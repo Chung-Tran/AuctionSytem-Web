@@ -6,6 +6,7 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const cookieParser = require('cookie-parser');
 const dbConnect = require('./config/dbConnect');
+const  errorHandler  = require('./middlewares/errorMiddleware');
 // const { connectRedis, addUserOnlineToList } = require('./config/redisConfig'); 
 const cloudinary = require('cloudinary').v2;
 // const {wss,userConnection} = require('./config/webSocketConfig');
@@ -39,7 +40,7 @@ dbConnect();
 // });
 
 //Define routes
-
+const userRoute = require("./routes/UserRoute");
 
 //Config server
 app.use(cookieParser()); 
@@ -52,7 +53,10 @@ app.use(cors());
 
 
 //Use routes
+app.use('/api/user', userRoute);
 
+// Error handling middleware
+app.use(errorHandler);
 
 //Start server
 const PORT = process.env.PORT;
