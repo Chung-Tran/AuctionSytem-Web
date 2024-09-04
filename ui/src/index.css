@@ -6,3 +6,19 @@
 body {
   font-family: 'Inter', sans-serif;
 }
+.bg-muted{
+  background-color:  #F3F4F5;
+}
+.text-muted-foreground{
+  color: #6C6E74;
+}
+.bg-primary{
+  background-color: #17181A;
+}
+.bg-breadcrumb{
+  background-image: url('./assets//breadcrumbanner.png');
+  background-position: right;
+  background-repeat: no-repeat;
+  background-size: contain;
+  margin-right: 20px;
+}
