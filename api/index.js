@@ -7,7 +7,7 @@ const cors = require('cors')
 const cookieParser = require('cookie-parser');
 const dbConnect = require('./config/dbConnect');
 const  errorHandler  = require('./middlewares/errorMiddleware');
-// const { connectRedis, addUserOnlineToList } = require('./config/redisConfig'); 
+const  redisClient = require('./config/redis'); 
 const cloudinary = require('cloudinary').v2;
 // const {wss,userConnection} = require('./config/webSocketConfig');
 
@@ -15,11 +15,13 @@ const cloudinary = require('cloudinary').v2;
 cloudinary.config({
     secure: true
 });
+
 //Connect db
 dbConnect();
+
 // Connect redis server in docker
-// const redisClient = connectRedis();
-// redisClient.connect();
+redisClient.connect();
+
 //config websocket
 // wss.on('connection', function connection(ws) {
 //     userConnection.add(ws);
@@ -40,8 +42,10 @@ dbConnect();
 // });
 
 //Define routes
+const authRoute = require("./routes/auth.route");
 const userRoute = require("./routes/UserRoute");
-const employeeRoute = require("./routes/employee.route")
+const employeeRoute = require("./routes/employee.route");
+
 
 //Config server
 app.use(cookieParser()); 
@@ -54,6 +58,7 @@ app.use(cors());
 
 
 //Use routes
+app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
 app.use("/api/employee", employeeRoute)
 
