@@ -41,6 +41,7 @@ dbConnect();
 
 //Define routes
 const userRoute = require("./routes/UserRoute");
+const employeeRoute = require("./routes/employee.route")
 
 //Config server
 app.use(cookieParser()); 
@@ -54,6 +55,8 @@ app.use(cors());
 
 //Use routes
 app.use('/api/user', userRoute);
+app.use("/api/employee", employeeRoute)
+
 
 // Error handling middleware
 app.use(errorHandler);
