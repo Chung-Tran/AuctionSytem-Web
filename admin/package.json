@@ -31,6 +31,7 @@
     "@coreui/utils": "^2.0.2",
     "@reduxjs/toolkit": "^2.0.1",
     "antd": "^5.10.3",
+    "auction-system": "file:",
     "axios": "^1.6.2",
     "chart.js": "^3.9.1",
     "classnames": "^2.3.2",

@@ -25,7 +25,7 @@ const Upcomming = () => {
                 ]}
                 title="Upcoming Auctions"
             />
-            <section className='container mx-auto mt-6'>
+            <section className='container mx-auto mt-6 px-6'>
                 <h1 className="text-3xl font-bold mb-6">Upcoming</h1>
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
@@ -57,7 +57,7 @@ const Upcomming = () => {
                     <button className='ml-1 flex p-2 hover:bg-[#F3F4F5] rounded items-center font-medium'>Next &nbsp;<ChevronRight /></button>
                 </div>
             </section>
-            <section className="bg-muted py-12 mt-10">
+            <section className="bg-muted py-12 mt-10 px-6">
                 <div className="container mx-auto px-4 md:px-6">
                     <h2 className="text-2xl font-bold mb-6">Product Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -95,7 +95,7 @@ const Upcomming = () => {
                     </div>
                 </div>
             </section>
-            <section className=" py-12 mt-10 ">
+            <section className=" py-12 mt-10 px-6 ">
                 <div className='container mx-auto'>
                     <h2 className="text-2xl font-bold">Related Assets</h2>
                     <div className="grid sm:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">

@@ -1,7 +1,8 @@
 import { ClockIcon, EyeIcon } from 'lucide-react';
 import React from 'react';
+import { Link } from 'react-router-dom';
 
-const ProductItem = ({ image, name, price, endsIn }) => {
+const ProductItem = ({ image, name, price, endsIn,slug }) => {
   return (
     // <div className="rounded-lg shadow-md overflow-hidden border border-[#E6E6E6]">
     //   <div className="aspect-w-1 aspect-h-1 max-h-[300px]">
@@ -16,15 +17,19 @@ const ProductItem = ({ image, name, price, endsIn }) => {
     //   </div>
     // </div>
     <div className="bg-card rounded-lg overflow-hidden shadow-lg">
+      <Link to={`/products/${slug}`}>
       <img
         src="/placeholder.svg"
         alt="Product Image"
         width={600}
         height={400}
         className="w-full aspect-[3/2] object-cover"
-      />
+        />
+      </Link>
       <div className="p-4">
+        <Link to={`/products/${slug}`}>
         <h3 className="text-lg font-semibold">Vintage Typewriter</h3>
+        </Link>
         <p className="text-muted-foreground text-sm mt-1">
           Fully restored 1950s typewriter in excellent condition.
         </p>

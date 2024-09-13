@@ -10,7 +10,7 @@ const Header = () => {
           <Link to="/" className="text-xl font-semibold flex"> <Hammer className='mr-2'/> Auction House</Link>
           <nav>
             <ul className="flex space-x-4">
-              <li><Link to="/live-auctions" className=" hover:text-gray-900 font-medium hover:underline text-sm">Live Auctions</Link></li>
+              <li><Link to="/auctioning" className=" hover:text-gray-900 font-medium hover:underline text-sm">Live Auctions</Link></li>
               <li><Link to="/upcoming-auctions" className=" hover:text-gray-900 font-medium hover:underline text-sm">Upcoming Auctions</Link></li>
               <li><Link to="/sell" className=" hover:text-gray-900 font-medium hover:underline text-sm" >Sell</Link></li>
               <li><Link to="/about" className=" hover:text-gray-900 font-medium hover:underline text-sm">About</Link></li>
