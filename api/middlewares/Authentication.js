@@ -1,16 +1,18 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-const {RefreshToken} = require('../models/UserModel');
+
+const { parseDuration } = require("../utils/time")
+const { RefreshToken } = require('../models/UserModel');
 
 // Tạo access token
-function generateAccessToken(userId, sessionKey) {
+function generateAccessToken(userId, sessionKey, expiresIn = "15m") {
     console.log(sessionKey)
-    return jwt.sign({ userId, sessionKey }, process.env.JWT_SECRET, { expiresIn: '15m' });
+    return jwt.sign({ userId, sessionKey }, process.env.JWT_SECRET, { expiresIn: expiresIn });
 }
 
 // Tạo refresh token
-async function generateRefreshToken(userId) {
+async function generateRefreshToken(userId, expiresIn = "7d") {
     const refreshToken = crypto.randomBytes(40).toString('hex');
     const hash = await bcrypt.hash(refreshToken, 10);
 
@@ -20,7 +22,7 @@ async function generateRefreshToken(userId) {
         token: hash,
         sessionKey: sessionKey,
         userId: userId,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 ngày
+        expiresAt: new Date(Date.now() + parseDuration(expiresIn)) // 7 ngày
     });
 
     return { refreshToken, sessionKey };
@@ -56,7 +58,7 @@ async function verifyAccessToken(req, res, next) {
 
                 await RefreshToken.findOneAndUpdate(
                     { userId, sessionKey },
-                    { 
+                    {
                         token: newRefreshTokenHash,
                         sessionKey: newSessionKey,
                         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
