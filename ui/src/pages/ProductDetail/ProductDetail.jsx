@@ -3,7 +3,8 @@ import Breadcrumb from '../../components/BreadCrumb/BreadCrumb'
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 import ProductItem from '../../components/Product/ProductItem';
-import logo from '../../assets/logo192.png'
+import logo from '../../assets/logo192.png';
+import ImageGallery from "react-image-gallery";
 const ProductDetail = () => {
     const products = [
         { id: 1, name: "Antique Pocket Watch", price: 1250, endsIn: "3 days", image: logo },
@@ -11,6 +12,20 @@ const ProductDetail = () => {
         { id: 3, name: "Rare Porcelain Vase", price: 3800, endsIn: "5 days", image: logo },
         { id: 4, name: "Vintage Rolex Watch", price: 12500, endsIn: "2 days", image: logo },
     ];
+    const images = [
+        {
+          original: "https://picsum.photos/id/1018/1000/600/",
+          thumbnail: "https://picsum.photos/id/1018/250/150/",
+        },
+        {
+          original: "https://picsum.photos/id/1015/1000/600/",
+          thumbnail: "https://picsum.photos/id/1015/250/150/",
+        },
+        {
+          original: "https://picsum.photos/id/1019/1000/600/",
+          thumbnail: "https://picsum.photos/id/1019/250/150/",
+        },
+      ];
     return (
         <div>
             <Breadcrumb
@@ -20,15 +35,13 @@ const ProductDetail = () => {
                 ]}
                 title="Sản phẩm đấu giá"
             />
-            <section>
+            <section className='px-6'>
                 <div className="grid md:grid-cols-2 gap-6 lg:gap-6 items-start container px-4 mx-auto py-6 flex-1">
-                    <div className="grid gap-4 md:gap-10 items-start max-h-[80vh]">
-                        <img
-                            src="/placeholder.svg"
-                            alt="Product Image"
-                            width={600}
-                            height={900}
-                            className="aspect-[2/3] object-cover border w-full h-full rounded-lg overflow-hidden"
+                    <div className="grid gap-4 md:gap-10 items-start h-[90vh] relative image-gallery-wrapper">
+                        <ImageGallery
+                            items={images}
+                            showNav={false}
+                            showPlayButton={false}
                         />
                     </div>
                     <div className="grid gap-4 md:gap-10 items-start">
@@ -70,11 +83,11 @@ const ProductDetail = () => {
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Registration Open:</span>
-                                        <div className=' font-semibold'>2023-09-01 00:00</div>
+                                        <div className=' font-semibold'>2024-09-01 00:00</div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Registration Close:</span>
-                                        <div className=' font-semibold'>2023-09-15 23:59</div>
+                                        <div className=' font-semibold'>2024-09-15 23:59</div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Registration Fee:</span>
@@ -106,7 +119,7 @@ const ProductDetail = () => {
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Auction Start:</span>
-                                        <div className=' font-semibold'>2023-09-16 09:00</div>
+                                        <div className=' font-semibold'>2024-09-16 09:00</div>
                                     </div>
                                 </div>
                             </div>
@@ -117,7 +130,7 @@ const ProductDetail = () => {
                 </div>
             </section>
 
-            <section className=' mt-10 mb-4'>
+            <section className='px-6 mt-10 mb-4'>
                 <div className=" container w-full mx-auto mt-8">
                     <Tabs>
                         <TabList className="flex space-x-4">
@@ -150,7 +163,7 @@ const ProductDetail = () => {
                 </div>
             </section>
 
-            <section className=" py-12 mt-10 ">
+            <section className=" py-12 mt-10 px-6">
                 <div className='container mx-auto'>
                     <h2 className="text-2xl font-bold mb-4">Latest News</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">

@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
-
+@import '~react-image-gallery/styles/css/image-gallery.css';
 body {
   font-family: 'Inter', sans-serif;
 }
@@ -21,4 +21,50 @@ body {
   background-repeat: no-repeat;
   background-size: contain;
   margin-right: 20px;
+}
+.bg-auctionroom {
+  background-image: url('./assets/auctionRoom.jpg');
+  background-size:contain;
+  background-repeat: no-repeat;
+  height: 100%;
+}
+.border-color{
+border-color: #364084;
+}
+
+.bgfooter_auctionroom{
+  background-image: url('./assets/bgfooter_auctionroom.jpg');
+  background-repeat: no-repeat;
+  /* height: 100%; */
+  width: 100%;
+  object-fit: cover;
+  background-size: 100%;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(200%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  display: inline-block;
+  white-space: nowrap; /* Ngăn nội dung xuống dòng */
+  animation: marquee 20s linear infinite; /* 10 giây cho một vòng lặp */
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.3s ease-in-out;
 }

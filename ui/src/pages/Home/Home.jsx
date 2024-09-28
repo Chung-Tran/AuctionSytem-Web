@@ -83,7 +83,7 @@ const Home = () => {
                 </div>
             </section>
 
-            <section className="bg-muted py-12">
+            <section className="py-12">
                 <div className="container mx-auto px-4 md:px-6">
                     <h2 className="text-2xl font-bold mb-6">Sold Items</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
@@ -98,7 +98,7 @@ const Home = () => {
                             />
                             <div className="p-4">
                                 <h3 className="text-xl font-bold mb-2">Vintage Typewriter</h3>
-                                <p className="text-muted-foreground mb-4">Sold for $250 on June 1, 2023</p>
+                                <p className="text-muted-foreground mb-4">Sold for $250 on June 1, 2024</p>
                             </div>
                         </div>
                         <div className="bg-background rounded-lg shadow-lg overflow-hidden">
@@ -112,7 +112,7 @@ const Home = () => {
                             />
                             <div className="p-4">
                                 <h3 className="text-xl font-bold mb-2">Antique Vase</h3>
-                                <p className="text-muted-foreground mb-4">Sold for $500 on May 15, 2023</p>
+                                <p className="text-muted-foreground mb-4">Sold for $500 on May 15, 2024</p>
                             </div>
                         </div>
                         <div className="bg-background rounded-lg shadow-lg overflow-hidden">
@@ -126,7 +126,7 @@ const Home = () => {
                             />
                             <div className="p-4">
                                 <h3 className="text-xl font-bold mb-2">Retro Camera</h3>
-                                <p className="text-muted-foreground mb-4">Sold for $150 on April 30, 2023</p>
+                                <p className="text-muted-foreground mb-4">Sold for $150 on April 30, 2024</p>
                             </div>
                         </div>
                         <div className="bg-background rounded-lg shadow-lg overflow-hidden">
@@ -140,7 +140,7 @@ const Home = () => {
                             />
                             <div className="p-4">
                                 <h3 className="text-xl font-bold mb-2">Vintage Vinyl</h3>
-                                <p className="text-muted-foreground mb-4">Sold for $300 on March 20, 2023</p>
+                                <p className="text-muted-foreground mb-4">Sold for $300 on March 20, 2024</p>
                             </div>
                         </div>
                     </div>
