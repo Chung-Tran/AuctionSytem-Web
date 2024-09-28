@@ -115,7 +115,7 @@ const Upcomming = () => {
                                 <div className="flex items-center justify-between mt-4">
                                     <div className="flex items-center gap-2">
                                         <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                                        <span className="text-muted-foreground text-sm">September 1, 2023</span>
+                                        <span className="text-muted-foreground text-sm">September 1, 2024</span>
                                     </div>
                                     <Link href="#" className="text-primary hover:underline" prefetch={false}>
                                         Read More
@@ -139,7 +139,7 @@ const Upcomming = () => {
                                 <div className="flex items-center justify-between mt-4">
                                     <div className="flex items-center gap-2">
                                         <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                                        <span className="text-muted-foreground text-sm">August 15, 2023</span>
+                                        <span className="text-muted-foreground text-sm">August 15, 2024</span>
                                     </div>
                                     <Link href="#" className="text-primary hover:underline" prefetch={false}>
                                         Read More
@@ -163,7 +163,7 @@ const Upcomming = () => {
                                 <div className="flex items-center justify-between mt-4">
                                     <div className="flex items-center gap-2">
                                         <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                                        <span className="text-muted-foreground text-sm">August 15, 2023</span>
+                                        <span className="text-muted-foreground text-sm">August 15, 2024</span>
                                     </div>
                                     <Link href="#" className="text-primary hover:underline" prefetch={false}>
                                         Read More
@@ -187,7 +187,7 @@ const Upcomming = () => {
                                 <div className="flex items-center justify-between mt-4">
                                     <div className="flex items-center gap-2">
                                         <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                                        <span className="text-muted-foreground text-sm">September 1, 2023</span>
+                                        <span className="text-muted-foreground text-sm">September 1, 2024</span>
                                     </div>
                                     <Link href="#" className="text-primary hover:underline" prefetch={false}>
                                         Read More

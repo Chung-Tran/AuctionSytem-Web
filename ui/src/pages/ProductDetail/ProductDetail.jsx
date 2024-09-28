@@ -83,11 +83,11 @@ const ProductDetail = () => {
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Registration Open:</span>
-                                        <div className=' font-semibold'>2023-09-01 00:00</div>
+                                        <div className=' font-semibold'>2024-09-01 00:00</div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Registration Close:</span>
-                                        <div className=' font-semibold'>2023-09-15 23:59</div>
+                                        <div className=' font-semibold'>2024-09-15 23:59</div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Registration Fee:</span>
@@ -119,7 +119,7 @@ const ProductDetail = () => {
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Auction Start:</span>
-                                        <div className=' font-semibold'>2023-09-16 09:00</div>
+                                        <div className=' font-semibold'>2024-09-16 09:00</div>
                                     </div>
                                 </div>
                             </div>

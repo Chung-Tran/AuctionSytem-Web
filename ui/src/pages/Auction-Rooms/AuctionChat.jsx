@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { Send } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
 
 export default function AuctionChat() {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [inputMessage, setInputMessage] = useState('');
+    const messagesEndRef = useRef(null);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -20,10 +23,41 @@ export default function AuctionChat() {
         return () => clearInterval(interval);
     }, [isOpen, messages.length]);
 
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
     const toggleChat = () => {
         setIsOpen(!isOpen);
         if (!isOpen) {
             setUnreadCount(0);
+        }
+    };
+
+    const handleInputChange = (e) => {
+        setInputMessage(e.target.value);
+    };
+
+    const handleSendMessage = () => {
+        if (inputMessage.trim()) {
+            const newMessage = {
+                id: Date.now(),
+                sender: 'You',
+                content: inputMessage.trim()
+            };
+            setMessages(prevMessages => [...prevMessages, newMessage]);
+            setInputMessage('');
+        }
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
         }
     };
 
@@ -77,6 +111,24 @@ export default function AuctionChat() {
                                 <span>{message.content}</span>
                             </div>
                         ))}
+                    </div>
+                    <div className="p-3 bg-black bg-opacity-40">
+                        <div className="flex items-center">
+                            <input
+                                type="text"
+                                value={inputMessage}
+                                onChange={handleInputChange}
+                                onKeyPress={handleKeyPress}
+                                placeholder="Type a message..."
+                                className="flex-grow mr-2 p-2 rounded-full bg-gray-900 opacity-50 text-white placeholder-gray-400 focus:outline-none"
+                            />
+                            <button
+                                onClick={handleSendMessage}
+                                className="p-2 rounded-md bg-blue-600 opacity-50 text-white hover:bg-blue-700 focus:outline-none"
+                            >
+                                <Send size={20} />
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

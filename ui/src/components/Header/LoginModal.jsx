@@ -19,7 +19,7 @@ const InputField = ({ label, name, type = 'text', ...props }) => {
           id={name}
           name={name}
           type={inputType}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 outline-0"
           {...props}
         />
         {type === 'password' && (
@@ -52,13 +52,6 @@ const LoginModal = ({ isOpen, setIsOpen }) => {
 
   if (!isOpen) return null;
 
-  const loginSchema = Yup.object().shape({
-    login: Yup.string()
-      .required('Email or Phone is required')
-      .matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$|^[0-9]+$/, 'Enter a valid email or phone number'),
-    password: Yup.string().required('Password is required'),
-  });
-
   const signupSchema = Yup.object().shape({
     fullName: Yup.string().required('Full Name is required'),
     email: Yup.string().email('Invalid email').required('Email is required'),
@@ -77,7 +70,7 @@ const LoginModal = ({ isOpen, setIsOpen }) => {
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 mt-auto flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg p-8 shadow-lg w-full max-w-md relative">
         <button
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
@@ -106,7 +99,6 @@ const LoginModal = ({ isOpen, setIsOpen }) => {
             {!isForgotPassword ? (
               <Formik
                 initialValues={{ login: '', password: '' }}
-                validationSchema={loginSchema}
                 onSubmit={(values) => console.log(values)}
               >
                 <Form className="space-y-4">

@@ -122,11 +122,11 @@ const AuctionLive = () => {
                     </h2>
                     <div className="space-y-3">
                         {[
-                            { bid: 14120000000, time: '15/09/2023 • 10:46:18.922', user: 'VPA-1OZI' },
-                            { bid: 14115000000, time: '15/09/2023 • 10:21:38.761', user: 'VPA-625U' },
-                            { bid: 14105000000, time: '15/09/2023 • 10:21:04.192', user: 'VPA-GFUC' },
-                            { bid: 14105000000, time: '15/09/2023 • 10:21:04.192', user: 'VPA-GFUC' },
-                            { bid: 14105000000, time: '15/09/2023 • 10:21:04.192', user: 'VPA-GFUC' },
+                            { bid: 14120000000, time: '15/09/2024 • 10:46:18.922', user: 'VPA-1OZI' },
+                            { bid: 14115000000, time: '15/09/2024 • 10:21:38.761', user: 'VPA-625U' },
+                            { bid: 14105000000, time: '15/09/2024 • 10:21:04.192', user: 'VPA-GFUC' },
+                            { bid: 14105000000, time: '15/09/2024 • 10:21:04.192', user: 'VPA-GFUC' },
+                            { bid: 14105000000, time: '15/09/2024 • 10:21:04.192', user: 'VPA-GFUC' },
                         ].map((bid, index) => (
                             <div key={index} className="flex justify-between space-y-2">
                                 <div className='flex flex-col'>

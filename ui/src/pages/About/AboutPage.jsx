@@ -131,7 +131,7 @@ export default function AboutPage() {
           <li><strong>2018:</strong> Reached 1 million registered users milestone</li>
           <li><strong>2020:</strong> Launched AI-powered authentication system for luxury goods</li>
           <li><strong>2022:</strong> Expanded to Asia with a new office in Singapore</li>
-          <li><strong>2023:</strong> Introduced blockchain technology for provenance tracking</li>
+          <li><strong>2024:</strong> Introduced blockchain technology for provenance tracking</li>
         </ul>
         <p>Today, we continue to grow and innovate, always with our users at the heart of everything we do.</p>
       </div>
