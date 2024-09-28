@@ -1,8 +1,19 @@
 import { ClockIcon, EyeIcon } from 'lucide-react';
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { openNotify } from '../../commons/MethodsCommons';
 
-const ProductItem = ({ image, name, price, endsIn,slug }) => {
+const ProductItem = ({ image, name, price, endsIn, slug }) => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    const isValid = true; // Đây là giá trị giả định
+    if (isValid) {
+      openNotify('success', "Form submitted successfully!");
+    } else {
+      openNotify('error', "There was an error submitting the form.");
+    }
+  };
   return (
     // <div className="rounded-lg shadow-md overflow-hidden border border-[#E6E6E6]">
     //   <div className="aspect-w-1 aspect-h-1 max-h-[300px]">
@@ -48,7 +59,7 @@ const ProductItem = ({ image, name, price, endsIn,slug }) => {
             <EyeIcon className="w-4 h-4 text-muted-foreground" />
             <span className="text-muted-foreground text-sm">24 watching</span>
           </div>
-          <button size="sm" className="bg-primary text-white p-2 rounded-md font-medium">Place Bid</button>
+          <button size="sm" className="bg-primary text-white p-2 rounded-md font-medium" onClick={handleSubmit}>Place Bid</button>
         </div>
       </div>
     </div>

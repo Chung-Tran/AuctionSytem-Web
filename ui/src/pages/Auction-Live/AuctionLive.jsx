@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Clock, CircleDollarSign } from 'lucide-react';
+import AuctionChat from '../Auction-Rooms/AuctionChat';
 
 const AuctionLive = () => {
     const [currentBid, setCurrentBid] = useState(14120000000);
@@ -108,6 +109,8 @@ const AuctionLive = () => {
                     </div>
                     <div className='border border-white h-48 w-48 justify-center  m-auto'></div>
                 </div>
+                <AuctionChat
+                />
 
             </div>
             <div className="w-[45%] flex flex-col p-2 items-end ml-auto items-center justify-center">

@@ -27,7 +27,7 @@ export default function AuctioningItem({ item }) {
           <div className="text-muted-foreground font-medium">Participants: {item.participants}</div>
         </div>
         <button size="sm" className='w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium bg-primary h-11 rounded-md px-8 text-white'>
-          Join Auction
+          <a href="/auctions/room/roomId">Join Auction</a>
         </button>
       </div>
     </div>

@@ -83,7 +83,7 @@ const Home = () => {
                 </div>
             </section>
 
-            <section className="bg-muted py-12">
+            <section className="py-12">
                 <div className="container mx-auto px-4 md:px-6">
                     <h2 className="text-2xl font-bold mb-6">Sold Items</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">

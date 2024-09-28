@@ -8,20 +8,35 @@ import SellProduct from './pages/SellProduct/SellProduct';
 import AuctioningPage from './pages/AuctioningPage/AuctioningPage';
 import AuctionLive from './pages/Auction-Live/AuctionLive';
 import AuctionRooms from './pages/Auction-Rooms/AuctionRooms';
+import AboutPage from './pages/About/AboutPage';
+import NotFound from './pages/NotFound';
+import ContactPage from './pages/Contact/ContactPage';
+import { Toaster } from 'react-hot-toast';
 function App() {
   return (
     <Router>
+       <Toaster />
       <Routes>
+        {/* Routes with Layout */}
         <Route element={<Layout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/upcoming-auctions" element={<Upcomming />} />
-          <Route path="/products/:slug" element={<ProductDetail />} />
-          <Route path="/products/register-auction" element={<SellProduct />} />
-          <Route path="/auctioning" element={<AuctioningPage />} />
+          <Route path="/" element={<Home />} /> {/* Homepage */}
+          <Route path="/auctions">
+            <Route path="upcoming" element={<Upcomming />} /> {/* Danh sách sản phẩm đấu giá sắp tới */}
+            <Route path="ongoing" element={<AuctioningPage />} /> {/* Danh sách phòng đang đấu giá hiện tại */}
+          </Route>
+          <Route path="/products">
+            <Route path=":slug" element={<ProductDetail />} /> {/* Chi tiết sản phẩm */}
+            <Route path="sell" element={<SellProduct />} /> {/* Đăng ký đấu giá sản phẩm */}
+          </Route>
+          <Route path="/about" element={<AboutPage />} /> {/* Về chúng tôi */}
+          <Route path="/contact" element={<ContactPage />} /> {/* Về chúng tôi */}
         </Route>
-        {/* Routes no-layout. Cho page room đấu giá SP */}
-        <Route path="/auctioning-live" element={<AuctionLive />} />
-        <Route path="/auctioning-rooms/:roomId" element={<AuctionRooms />} />
+
+        {/* Routes without Layout. Cho page room đấu giá SP */}
+        <Route path="auctions/room/:roomId" element={<AuctionRooms />} /> {/* Phòng đấu giá (cho cả người xem và người tham gia) */}
+
+        {/* 404 Not Found Route */}
+      <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
