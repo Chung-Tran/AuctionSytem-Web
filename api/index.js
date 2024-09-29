@@ -45,6 +45,7 @@ redisClient.connect();
 const authRoute = require("./routes/auth.route");
 const userRoute = require("./routes/UserRoute");
 const employeeRoute = require("./routes/employee.route");
+const customerRoute = require("./routes/CustomerRoute");
 
 
 //Config server
@@ -52,7 +53,10 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(express.json());
-app.use(cors());
+const corsOptions = {
+    exposedHeaders: ['x-new-access-token','x-token-resetpassword'], // Expose các custom headers cho client
+};
+app.use(cors(corsOptions));
 
 //Middleware authen token
 
@@ -61,6 +65,7 @@ app.use(cors());
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
 app.use("/api/employee", employeeRoute)
+app.use("/api/customers", customerRoute)
 
 
 // Error handling middleware

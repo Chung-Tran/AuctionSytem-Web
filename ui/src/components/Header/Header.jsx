@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, User, Hammer, Bell, LogOut, Settings, UserCircle, ChevronDown, Trash2, CheckCircle, AlertCircle } from 'lucide-react';
 import LoginModal from './LoginModal';
-
+import { AppContext } from '../../AppContext';
+import avatarMale from '../../assets/avatarMale.webp'
 const Header = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // Simulate login state
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Simulate login state
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [visibleNotifications, setVisibleNotifications] = useState(3);
@@ -13,7 +14,10 @@ const Header = () => {
   const userDropdownRef = useRef(null);
   const notificationsDropdownRef = useRef(null);
   const headerRef = useRef(null);
-
+  const { user } = useContext(AppContext)
+  useEffect(() => {
+    setIsLoggedIn(user ? true : false)
+  },[user])
   // Dummy notifications data
   const [notifications, setNotifications] = useState([
     { id: 1, message: "New bid on your item", timestamp: "5 minutes ago", type: 'info' },
@@ -94,7 +98,6 @@ const Header = () => {
         return <Bell className="w-5 h-5 text-blue-500" />;
     }
   };
-
   return (
     <header
       ref={headerRef}
@@ -156,8 +159,8 @@ const Header = () => {
                     <div className="px-4 py-2 bg-gray-100 font-semibold text-gray-800 rounded-t-lg">Notifications</div>
                     <div className="max-h-96 overflow-y-auto">
                       {notifications.slice(0, visibleNotifications).map(notification => (
-                        <div 
-                          key={notification.id} 
+                        <div
+                          key={notification.id}
                           className="px-4 py-3 hover:bg-gray-50 transition duration-300 ease-in-out"
                         >
                           <div className="flex items-start space-x-3">
@@ -171,7 +174,7 @@ const Header = () => {
                               <p className="text-xs text-gray-500 mt-1">{notification.timestamp}</p>
                             </div>
                             <div className="flex space-x-2">
-                              <button 
+                              <button
                                 onClick={() => deleteNotification(notification.id)}
                                 className="text-xs text-red-600 hover:text-red-800 transition duration-300 ease-in-out"
                                 aria-label="Delete notification"
@@ -185,7 +188,7 @@ const Header = () => {
                     </div>
                     {visibleNotifications < notifications.length && (
                       <div className="px-4 py-2 text-center border-t border-gray-100">
-                        <button 
+                        <button
                           onClick={loadMoreNotifications}
                           className="text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center justify-center w-full"
                         >
@@ -203,17 +206,17 @@ const Header = () => {
                   onClick={toggleUserDropdown}
                 >
                   <img
-                    src="/api/placeholder/32/32"
+                    src={avatarMale}
                     alt="User avatar"
                     className="w-8 h-8 rounded-full"
                   />
-                  <span className="text-sm font-medium">John Doe</span>
+                  <span className="text-sm font-medium">{user?.fullName}</span>
                 </div>
                 {showUserDropdown && (
                   <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-200">
                     <div className="px-4 py-3 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-800">John Doe</p>
-                      <p className="text-xs text-gray-500">john.doe@example.com</p>
+                      <p className="text-sm font-medium text-gray-800">{user?.fullName}</p>
+                      <p className="text-xs text-gray-500">{user?.email}</p>
                     </div>
                     <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                       <UserCircle className="inline-block mr-2" size={16} />
@@ -250,6 +253,7 @@ const Header = () => {
           setIsLoggedIn(true);
           setIsModalOpen(false);
         }}
+
       />
     </header>
   );

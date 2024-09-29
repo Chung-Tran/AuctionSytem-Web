@@ -14,6 +14,7 @@ import ContactPage from './pages/Contact/ContactPage';
 import { Toaster } from 'react-hot-toast';
 import ProfilePage from './pages/Profile/ProfilePage';
 import ChangePassword from './pages/Profile/ChangePasswordPage';
+import PrivateRoute from './PrivateRoute';
 function App() {
   return (
     <Router>
@@ -32,8 +33,11 @@ function App() {
           </Route>
           <Route path="/about" element={<AboutPage />} /> {/* Về chúng tôi */}
           <Route path="/contact" element={<ContactPage />} /> {/* Về chúng tôi */}
-          <Route path="/profile" element={<ProfilePage />} /> {/* Thông tin cá nhân */}
-          <Route path="/profile/change-password" element={<ChangePassword />} /> {/* Thông tin cá nhân */}
+
+          <Route element={<PrivateRoute />}>
+            <Route path="/profile" element={<ProfilePage />} /> {/* Thông tin cá nhân */}
+            <Route path="/profile/change-password" element={<ChangePassword />} /> {/* Đổi mật khẩu */}
+          </Route>
         </Route>
 
         {/* Routes without Layout. Cho page room đấu giá SP */}

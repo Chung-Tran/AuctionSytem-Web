@@ -12,31 +12,33 @@ const axiosClient = axios.create({
 // Thêm interceptor để thiết lập token vào header của mỗi request
 axiosClient.interceptors.request.use(
     async (config) => {
-        const token = localStorage.getItem('token'); // Gọi hàm authorize để lấy token từ local storage
+        const token = localStorage.getItem('token'); 
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
-    // (error) => {
-    //     return Promise.reject(error);
-    // }
+    (error) => {
+        return Promise.reject(error);
+    }
 );
 
-// Thêm interceptor để cập nhật token trong local storage nếu nó được trả về từ phản hồi
+// Thêm interceptor để cập nhật token trong local storage nếu nó được trả về
 axiosClient.interceptors.response.use(
     (response) => {
+        const newAccessToken = response.headers['x-new-access-token'];
+        if (newAccessToken) {
+            localStorage.setItem('token', newAccessToken); 
+        }
+
         if (response.status === 401 || response.status === 403) {
-            localStorage.removeItem('token')
+            localStorage.removeItem('token'); // Remove token if not authorized
         }
-        const { data } = response;
-        if (data && data?.data?.token) {
-            localStorage.setItem('token', data.data.token); 
-        }
+
         return response;
     },
-    // (error) => {
-    //     return Promise.reject(error);
-    // }
+    (error) => {
+        return Promise.reject(error);
+    }
 );
 export default axiosClient;
