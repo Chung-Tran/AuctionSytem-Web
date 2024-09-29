@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import 'react-tabs/style/react-tabs.css';
-import { XIcon, Eye, EyeOff } from 'lucide-react';
+import { XIcon, Eye, EyeOff, Loader } from 'lucide-react';
+import HomeService from '../../services/HomeService';
+import { AppContext } from '../../AppContext';
+import { openNotify } from '../../commons/MethodsCommons';
 
 const InputField = ({ label, name, type = 'text', ...props }) => {
   const [showPassword, setShowPassword] = useState(false);
   const inputType = type === 'password' && showPassword ? 'text' : type;
-
   return (
     <div className="mb-4">
       <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
@@ -46,14 +48,18 @@ const Button = ({ children, ...props }) => (
   </button>
 );
 
-const LoginModal = ({ isOpen, setIsOpen }) => {
+const LoginModal = ({ isOpen, setIsOpen, onLoginSuccess }) => {
   const [showOtp, setShowOtp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
-
+  const [loadingSendMail, setLoadingSendMail] = useState(false);
+  const { setUserData } = useContext(AppContext);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [otpKey, setOtpKey] = useState(null);
   if (!isOpen) return null;
 
   const signupSchema = Yup.object().shape({
     fullName: Yup.string().required('Full Name is required'),
+    username: Yup.string().required('Username is required'),
     email: Yup.string().email('Invalid email').required('Email is required'),
     password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
     confirmPassword: Yup.string()
@@ -64,14 +70,9 @@ const LoginModal = ({ isOpen, setIsOpen }) => {
     agreement: Yup.boolean().oneOf([true], 'You must accept the terms and conditions'),
   });
 
-  const forgotPasswordSchema = Yup.object().shape({
-    email: Yup.string().email('Invalid email').required('Email is required'),
-    otp: showOtp ? Yup.string().required('OTP is required') : Yup.string(),
-  });
-
   return (
     <div className="fixed inset-0 mt-auto flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-8 shadow-lg w-full max-w-md relative">
+      <div className="bg-white rounded-lg p-8 shadow-lg w-full max-w-md relative overflow-auto max-h-[95%] custom-scrollbar" >
         <button
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
           onClick={() => setIsOpen(false)}
@@ -98,48 +99,151 @@ const LoginModal = ({ isOpen, setIsOpen }) => {
           <TabPanel>
             {!isForgotPassword ? (
               <Formik
-                initialValues={{ login: '', password: '' }}
-                onSubmit={(values) => console.log(values)}
-              >
-                <Form className="space-y-4">
-                  <InputField label="Email or Phone" name="login" />
-                  <InputField label="Password" name="password" type="password" />
-                  <Button type="submit">Login</Button>
-                </Form>
-              </Formik>
-            ) : (
-              <Formik
-                initialValues={{ email: '', otp: '' }}
-                validationSchema={forgotPasswordSchema}
-                onSubmit={(values) => {
-                  if (!showOtp) {
-                    setShowOtp(true);
-                  } else {
-                    console.log(values);
+                initialValues={{ username: '', password: '' }}
+                validationSchema={Yup.object({
+                  username: Yup.string().required('Username is required'),
+                  password: Yup.string().required('Password is required'),
+                })}
+                onSubmit={async (values, { setSubmitting }) => {
+                  try {
+                    const login = await HomeService.login(values.username, values.password);
+                    if (!!login) {
+                      setUserData(login);
+                      openNotify('success', 'Login successfully');
+                      onLoginSuccess();
+                    } else {
+                      openNotify('error', login?.message || 'Login failed');
+                    }
+                  } catch (error) {
+                    openNotify('error', error.message || 'An error occurred during login');
+                  } finally {
+                    setSubmitting(false);
                   }
                 }}
               >
-                <Form className="space-y-4">
-                  <InputField label="Email" name="email" type="email" />
-                  {showOtp && <InputField label="OTP" name="otp" />}
-                  <Button type="submit">{showOtp ? 'Verify OTP' : 'Send OTP'}</Button>
-                </Form>
+                {({ isSubmitting }) => (
+                  <Form className="space-y-4">
+                    <InputField label="Email or Phone" name="username" />
+                    <InputField label="Password" name="password" type="password" />
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? 'Logging in...' : 'Login'}
+                    </Button>
+                  </Form>
+                )}
+              </Formik>
+            ) : (
+              <Formik
+                initialValues={{ email: '', otp: '', newPassword: '', confirmPassword: '' }}
+                onSubmit={async (values, { setSubmitting }) => {
+                  if (!showOtp) {
+                    if (!values.email) {
+                      openNotify('error', 'Email is invalid!');
+                      return;
+                    }
+
+                    setSubmitting(true);
+                    try {
+                      const otp = await HomeService.sendOTPForgotPassword(values.email);
+                      if (otp) {
+                        openNotify('success', 'OTP is sent successfully. Check your email!');
+                        setShowOtp(true);
+                      } else {
+                        openNotify('error', 'Send OTP failed. Try again!');
+                      }
+                    } catch (error) {
+                      openNotify('error', 'Cannot send OTP');
+                    } finally {
+                      setSubmitting(false);
+                    }
+                  }
+                  //Verify OTP
+                  else if (showOtp && !showNewPassword) {
+                    try {
+                      const verifyOTP = await HomeService.verifyOTP({
+                        otp: values.otp,
+                        email: values.email
+                      });
+                      if (verifyOTP) {
+                        setOtpKey(verifyOTP.key);
+                        setShowNewPassword(true);
+                        openNotify('success', 'OTP verified successfully. Please set your new password.');
+                      }
+                    } catch (error) {
+                      console.log(error)
+                    } finally {
+                      setSubmitting(false);
+                    }
+                  }
+                  //Verify thành công
+                  else if (showNewPassword) {
+                    try {
+                      if (!values?.newPassword || values?.newPassword?.length < 6)
+                        return openNotify('error', 'Password must be least 6 character!');
+                      if (values.newPassword !== values.confirmPassword)
+                        return openNotify('error', 'Password not match');
+                      const resetPassword = await HomeService.resetPassword(
+                        {
+                          email: values.email,
+                          otpKey,
+                          newPassword: values.newPassword
+                        });
+                      if (!!resetPassword) {
+                        openNotify('success', 'Password reset successfully. You can now login with your new password.');
+                        setIsForgotPassword(false);
+                      } else {
+                        openNotify('error', 'Failed to reset password. Please try again.');
+                      }
+                    } catch (error) {
+                      openNotify('error', 'Error resetting password');
+                    } finally {
+                      setSubmitting(false);
+                    }
+                  }
+                }}
+              >
+                {({ isSubmitting }) => (
+                  <Form className="space-y-4">
+                    <InputField label="Email" name="email" type="email" disabled={showOtp} />
+                    {showOtp && <InputField label="OTP" name="otp" />}
+                    {showNewPassword && (
+                      <>
+                        <InputField label="New Password" name="newPassword" type="password" />
+                        <InputField label="Confirm New Password" name="confirmPassword" type="password" />
+                      </>
+                    )}
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <div className="flex items-center justify-center">
+                          <Loader className="animate-spin mr-2 h-4 w-4" />
+                          {showNewPassword ? 'Resetting...' : showOtp ? 'Verifying...' : 'Sending...'}
+                        </div>
+                      ) : (
+                        showNewPassword ? 'Reset Password' : showOtp ? 'Verify OTP' : 'Send OTP'
+                      )}
+                    </Button>
+                  </Form>
+                )}
               </Formik>
             )}
             <div className="text-sm mt-4 text-center">
               <span
                 className="cursor-pointer text-blue-600 hover:underline"
-                onClick={() => setIsForgotPassword(!isForgotPassword)}
+                onClick={() => {
+                  setIsForgotPassword(!isForgotPassword);
+                  setShowOtp(false);
+                  setShowNewPassword(false);
+                }}
               >
                 {isForgotPassword ? 'Back to Login' : 'Forgot Password?'}
               </span>
             </div>
           </TabPanel>
 
-          <TabPanel>
+          <TabPanel className="overflow-auto ">
             <Formik
               initialValues={{
                 fullName: '',
+                username: '',
                 email: '',
                 password: '',
                 confirmPassword: '',
@@ -148,22 +252,56 @@ const LoginModal = ({ isOpen, setIsOpen }) => {
                 agreement: false,
               }}
               validationSchema={signupSchema}
-              onSubmit={(values) => console.log(values)}
+              onSubmit={async (values, { resetForm }) => {
+                const register = await HomeService.createAccount(values);
+                if (!!register) {
+                  openNotify('error', register.message);
+                } else {
+                  openNotify('success', 'Register successfully!!');
+                  resetForm();
+                }
+              }}
+              className="overflow-auto"
             >
               {({ values, setFieldValue }) => (
                 <Form className="space-y-4">
                   <InputField label="Full Name" name="fullName" />
+                  <InputField label="Username" name="username" /> {/* Added username input */}
                   <div className="relative">
                     <InputField label="Email" name="email" type="email" />
                     <button
                       type="button"
-                      className="absolute right-2 top-8 bg-blue-600 text-white py-1 px-3 rounded-md hover:bg-blue-700 text-sm"
-                      onClick={() => {
-                        // Logic to send OTP
-                        console.log('Sending OTP to', values.email);
+                      className={`absolute right-2 top-8 bg-blue-600 text-white py-1 px-3 rounded-md hover:bg-blue-700 text-sm ${loadingSendMail ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      onClick={async () => {
+                        if (!values.email) {
+                          openNotify('error', 'Email is invalid!');
+                          return;
+                        }
+
+                        setLoadingSendMail(true);
+                        try {
+                          const otp = await HomeService.sendOTP(values.email);
+                          if (!!otp) {
+                            openNotify('success', 'OTP is sent successfully. Check your email!');
+                          } else {
+                            openNotify('error', 'Send OTP failed. Try again!');
+                          }
+                        } catch (error) {
+                          openNotify('error', 'Cannot send OTP');
+                        } finally {
+                          setLoadingSendMail(false);
+                        }
                       }}
+                      disabled={loadingSendMail}
                     >
-                      Send OTP
+                      {loadingSendMail ? (
+                        <div className="flex items-center">
+                          <Loader className="animate-spin mr-2 h-4 w-4" />
+                          Sending...
+                        </div>
+                      ) : (
+                        'Send OTP'
+                      )}
                     </button>
                   </div>
                   <InputField label="Phone Number" name="phone" />
@@ -189,6 +327,7 @@ const LoginModal = ({ isOpen, setIsOpen }) => {
               )}
             </Formik>
           </TabPanel>
+
         </Tabs>
       </div>
     </div>
