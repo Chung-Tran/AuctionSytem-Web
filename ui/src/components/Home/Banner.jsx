@@ -1,5 +1,6 @@
 // Banner.js
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Banner = () => {
     return (
@@ -8,8 +9,8 @@ const Banner = () => {
                 <h2 className="text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl leading-4">Discover Unique Treasures at Our Auctions</h2>
                 <p className="text-gray-600 mb-6 text-lg md:text-xl">Browse a curated selection of rare and valuable items up for auction. Register now to start bidding.</p>
                 <div className="space-x-2 flex flex-col sm:flex-row gap-1">
-                    <button className="bg-black text-white px-6 py-2 rounded-md font-medium h-10 inline-flex flex-1 items-center justify-center">Browse Auctions</button>
-                    <button className="bg-gray-200 text-gray-800 px-6 py-2 rounded-md font-medium h-10 inline-flex flex-1 items-center justify-center">Sell an item</button>
+                    <button className="bg-black text-white px-6 py-2 rounded-md font-medium h-10 inline-flex flex-1 items-center justify-center"><Link to="/auctions/ongoing">Browse Auctions</Link></button>
+                    <button className="bg-gray-200 text-gray-800 px-6 py-2 rounded-md font-medium h-10 inline-flex flex-1 items-center justify-center"><Link to="auctions/sell">Sell an item</Link></button>
                 </div>
             </div>
             <div className="w-1/2 h-full">
