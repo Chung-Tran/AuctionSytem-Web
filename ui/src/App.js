@@ -26,11 +26,10 @@ function App() {
           <Route path="/auctions">
             <Route path="upcoming" element={<Upcomming />} /> {/* Danh sách sản phẩm đấu giá sắp tới */}
             <Route path="ongoing" element={<AuctioningPage />} /> {/* Danh sách phòng đang đấu giá hiện tại */}
-          </Route>
-          <Route path="/products">
             <Route path=":slug" element={<ProductDetail />} /> {/* Chi tiết sản phẩm */}
             <Route path="sell" element={<SellProduct />} /> {/* Đăng ký đấu giá sản phẩm */}
           </Route>
+          
           <Route path="/about" element={<AboutPage />} /> {/* Về chúng tôi */}
           <Route path="/contact" element={<ContactPage />} /> {/* Về chúng tôi */}
 

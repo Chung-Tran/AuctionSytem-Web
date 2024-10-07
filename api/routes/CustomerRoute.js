@@ -9,7 +9,7 @@ const { getCustomerById,
     sendOTPForPasswordReset,
     resetPassword,
     verifyOTP,
-} = require('../controllers/CustomerController');
+} = require('../controllers/customer.controller');
 const { verifyAccessToken } = require('../middlewares/Authentication');
 
 router.post('/login', loginCustomer);

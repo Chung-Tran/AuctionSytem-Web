@@ -18,8 +18,7 @@ const HomeService = {
             const data = await handleResponse(response);
             return data;
         } catch (error) {
-            openNotify('error','Login failed')
-            throw new Error(error.message || 'Login failed');
+           handleResponseError(error)
         }
     },
     sendOTP: async (values) => {
@@ -32,8 +31,7 @@ const HomeService = {
             const data = await handleResponse(response);
             return data;
         } catch (error) {
-            openNotify('error','Fetch data failed')
-            throw new Error(error.message || 'Fetch data failed');
+            handleResponseError(error)
         }
     },
     sendOTPForgotPassword: async (values) => {
