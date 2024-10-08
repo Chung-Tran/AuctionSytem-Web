@@ -1,9 +1,11 @@
 const common = require("./common.validation")
+const paging = require("./paging.validation")
 const auth = require("./auth.validation")
-const employee = require("./employee.validation")
+const user = require("./user.validation")
 
 module.exports = {
     ...common,
     ...auth,
-    ...employee,
+    ...user,
+    ...paging
 };

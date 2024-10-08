@@ -1,4 +1,4 @@
-const EmployeeStatus = Object.freeze({
+const UserStatus = Object.freeze({
     ACTIVE: 'active',
     INACTIVE: 'inactive',
     SUSPENDED: 'suspended'
@@ -9,4 +9,4 @@ const EmailType = Object.freeze({
 });
 
 
-module.exports = { EmployeeStatus, EmailType };
+module.exports = { UserStatus, EmailType };

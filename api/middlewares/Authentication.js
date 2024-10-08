@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
 const { parseDuration } = require("../utils/time")
-const { RefreshToken } = require('../models/UserModel');
+const { RefreshToken } = require('../models/user.model');
 const { formatResponse } = require('../common/MethodsCommon');
 
 // Tạo access token

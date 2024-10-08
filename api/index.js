@@ -43,8 +43,7 @@ redisClient.connect();
 
 //Define routes
 const authRoute = require("./routes/auth.route");
-const userRoute = require("./routes/UserRoute");
-const employeeRoute = require("./routes/employee.route");
+const userRoute = require("./routes/user.route");
 const customerRoute = require("./routes/CustomerRoute");
 
 
@@ -63,8 +62,7 @@ app.use(cors(corsOptions));
 
 //Use routes
 app.use('/api/auth', authRoute);
-app.use('/api/user', userRoute);
-app.use("/api/employee", employeeRoute)
+app.use("/api/users", userRoute)
 app.use("/api/customers", customerRoute)
 
 
