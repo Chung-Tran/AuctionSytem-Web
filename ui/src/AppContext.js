@@ -39,7 +39,7 @@ export const AppProvider = ({ children }) => {
                     } else {
                         // Gọi API để lấy thông tin người dùng
                         const userInfo = await ProfileService.getById(decodedToken.userId);
-                        setUserData(userInfo?.data);
+                        setUserData(userInfo);
                     }
                 } catch (error) {
                     console.error("Session expired", error);

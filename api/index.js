@@ -45,6 +45,9 @@ redisClient.connect();
 const authRoute = require("./routes/auth.route");
 const userRoute = require("./routes/user.route");
 const customerRoute = require("./routes/CustomerRoute");
+const auctionRoute = require("./routes/auction.route");
+const { verifyAccessToken } = require("./middlewares/Authentication");
+const resourceRoute = require("./routes/resouce.rote")
 
 
 //Config server
@@ -59,11 +62,13 @@ app.use(cors(corsOptions));
 
 //Middleware authen token
 
-
 //Use routes
 app.use('/api/auth', authRoute);
-app.use("/api/users", userRoute)
-app.use("/api/customers", customerRoute)
+app.use('/api/user', userRoute);
+app.use("/api/employee", employeeRoute);
+app.use("/api/customers", customerRoute);
+app.use("/api/auctions", auctionRoute);
+app.use("/api/resource", resourceRoute)
 
 
 // Error handling middleware

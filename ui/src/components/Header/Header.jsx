@@ -122,7 +122,7 @@ const Header = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/products/sell" className="hover:text-gray-900 font-medium hover:underline text-sm">
+                <Link to="/auctions/sell" className="hover:text-gray-900 font-medium hover:underline text-sm">
                   Sell
                 </Link>
               </li>

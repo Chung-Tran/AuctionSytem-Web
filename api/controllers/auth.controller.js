@@ -78,7 +78,7 @@ const employeeResetPassword = asyncHandle(async (req, res) => {
 
     // validate otp 
     const value = await redisClient.get(`reset_pass_otp_${username}`);
-    const { otpHashed } = JSON.parse(value);
+    const { otpHashed } = value ? JSON.parse(value) : {};
     if (!otpHashed)
         return res.status(400).json(formatResponse(false, null, "OTP Invalid."));
 
