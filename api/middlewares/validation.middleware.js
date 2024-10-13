@@ -12,7 +12,7 @@ const validateBodyRequest = (schema) => (req, res, next) => {
         validationError.name = 'ValidationError';
         validationError.errors = error.details.map(detail => detail.message).join(', ');
 
-        throw validationError;
+        throw validationError;  
 
     }
     next();

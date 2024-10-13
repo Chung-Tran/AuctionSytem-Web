@@ -1,6 +1,7 @@
 const Joi = require('joi');
 
 const { EmployeeStatus } = require("../common/constant")
+const mongoose = require('mongoose'); 
 
 
 const createEmployeeSchema = Joi.object({
@@ -57,13 +58,27 @@ const createEmployeeSchema = Joi.object({
             'string.min': "'{#key}' should have a minimum length of {#limit}",
             'any.required': "'{#key}' is required",
         }),
-    status: Joi.string()
-        .valid(...Object.values(EmployeeStatus))
-        .optional()
-        .default(EmployeeStatus.ACTIVE)
+    // status: Joi.string()
+    //     .valid(...Object.values(EmployeeStatus))
+    //     .optional()
+    //     .default(EmployeeStatus.ACTIVE)
+    //     .messages({
+    //         'string.base': "'{#key}' should be a string",
+    //         'any.only': "'{#key}' must be one of {#valids}",
+    //     }),
+    
+    rolePermission: Joi.string()
+        .custom((value, helpers) => {
+            // Custom validation for ObjectId
+            if (!mongoose.Types.ObjectId.isValid(value)) {
+                return helpers.error('any.invalid');
+            }
+            return value;
+        })
+        .required()
         .messages({
-            'string.base': "'{#key}' should be a string",
-            'any.only': "'{#key}' must be one of {#valids}",
+            'any.required': "'{#key}' is required",
+            'any.invalid': "'{#key}' must be a valid ObjectId",
         }),
 });
 
@@ -123,6 +138,15 @@ const updateEmployeeSchema = Joi.object({
             'string.base': "'{#key}' should be a string",
             'any.only': "'{#key}' must be one of {#valids}",
         }),
+    rolePermission: Joi.string()
+        .alphanum()
+        .optional()
+        .messages({
+            'string.base': "'{#key}' should be a string",
+            'string.empty': "'{#key}' cannot be empty",
+            'string.alphanum': "'{#key}' should be a valid alphanumeric ID",
+        })
+    
 });
 
 

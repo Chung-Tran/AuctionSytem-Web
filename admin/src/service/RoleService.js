@@ -2,8 +2,8 @@ import { toast } from "react-toastify";
 import axiosClient from "src/utils/axiosConfig"
 
 const roleApi={
-    getAllrole : async ()=> {
-        const roleList =await axiosClient.get('/role');
+    getAllRolePermission : async ()=> {
+        const roleList =await axiosClient.get('/role/getAllRolePermission');
         if (!roleList)
         {
             toast.error("Không tìm thấy vai trò nào");

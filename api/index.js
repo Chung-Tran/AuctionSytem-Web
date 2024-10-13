@@ -20,7 +20,7 @@ cloudinary.config({
 dbConnect();
 
 // Connect redis server in docker
-redisClient.connect();
+// redisClient.connect();
 
 //config websocket
 // wss.on('connection', function connection(ws) {
@@ -45,6 +45,7 @@ redisClient.connect();
 const authRoute = require("./routes/auth.route");
 const userRoute = require("./routes/UserRoute");
 const employeeRoute = require("./routes/employee.route");
+const role = require('./routes/RoleRoute');
 
 
 //Config server
@@ -52,15 +53,19 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(express.json());
-app.use(cors());
-
+// app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000', // Chỉ định nguồn gốc được phép
+    credentials: true // Cho phép gửi cookie và các thông tin xác thực khác
+}));
 //Middleware authen token
 
 
 //Use routes
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
-app.use("/api/employee", employeeRoute)
+app.use("/api/employee", employeeRoute);
+app.use('/api/role', role);
 
 
 // Error handling middleware

@@ -26,6 +26,7 @@ const EmployeeSchema = new Schema(
         phoneNumber: {
             type: String,
             required: true,
+            unique: true,
             trim: true
         },
         hashedPassword: {
@@ -37,6 +38,8 @@ const EmployeeSchema = new Schema(
             enum: Object.values(EmployeeStatus),
             default: EmployeeStatus.ACTIVE
         },
+        rolePermission: { type: mongoose.Schema.Types.ObjectId, ref: 'RolePermission', require: true}, 
+
         createdAt: {
             type: Date,
             default: Date.now
@@ -52,7 +55,9 @@ const EmployeeSchema = new Schema(
         updatedBy: {
             type: mongoose.Schema.Types.ObjectId,
             // ref: 'User'
-        }
+        },
+        
+
     },
     { timestamps: true }
 );

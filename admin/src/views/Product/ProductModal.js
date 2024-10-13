@@ -9,11 +9,11 @@ import { toast } from "react-toastify";
 import { SyncLoader } from 'react-spinners';
 import { cilDelete } from '@coreui/icons';
 import CIcon from '@coreui/icons-react';
-import dialShapeApi from 'src/service/DialShapeService';
-import dialSizeApi from 'src/service/DialSizeService';
-import waterResistanceApi from 'src/service/WaterResistanceService';
-import strapMaterialApi from 'src/service/StrapMaterialService';
-import brandApi from 'src/service/BrandService';
+// import dialShapeApi from 'src/service/DialShapeService';
+// import dialSizeApi from 'src/service/DialSizeService';
+// import waterResistanceApi from 'src/service/WaterResistanceService';
+// import strapMaterialApi from 'src/service/StrapMaterialService';
+// import brandApi from 'src/service/BrandService';
 import { VND, convertToNumber } from 'src/utils/validateField';
 function ProductModal(props) {
     let { type, setShowModal, data } = props;
@@ -48,11 +48,11 @@ function ProductModal(props) {
                     setProductInfo(null)
                 }
                 const [dialShapeData, dialSizeData, waterResistanceData, strapMaterialData, brandData] = await Promise.all([
-                    dialShapeApi.getAll(),
-                    dialSizeApi.getAll(),
-                    waterResistanceApi.getAll(),
-                    strapMaterialApi.getAll(),
-                    brandApi.getAll()
+                    // dialShapeApi.getAll(),
+                    // dialSizeApi.getAll(),
+                    // waterResistanceApi.getAll(),
+                    // strapMaterialApi.getAll(),
+                    // brandApi.getAll()
                 ]).then(setPending(false));
                 setDialShape(dialShapeData.data);
                 setDialSize(dialSizeData.data);
