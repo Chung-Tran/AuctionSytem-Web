@@ -46,6 +46,22 @@ const AuctionService = {
            handleResponseError(error)
         }
     },
+    getOnGoing: async () => {
+        try {
+            const response = await axiosClient.get(`auctions/ongoing`);
+            const data = await handleResponse(response);
+            return data;
+        } catch (error) {
+           handleResponseError(error)
+        }
+    },
+    checkUserRegistration: async (roomId) => {
+            try {
+               
+            } catch (error) {
+               handleResponseError(error)
+            }
+    }
 }
 
 export default AuctionService;

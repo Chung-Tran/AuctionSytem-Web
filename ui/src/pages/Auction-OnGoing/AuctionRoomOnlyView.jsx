@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Hammer, Play, Bell } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import AuctionLive from '../Auction-Live/AuctionLive'
-
-const AuctionRooms = () => {
+//Read only
+const AuctionRoomOnlyView = () => {
   const [timeLeft, setTimeLeft] = useState({ minutes: 22, seconds: 47 })
   const [currentPrice, setCurrentPrice] = useState(825000000)
   const userCanBid = true;
@@ -36,7 +35,7 @@ const AuctionRooms = () => {
     { price: 60000000, time: '12/09/2024 14:00:37.450', user: 'VPA-***GJV' },
   ]
 
-  return !userCanBid ? (
+  return (
     <div className='w-full min-h-screen bg-gradient-to-br from-[#02003F] via-purple-900 to-indigo-900 text-white flex flex-col'>
       <style jsx>{`
         @keyframes neon-pulse {
@@ -125,10 +124,7 @@ const AuctionRooms = () => {
 
     </div>
   )
-    :
-    (
-      <AuctionLive />
-    )
+
 }
 
-export default AuctionRooms
+export default AuctionRoomOnlyView

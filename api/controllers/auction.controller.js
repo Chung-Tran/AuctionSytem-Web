@@ -306,7 +306,118 @@ const listAuctions = asyncHandler(async (req, res) => {
     }
 });
 
+//Đấu giá đang diễn ra
+const ongoingList= asyncHandler(async (req, res) => {
+    const { status, page = 1, limit = 10 } = req.query;
 
+    try {
+        const pageInt = parseInt(page, 10);
+        const limitInt = parseInt(limit, 10);
+
+        let pipeline = [];
+
+        if (status) {
+            pipeline.push({
+                $match: { status }
+            });
+        }
+        pipeline.push(
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: 'product',
+                    foreignField: '_id',
+                    as: 'product'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'bidhistories',
+                    localField: '_id',
+                    foreignField: 'auction',
+                    as: 'bidshistory'
+                }
+            },
+            {
+                $unwind: '$product'
+            }
+        );
+        
+        pipeline.push(
+            {
+                $addFields: {
+                    highestBid: { $cond: { if: { $gt: [{ $size: "$bidshistory" }, 0] }, then: { $max: "$bidshistory.amount" }, else: null } },
+                    timeRemain: { $subtract: [ "$endTime", new Date() ] } // Tính thời gian còn lại
+                }
+            }
+        );
+
+        pipeline.push({
+            $sort: { createdAt: -1 }
+        });
+
+        pipeline.push(
+            { $skip: (pageInt - 1) * limitInt },
+            { $limit: limitInt }
+        );
+        
+        const totalAuctions = await Auction.countDocuments(status ? { status } : {});
+        pipeline.push({
+            $project: {
+                productName: "$product.productName",
+                productImages: "$product.images",
+                productDescription: "$product.description",
+
+                participants:1,
+                slug:1,
+                currentViews: 1,
+                startingPrice: 1,
+                registrationOpenDate: 1,
+                startTime: 1,
+                endTime: 1,
+            }
+        });
+        const auctions = await Auction.aggregate(pipeline);
+        res.status(200).json(formatResponse(true, {
+            docs: auctions,
+            total: totalAuctions,
+            page: pageInt,
+            limit: limitInt,
+        }, ""));
+    } catch (error) {
+        console.error('Lỗi khi lấy danh sách phiên đấu giá:', error);
+        res.status(500).json(formatResponse(false, null, "Đã xảy ra lỗi khi lấy danh sách phiên đấu giá"));
+    }
+});
+
+//Check customer có trong danh sách đăng ký đấu giá hay không
+const checkValidAccess = asyncHandler(async (req, res) => {
+    const customerId = req.user.userId; 
+
+    try {
+        const auction = await Auction.findOne({
+            status: 'active',
+            startTime: { $lte: new Date() },
+            endTime: { $gte: new Date() },
+            'registeredUsers': {
+                $elemMatch: {
+                    customer: customerId,
+                    status: 'active',
+                    transaction: { $exists: true }
+                }
+            }
+        }).select('registeredUsers.$');
+
+        if (auction && auction.registeredUsers.length > 0) {
+            res.status(200).json(formatResponse(true, { allow: true }, "Allow access"));
+        } else {
+            res.status(403).json(formatResponse(false, { allow: false }, "Access denied"));
+        }
+    } catch (error) {
+        console.error('Error checking auction access:', error);
+        res.status(500).json(formatResponse(false, null, "An error occurred while checking auction access"));
+    }
+});
 
 module.exports = {
     registerAuctionProduct,
@@ -314,5 +425,7 @@ module.exports = {
     rejectAuction,
     listAuctions, 
     getAuctionDetails,
-    getAuctionOutstanding
+    getAuctionOutstanding,
+    ongoingList,
+    checkValidAccess
 };

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react'
+import React, { useEffect, useState, useMemo, useCallback, useContext } from 'react'
 import Breadcrumb from '../../components/BreadCrumb/BreadCrumb'
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
 import 'react-tabs/style/react-tabs.css'
@@ -8,12 +8,16 @@ import AuctionService from '../../services/AuctionService'
 import { useParams } from 'react-router-dom'
 import { formatCurrency, formatDate } from '../../commons/MethodsCommons'
 import LoadingSpinner from '../LoadingSpinner'
-
+import RegistrationSteps from './RegistrationSteps';  
+import { AppContext } from '../../AppContext'
 const ProductDetail = () => {
     const { slug } = useParams()
+    const {user,toggleLoginModal}= useContext(AppContext)
     const [auction, setAuction] = useState(null)
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
     const [auctionRelate, setAuctionRelate] = useState([]);
+    const [isRegistrationModalVisible, setIsRegistrationModalVisible] = useState(false);
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -50,7 +54,7 @@ const ProductDetail = () => {
         } else {
             setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
         }
-    }, [])
+    }, []);
 
     useEffect(() => {
         if (auction) {
@@ -77,6 +81,13 @@ const ProductDetail = () => {
 
     if (!auction) {
         return <LoadingSpinner/>
+    }
+    const handleRegister = () => {
+        if (!user)
+            toggleLoginModal(true);
+        else {
+            setIsRegistrationModalVisible(true)
+        }
     }
     return !!auction && (
         <div>
@@ -175,7 +186,11 @@ const ProductDetail = () => {
                                     </div>
                                 </div>
                             </div>
-                            <button size="lg" className='w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium bg-primary h-11 rounded-md px-8 text-white'>Register for Auction</button>
+                            <button
+                                size="lg"
+                                className='w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium bg-primary h-11 rounded-md px-8 text-white'
+                                onClick={handleRegister}
+                            >Register for Auction</button>
                         </div>
 
                     </div>
@@ -236,6 +251,13 @@ const ProductDetail = () => {
                     </div>
                 </div>
             </section>
+            {/* register form */}
+            {isRegistrationModalVisible && (
+    <RegistrationSteps 
+        auction={auction} 
+        onClose={() => setIsRegistrationModalVisible(false)} 
+    />
+)}
         </div>
     )
 }
