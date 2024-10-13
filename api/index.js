@@ -1,85 +1,73 @@
-//Khởi tạo biến config
+// index.js
+
 const express = require("express");
 const app = express();
+const http = require('http');
+const socketIo = require('socket.io');
 const dotenv = require('dotenv').config();
-const bodyParser = require('body-parser')
-const cors = require('cors')
+const bodyParser = require('body-parser');
+const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const dbConnect = require('./config/dbConnect');
-const  errorHandler  = require('./middlewares/errorMiddleware');
-const  redisClient = require('./config/redis'); 
+const errorHandler = require('./middlewares/errorMiddleware');
+const redisClient = require('./config/redis');
 const cloudinary = require('cloudinary').v2;
-// const {wss,userConnection} = require('./config/webSocketConfig');
+const { initializeSocket } = require('./controllers/socket.controller');
 
+// Tạo server http
+const server = http.createServer(app);
+
+// Khởi tạo Socket.IO
+const io = socketIo(server, {
+    cors: {
+        origin: "http://localhost:3033",  // Thay đổi thành URL của client
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
+initializeSocket(io);
 
 cloudinary.config({
     secure: true
 });
 
-//Connect db
+// Connect db
 dbConnect();
 
 // Connect redis server in docker
 redisClient.connect();
 
-//config websocket
-// wss.on('connection', function connection(ws) {
-//     userConnection.add(ws);
-//     // Xử lý các tin nhắn nhận được từ client
-//     ws.on('message', function incoming(message) {
-//         try {
-//             const parsedMessage = JSON.parse(message);
-//             if (parsedMessage.type === 'chat') {
-//                 // Tin nhắn là loại chat, gọi hàm sendMessage để xử lý
-//                 sendMessage(parsedMessage,userConnection);
-//             }
-            
-//         } catch (error) {
-//             console.error('Error parsing message:', error);
-//         }
-//     });
-
-// });
-
-//Define routes
+// Define routes
 const authRoute = require("./routes/auth.route");
 const userRoute = require("./routes/UserRoute");
 const employeeRoute = require("./routes/employee.route");
 const customerRoute = require("./routes/CustomerRoute");
 const auctionRoute = require("./routes/auction.route");
-const { verifyAccessToken } = require("./middlewares/Authentication");
-const resourceRoute = require("./routes/resouce.rote")
+const resourceRoute = require("./routes/resouce.rote");
 
-
-//Config server
-app.use(cookieParser()); 
+// Config server
+app.use(cookieParser());
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended:false}));
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json());
 const corsOptions = {
-    exposedHeaders: ['x-new-access-token','x-token-resetpassword'], // Expose các custom headers cho client
+    exposedHeaders: ['x-new-access-token', 'x-token-resetpassword'],
 };
 app.use(cors(corsOptions));
 
-//Middleware authen token
-
-//Use routes
+// Use routes
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
 app.use("/api/employee", employeeRoute);
 app.use("/api/customers", customerRoute);
 app.use("/api/auctions", auctionRoute);
-app.use("/api/resource", resourceRoute)
-
-
+app.use("/api/resource", resourceRoute);
 
 // Error handling middleware
 app.use(errorHandler);
 
-//Start server
+// Start server
 const PORT = process.env.PORT;
-app.listen(PORT, () => {
-    console.log(`Server start in PORT ${PORT}`)
-})
-
-
+server.listen(PORT, () => {
+    console.log(`Server start in PORT ${PORT}`);
+});

@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -49,12 +49,19 @@ const Button = ({ children, ...props }) => (
 );
 
 const LoginModal = ({ isOpen, setIsOpen, onLoginSuccess }) => {
+  const {openLoginModal,toggleLoginModal } = useContext(AppContext)
   const [showOtp, setShowOtp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [loadingSendMail, setLoadingSendMail] = useState(false);
   const { setUserData } = useContext(AppContext);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [otpKey, setOtpKey] = useState(null);
+  useEffect(() => {
+    if (openLoginModal == true) {
+      // toggleLoginModal();
+      setIsOpen(true)
+    }
+  },[openLoginModal])
   if (!isOpen) return null;
 
   const signupSchema = Yup.object().shape({
@@ -75,7 +82,7 @@ const LoginModal = ({ isOpen, setIsOpen, onLoginSuccess }) => {
       <div className="bg-white rounded-lg p-8 shadow-lg w-full max-w-md relative overflow-auto max-h-[95%] custom-scrollbar" >
         <button
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
-          onClick={() => setIsOpen(false)}
+          onClick={() => { setIsOpen(false);  toggleLoginModal(false)}}
         >
           <XIcon className="h-6 w-6" />
         </button>

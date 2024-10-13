@@ -28,7 +28,19 @@ const AuctionSchema = new Schema({
     winner: { type: Schema.Types.ObjectId, ref: 'Customer' },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     bids: [{ type: Schema.Types.ObjectId, ref: 'BidHistory' }],
-    outstanding: { type: Boolean, default: false } //Phiên đấu giá được ghim hightlight ở website
+    outstanding: { type: Boolean, default: false },//Phiên đấu giá được ghim hightlight ở website
+    registeredUsers: [
+        {
+            customer: { type: Schema.Types.ObjectId, ref: 'Customer' },
+            registrationTime: { type: Date },
+            status: {
+                type: String,
+                enum: ['pending', 'active'],
+                default: 'active'
+            },
+            // transaction: { type: Schema.Types.ObjectId, ref: 'Transaction' }
+        }
+    ]
     
 }, { timestamps: true });
 

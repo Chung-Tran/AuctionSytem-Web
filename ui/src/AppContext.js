@@ -6,6 +6,7 @@ export const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [openLoginModal, setOpenLoginModal] = useState(null);
 
     const setUserData = (user) => {
         const { fullName, email, username, _id } = user;
@@ -16,7 +17,11 @@ export const AppProvider = ({ children }) => {
             userId: _id,
         });
     };
-
+    const toggleLoginModal = (value) => {
+        value == undefined
+            ? setOpenLoginModal(!openLoginModal)
+            : setOpenLoginModal(value)
+    }
     useEffect(() => {
         const fetchUserData = async () => {
             // Lấy token từ localStorage
@@ -53,7 +58,7 @@ export const AppProvider = ({ children }) => {
     }, []); 
 
     return (
-        <AppContext.Provider value={{ user, setUserData }}>
+        <AppContext.Provider value={{ user, setUserData,openLoginModal,toggleLoginModal }}>
             {children}
         </AppContext.Provider>
     );

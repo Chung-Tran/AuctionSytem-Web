@@ -1,50 +1,25 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Breadcrumb from '../../components/BreadCrumb/BreadCrumb';
 import AuctioningItem from '../../components/Auctions/AuctioningItem';
+import AuctionService from '../../services/AuctionService';
 
 const AuctioningPage = () => {
-    const auctionItems = [
-        {
-            id: 1,
-            name: "Vintage Typewriter",
-            image: "/placeholder.svg",
-            price: 250,
-            highestBid: 300,
-            timeRemaining: "2h 15m",
-            status: "Open",
-            participants: 15,
-        },
-        {
-            id: 2,
-            name: "Antique Vase",
-            image: "/placeholder.svg",
-            price: 450,
-            highestBid: 500,
-            timeRemaining: "1h 45m",
-            status: "Open",
-            participants: 22,
-        },
-        {
-            id: 3,
-            name: "Luxury Watch",
-            image: "/placeholder.svg",
-            price: 1200,
-            highestBid: 1500,
-            timeRemaining: "3h 30m",
-            status: "Closed",
-            participants: 18,
-        },
-        {
-            id: 4,
-            name: "Vintage Camera",
-            image: "/placeholder.svg",
-            price: 800,
-            highestBid: 850,
-            timeRemaining: "4h 10m",
-            status: "Open",
-            participants: 12,
-        },
-    ];
+    const [auctions, setAuctions] = useState([]);
+    const [searchOptions, setSearchOptions] = useState({
+        limit: 8,
+        page: 1,
+        // status:'active'
+    });
+    useEffect(() => {
+        const fetchData = async () => {
+            const auctionList = await AuctionService.getList(searchOptions);
+            if (auctionList) {
+                setAuctions(auctionList.docs);
+            }
+        };
+        fetchData();
+    }, [searchOptions]);
+
     return (
         <div>
             <Breadcrumb
@@ -59,8 +34,18 @@ const AuctioningPage = () => {
                     <h1 className="text-4xl font-bold text-center">Live Auction Rooms</h1>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                    {auctionItems.map((item) => (
-                        <AuctioningItem key={item.id} item={item} />
+                    {auctions.map((item) => (
+                        <AuctioningItem 
+                        key={item._id}
+                        _id={item._id}
+                        image={item.image}
+                        name={item.productName}
+                        slug={item.slug}
+                        price={item.startingPrice}
+                        highestBid={item.highestBid || 122222}
+                        participants={item.participants || 1}
+                        endsIn={item.registrationOpenDate || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
+                        />
                     ))}
                 </div>
             </div>

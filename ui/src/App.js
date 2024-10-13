@@ -6,8 +6,6 @@ import Upcomming from './pages/Upcomming/Upcomming';
 import ProductDetail from './pages/ProductDetail/ProductDetail';
 import SellProduct from './pages/SellProduct/SellProduct';
 import AuctioningPage from './pages/AuctioningPage/AuctioningPage';
-import AuctionLive from './pages/Auction-Live/AuctionLive';
-import AuctionRooms from './pages/Auction-Rooms/AuctionRooms';
 import AboutPage from './pages/About/AboutPage';
 import NotFound from './pages/NotFound';
 import ContactPage from './pages/Contact/ContactPage';
@@ -15,10 +13,12 @@ import { Toaster } from 'react-hot-toast';
 import ProfilePage from './pages/Profile/ProfilePage';
 import ChangePassword from './pages/Profile/ChangePasswordPage';
 import PrivateRoute from './PrivateRoute';
+import AuctionRoom from './pages/Auction-OnGoing/AuctionRoom';
+import CheckAuctionAccess from './pages/Auction-OnGoing/CheckAuctionAccess';
 function App() {
   return (
     <Router>
-       <Toaster />
+      <Toaster />
       <Routes>
         {/* Routes with Layout */}
         <Route element={<Layout />}>
@@ -29,7 +29,7 @@ function App() {
             <Route path=":slug" element={<ProductDetail />} /> {/* Chi tiết sản phẩm */}
             <Route path="sell" element={<SellProduct />} /> {/* Đăng ký đấu giá sản phẩm */}
           </Route>
-          
+
           <Route path="/about" element={<AboutPage />} /> {/* Về chúng tôi */}
           <Route path="/contact" element={<ContactPage />} /> {/* Về chúng tôi */}
 
@@ -40,10 +40,15 @@ function App() {
         </Route>
 
         {/* Routes without Layout. Cho page room đấu giá SP */}
-        <Route path="auctions/room/:roomId" element={<AuctionRooms />} /> {/* Phòng đấu giá (cho cả người xem và người tham gia) */}
+        <Route path="auctions/room/:roomId" element={
+          <CheckAuctionAccess>
+            < AuctionRoom />
+          </CheckAuctionAccess>
+        }
+        /> {/* Phòng đấu giá (cho cả người xem và người tham gia) */}
 
         {/* 404 Not Found Route */}
-      <Route path="*" element={<NotFound />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
