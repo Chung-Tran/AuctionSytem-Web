@@ -79,7 +79,7 @@ function UserManagerModal(props) {
                 email: values.email,
                 password: values.password,
                 phoneNumber: values.phoneNumber,
-                rolePermission: values.rolePermission,
+                rolePermission: values.rolePermission || '66f7729a0fe0c277bc99ca86',
             });
             setUserInfo(null)
             setShow(false);
@@ -142,7 +142,8 @@ function UserManagerModal(props) {
                             </CRow>
                         </CCol>
                         
-                        <CCol md="6" className='mb-3'>
+                        {formik.values.rolePermission && (
+                            <CCol md="6" className='mb-3'>
                             <CRow>
                                 <CCol md="4" >
                                     <CFormLabel className='mt-1'>Chức vụ</CFormLabel>
@@ -159,6 +160,8 @@ function UserManagerModal(props) {
                                 </CCol>
                             </CRow>
                         </CCol>
+                        )} 
+                        
                     
                         <CCol md="6" className='mb-3'>
                             <CRow>

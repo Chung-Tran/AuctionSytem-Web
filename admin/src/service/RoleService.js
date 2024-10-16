@@ -22,7 +22,7 @@ const roleApi={
     },
     create: async (values) => {
         values.RoleID = Number(values.RoleID);
-        const newRole = await axiosClient.post('/role/createnew', values).then(result => {
+        const newRole = await axiosClient.post('/role/createRole', values).then(result => {
             if (!result.success) {
                 toast.error(result.message || "Tạo vai trò thất bại");
                 return false;
