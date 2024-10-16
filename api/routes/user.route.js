@@ -3,8 +3,9 @@ const router = express.Router();
 
 const { validateBodyRequest, validateParamsRequest,validateQueryRequest } = require("../middlewares/validation.middleware")
 const { idSchema, createUserSchema, updateUserSchema, pagingSchema } = require("../validations")
-const { getUsers, getUserById, createUser, updateUser, deleteUser } = require('../controllers/user.controller');
+const {getAllUsers, getUsers, getUserById, createUser, updateUser, deleteUser } = require('../controllers/user.controller');
 
+router.get('/getall', getAllUsers);
 router.get('/', validateQueryRequest(pagingSchema), getUsers);
 router.get('/:id', validateParamsRequest(idSchema), getUserById);
 router.post('/', validateBodyRequest(createUserSchema), createUser);

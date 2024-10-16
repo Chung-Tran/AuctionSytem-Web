@@ -35,44 +35,40 @@ const getUsers = asyncHandle(async (req, res) => {
 });
 
 const createUser = asyncHandle(async (req, res) => {
-  const { fullName, username, email, phoneNumber, password, status } = req.body;
+  const { fullName, username, email, phoneNumber, password, rolePermission } = req.body;
+  // const rolePermission = req.body.rolePermission;
 
   // check is duplicate info of employee in db
   const existingEmployee = await User.findOne({
-    $or: [{ username: username }, { email: email.toLowerCase() }],
+      $or: [
+          { username: username },
+          { email: email.toLowerCase() }
+      ]
   });
 
   if (existingEmployee) {
-    const validationError = new Error();
-    validationError.name = "ValidationError";
-    validationError.errors = "";
+      const validationError = new Error();
+      validationError.name = 'ValidationError';
+      validationError.errors = "";
 
-    if (existingEmployee.username === username) {
-      validationError.errors += "Username already exists. ";
-    }
-    if (existingEmployee.email === email.toLowerCase()) {
-      validationError.errors += "Email already exists.";
-    }
+      if (existingEmployee.username === username) {
+          validationError.errors += 'Username already exists. ';
+      }
+      if (existingEmployee.email === email.toLowerCase()) {
+          validationError.errors += 'Email already exists.';
+      }
 
-    throw validationError;
+      throw validationError;
   }
 
   // save new employee into db
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const employee = await User.create({
-    fullName,
-    username,
-    email,
-    phoneNumber,
-    hashedPassword,
-    status,
-  });
+  const hashedPassword = await bcrypt.hash(password, 10)
+  const employee = await User.create({ fullName, username, email, phoneNumber, hashedPassword, rolePermission });
   const employeeResponse = employee.toObject();
   delete employeeResponse.hashedPassword;
 
-  res
-    .status(200)
-    .json(formatResponse(true, employeeResponse, "Create Employee Successed!"));
+
+  res.status(200).json(formatResponse(true, employeeResponse, "Create Employee Successed!"));
 });
 
 const getUserById = asyncHandle(async (req, res) => {
@@ -138,4 +134,31 @@ const deleteUser = asyncHandle(async (req, res) => {
     .json(formatResponse(true, null, "Employee deleted successfully!"));
 });
 
-module.exports = { getUsers, getUserById, createUser, updateUser, deleteUser };
+const getAllUsers = asyncHandle(async (req, res) => {
+  const users = await User.find()
+    .populate({
+      path: 'rolePermission', 
+      populate: {
+        path: 'role',        
+        select: 'name'        
+      }
+    })
+    .populate({
+      path: 'rolePermission',
+      populate: {
+        path: 'permissions',   
+        select: 'name'         
+      }
+  });
+  const employeesResponse = users.map(employee => {
+      const employeeObj = employee.toObject();
+      delete employeeObj.hashedPassword;
+      return employeeObj;
+  });
+  
+
+  res.status(200).json(formatResponse(true, employeesResponse, "All employees retrieved successfully!"));
+});
+
+
+module.exports = { getUsers, getUserById, createUser, updateUser, deleteUser ,getAllUsers};
