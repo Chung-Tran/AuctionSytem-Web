@@ -37,4 +37,24 @@ const validateParamsRequest = (schema) => (req, res, next) => {
     next();
 };
 
-module.exports = { validateBodyRequest, validateParamsRequest };
+
+/**
+ * Middleware to validate request queries against a Joi schema.
+ * @param {Joi.ObjectSchema} schema 
+ * @returns {Function(req: Object, res: Object, next: Function): void}
+ */
+const validateQueryRequest = (schema) => (req, res, next) => {
+    const { error } = schema.validate(req.query, { abortEarly: false });
+    if (error) {
+
+        const validationError = new Error();
+        validationError.name = 'ValidationError';
+        validationError.errors = error.details.map(detail => detail.message).join(', ');
+
+        throw validationError;
+
+    }
+    next();
+};
+
+module.exports = { validateBodyRequest, validateParamsRequest, validateQueryRequest };

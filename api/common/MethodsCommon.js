@@ -2,7 +2,7 @@ const formatResponse = (success, data, message, metadata = {}) => {
     return {
         success: success,
         message: message || (success ? 'Operation successful' : 'Operation failed'),
-        data: data,
+        data: data || {},
         metadata: metadata
     };
 };

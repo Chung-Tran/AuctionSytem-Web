@@ -2,9 +2,8 @@ const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs'); // Template engine
-
 const { EmailType } = require("../common/constant")
-
+const crypto = require('crypto');
 /**
  * Creates a Nodemailer transporter.
  * 
@@ -85,6 +84,95 @@ async function sendEmail(to, type, content) {
     }
 }
 
+async function sendAccountCreationOTP(to) {
+    const transporter = createTransporter();
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+
+    const subject = 'Your Account Creation OTP Code';
+    const generateEmailTemplate = ( otp) => {
+        return `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>OTP Code</title>
+        </head>
+        <body>
+            <p>Your OTP code to create an account is: <strong>${otp}</strong></p>
+            <p>Please use this code to complete your registration process.</p>
+            <br>
+            <p>Thank you for choosing Auction System!</p>
+        </body>
+        </html>
+        `;
+    };
+
+    const htmlContent = generateEmailTemplate( otp); // Chuyển đổi thành htmlContent
+
+    const mailOptions = {
+        from: "Auction_System",
+        to: to,
+        subject: subject,
+        html: htmlContent 
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        return {
+            success: true,
+            otp
+        };
+    } catch (error) {
+        console.error('Failed to send email:', error);
+        return {
+            success: false
+        };
+    }
+}
+
+async function sendPasswordResetOTP(to) {
+    const transporter = createTransporter();
+    const otp = crypto.randomInt(100000, 999999).toString();
+
+    const subject = 'Your Password Reset OTP Code';
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Password Reset OTP</title>
+        </head>
+        <body>
+            <p>Your OTP code to reset your password is: <strong>${otp}</strong></p>
+            <p>This code will expire in 10 minutes.</p>
+            <p>If you didn't request a password reset, please ignore this email.</p>
+            <br>
+            <p>Thank you for using our service!</p>
+        </body>
+        </html>
+    `;
+
+    const mailOptions = {
+        from: "Auction_System",
+        to: to,
+        subject: subject,
+        html: htmlContent 
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        return { success: true, otp };
+    } catch (error) {
+        console.error('Failed to send password reset email:', error);
+        return { success: false };
+    }
+}
+
 module.exports = {
-    sendEmail
+    sendEmail,
+    sendAccountCreationOTP,
+    sendPasswordResetOTP
 };

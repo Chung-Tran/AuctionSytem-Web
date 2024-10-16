@@ -1,17 +1,95 @@
-import React from 'react'
+import React, { useEffect, useState, useMemo, useCallback, useContext } from 'react'
 import Breadcrumb from '../../components/BreadCrumb/BreadCrumb'
-import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
-import 'react-tabs/style/react-tabs.css';
-import ProductItem from '../../components/Product/ProductItem';
-import logo from '../../assets/logo192.png'
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
+import 'react-tabs/style/react-tabs.css'
+import ProductItem from '../../components/Product/ProductItem'
+import ImageGallery from "react-image-gallery"
+import AuctionService from '../../services/AuctionService'
+import { useParams } from 'react-router-dom'
+import { formatCurrency, formatDate } from '../../commons/MethodsCommons'
+import LoadingSpinner from '../LoadingSpinner'
+import RegistrationSteps from './RegistrationSteps';  
+import { AppContext } from '../../AppContext'
 const ProductDetail = () => {
-    const products = [
-        { id: 1, name: "Antique Pocket Watch", price: 1250, endsIn: "3 days", image: logo },
-        { id: 2, name: "Vintage Typewriter", price: 450, endsIn: "1 day", image: logo },
-        { id: 3, name: "Rare Porcelain Vase", price: 3800, endsIn: "5 days", image: logo },
-        { id: 4, name: "Vintage Rolex Watch", price: 12500, endsIn: "2 days", image: logo },
-    ];
-    return (
+    const { slug } = useParams()
+    const {user,toggleLoginModal}= useContext(AppContext)
+    const [auction, setAuction] = useState(null)
+    const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+    const [auctionRelate, setAuctionRelate] = useState([]);
+    const [isRegistrationModalVisible, setIsRegistrationModalVisible] = useState(false);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const auctionData = await AuctionService.getDetail(slug);
+                const auctionList = await AuctionService.getList({
+                    limit: 4,
+                    page: 1,
+                    // status:'active'
+                });
+
+                setAuction(auctionData)
+                setAuctionRelate(auctionList)
+            } catch (error) {
+                console.error('Error fetching auction data:', error)
+            }
+        }
+
+        if (slug) {
+            fetchData()
+        }
+    }, [slug])
+
+    const calculateTimeLeft = useCallback((targetDate) => {
+        const now = new Date()
+        const difference = targetDate - now
+
+        if (difference > 0) {
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24))
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60))
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000)
+
+            setTimeLeft({ days, hours, minutes, seconds })
+        } else {
+            setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+        }
+    }, []);
+
+    useEffect(() => {
+        if (auction) {
+            const fakeTime = new Date('2024-10-08T14:00:00')
+            const interval = setInterval(() => calculateTimeLeft(fakeTime), 1000)
+            return () => clearInterval(interval)
+        }
+    }, [auction, calculateTimeLeft])
+
+    const images = useMemo(() => [
+        {
+            original: "https://picsum.photos/id/1018/1000/600/",
+            thumbnail: "https://picsum.photos/id/1018/250/150/",
+        },
+        {
+            original: "https://picsum.photos/id/1015/1000/600/",
+            thumbnail: "https://picsum.photos/id/1015/250/150/",
+        },
+        {
+            original: "https://picsum.photos/id/1019/1000/600/",
+            thumbnail: "https://picsum.photos/id/1019/250/150/",
+        },
+    ], [])
+
+    if (!auction) {
+        return <LoadingSpinner/>
+    }
+    const handleRegister = () => {
+        if (!user)
+            toggleLoginModal(true);
+        else {
+            setIsRegistrationModalVisible(true)
+        }
+    }
+    return !!auction && (
         <div>
             <Breadcrumb
                 items={[
@@ -20,38 +98,36 @@ const ProductDetail = () => {
                 ]}
                 title="Sản phẩm đấu giá"
             />
-            <section>
+            <section className='px-6'>
                 <div className="grid md:grid-cols-2 gap-6 lg:gap-6 items-start container px-4 mx-auto py-6 flex-1">
-                    <div className="grid gap-4 md:gap-10 items-start max-h-[80vh]">
-                        <img
-                            src="/placeholder.svg"
-                            alt="Product Image"
-                            width={600}
-                            height={900}
-                            className="aspect-[2/3] object-cover border w-full h-full rounded-lg overflow-hidden"
+                    <div className="grid gap-4 md:gap-10 items-start h-[90vh] relative image-gallery-wrapper">
+                        <ImageGallery
+                            items={images}
+                            showNav={false}
+                            showPlayButton={false}
                         />
                     </div>
                     <div className="grid gap-4 md:gap-10 items-start">
                         <div className='grid gap-2'>
                             <h3 className='text-muted-foreground text-base'>Countdown time starts returning:</h3>
                             <div className='border border-[#E6E6E6] p-[15px] shadow-md'>
-                                <div class="mb-2.5">
-                                    <div id="timestamp" class="flex justify-around">
+                                <div className="mb-2.5">
+                                    <div id="timestamp" className="flex justify-around">
                                         <div id="day-div-count ">
-                                            <p id="days" class="timecount-style mb-0 text-center font-semibold text-xl ">09</p>
-                                            <p class="time-description mb-0 text-center uppercase text-sm">Ngày</p>
+                                            <p id="days" className="timecount-style mb-0 text-center font-semibold text-xl">{String(timeLeft.days).padStart(2, '0')}</p>
+                                            <p className="time-description mb-0 text-center uppercase text-sm">Ngày</p>
                                         </div>
                                         <div>
-                                            <p id="hours" class="timecount-style mb-0 text-center font-semibold text-xl ">10</p>
-                                            <p class="time-description mb-0 text-center uppercase text-sm">Giờ</p>
+                                            <p id="hours" className="timecount-style mb-0 text-center font-semibold text-xl">{String(timeLeft.hours).padStart(2, '0')}</p>
+                                            <p className="time-description mb-0 text-center uppercase text-sm">Giờ</p>
                                         </div>
                                         <div>
-                                            <p id="minutes" class="timecount-style mb-0 text-center font-semibold text-xl ">00</p>
-                                            <p class="time-description mb-0 text-center uppercase text-sm">Phút</p>
+                                            <p id="minutes" className="timecount-style mb-0 text-center font-semibold text-xl">{String(timeLeft.minutes).padStart(2, '0')}</p>
+                                            <p className="time-description mb-0 text-center uppercase text-sm">Phút</p>
                                         </div>
                                         <div>
-                                            <p id="seconds" class="timecount-style mb-0 text-center font-semibold text-xl ">21</p>
-                                            <p class="time-description mb-0 text-center uppercase text-sm">Giây</p>
+                                            <p id="seconds" className="timecount-style mb-0 text-center font-semibold text-xl">{String(timeLeft.seconds).padStart(2, '0')}</p>
+                                            <p className="time-description mb-0 text-center uppercase text-sm">Giây</p>
                                         </div>
                                     </div>
                                 </div>
@@ -62,27 +138,27 @@ const ProductDetail = () => {
                                 <div className="grid gap-4">
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Starting Bid:</span>
-                                        <div className="text-primary font-bold text-2xl">$99.99</div>
+                                        <div className="text-primary font-bold text-2xl">{formatCurrency(auction.startingPrice)}</div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Asset ID:</span>
-                                        <div className=' font-semibold'>ABC123</div>
+                                        <div className=' font-semibold'>{auction._id}</div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Registration Open:</span>
-                                        <div className=' font-semibold'>2023-09-01 00:00</div>
+                                        <div className=' font-semibold'>{formatDate(auction.registrationOpenDate)}</div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Registration Close:</span>
-                                        <div className=' font-semibold'>2023-09-15 23:59</div>
+                                        <div className=' font-semibold'>{formatDate(auction.registrationCloseDate)}</div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Registration Fee:</span>
-                                        <div className=' font-semibold'>$10.00</div>
+                                        <div className=' font-semibold'>{formatCurrency(auction.registrationFee)}</div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Bid Increment:</span>
-                                        <div className=' font-semibold'>$1.00</div>
+                                        <div className=' font-semibold'>{formatCurrency(auction.bidIncrement)}</div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Max Bid Increments:</span>
@@ -90,7 +166,7 @@ const ProductDetail = () => {
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Deposit:</span>
-                                        <div className=' font-semibold'>$50.00</div>
+                                        <div className=' font-semibold'>{formatCurrency(auction.deposit)}</div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Auction Type:</span>
@@ -98,26 +174,30 @@ const ProductDetail = () => {
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Asset Owner:</span>
-                                        <div className=' font-semibold'>ABC Company</div>
+                                        <div className=' font-semibold'>{auction.sellerName}</div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Asset Viewing Location:</span>
-                                        <div className=' font-semibold'>123 ABC Street, XYZ District, City</div>
+                                        <div className=' font-semibold'>{auction.productAddress}</div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Auction Start:</span>
-                                        <div className=' font-semibold'>2023-09-16 09:00</div>
+                                        <div className=' font-semibold'>{formatDate(auction.startTime)}</div>
                                     </div>
                                 </div>
                             </div>
-                            <button size="lg" className='w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium bg-primary h-11 rounded-md px-8 text-white'>Register for Auction</button>
+                            <button
+                                size="lg"
+                                className='w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium bg-primary h-11 rounded-md px-8 text-white'
+                                onClick={handleRegister}
+                            >Register for Auction</button>
                         </div>
 
                     </div>
                 </div>
             </section>
 
-            <section className=' mt-10 mb-4'>
+            <section className='px-6 mt-10 mb-4'>
                 <div className=" container w-full mx-auto mt-8">
                     <Tabs>
                         <TabList className="flex space-x-4">
@@ -129,7 +209,9 @@ const ProductDetail = () => {
                         <TabPanel>
                             <div className="p-4 border mt-4">
                                 <h2>Mô tả tài sản</h2>
-                                <p>Đây là nội dung mô tả tài sản.</p>
+                                <p>Tên sản phẩm: {auction.productName}</p>
+                                <p>Tình trạng sản phẩm: {auction.condition}</p>
+                                <p>Mô tả sản phẩm: {auction.productDescription}</p>
                             </div>
                         </TabPanel>
                         <TabPanel>
@@ -150,24 +232,34 @@ const ProductDetail = () => {
                 </div>
             </section>
 
-            <section className=" py-12 mt-10 ">
+            <section className=" py-12 mt-10 px-6">
                 <div className='container mx-auto'>
                     <h2 className="text-2xl font-bold mb-4">Latest News</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {products.map((product) => (
-                        <ProductItem
+                        {auctionRelate?.length > 0 && auctionRelate.map((product, index) =>
+                        (<ProductItem
                             key={product.id}
                             image={product.image}
-                            name={product.name}
-                            price={product.price}
-                            endsIn={product.endsIn}
+                            name={product.productName}
+                            slug={product.slug}
+                            price={product.startingPrice}
+                            currentViews={product.currentViews || 1}
+                            endsIn={product.registrationOpenDate || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
                         />
-                    ))}
-                </div>
+                        )
+                        )}
+                    </div>
                 </div>
             </section>
+            {/* register form */}
+            {isRegistrationModalVisible && (
+    <RegistrationSteps 
+        auction={auction} 
+        onClose={() => setIsRegistrationModalVisible(false)} 
+    />
+)}
         </div>
     )
 }
 
-export default ProductDetail
+export default React.memo(ProductDetail)

@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
 
-const { Employee } = require('../models/employee.model');
+const { User } = require('../models/user.model');
 const { formatResponse } = require('../common/MethodsCommon');
 const { generateAccessToken, generateRefreshToken } = require('../middlewares/Authentication')
 const { sendEmail } = require("../utils/email")
@@ -92,7 +92,7 @@ const employeeSendOTPCode = asyncHandle(async (req, res) => {
     const { email } = req.body;
 
     // check email in DB
-    const employee = await Employee.findOne({ email });
+    const employee = await User.findOne({ email });
     if (!employee) {
         return res.status(401).json(formatResponse(false, null, "Invalid email"));
     }
@@ -132,7 +132,7 @@ const employeeResetPassword = asyncHandle(async (req, res) => {
 
     // validate otp 
     const value = await redisClient.get(`reset_pass_otp_${username}`);
-    const { otpHashed } = JSON.parse(value);
+    const { otpHashed } = value ? JSON.parse(value) : {};
     if (!otpHashed)
         return res.status(400).json(formatResponse(false, null, "OTP Invalid."));
 
@@ -141,7 +141,7 @@ const employeeResetPassword = asyncHandle(async (req, res) => {
         return res.status(400).json(formatResponse(false, null, "OTP Invalid."));
 
     // change password
-    const employee = await Employee.findOne({ username });
+    const employee = await User.findOne({ username });
     if (!employee)
         return res.status(400).json(formatResponse(false, null, "Employee not found."))
 

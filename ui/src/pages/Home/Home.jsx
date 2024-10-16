@@ -1,15 +1,59 @@
-import React from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Banner from '../../components/Home/Banner'
 import { Filter, SortAsc } from 'lucide-react';
 import ProductItem from '../../components/Product/ProductItem';
 import logo from '../../assets/logo192.png'
+import AuctionService from '../../services/AuctionService';
+import { countdown, formatCurrency } from '../../commons/MethodsCommons';
+import LoadingSpinner from '../LoadingSpinner';
 const Home = () => {
-    const products = [
-        { id: 1, name: "Antique Pocket Watch", price: 1250, endsIn: "3 days", image: logo },
-        { id: 2, name: "Vintage Typewriter", price: 450, endsIn: "1 day", image: logo },
-        { id: 3, name: "Rare Porcelain Vase", price: 3800, endsIn: "5 days", image: logo },
-        { id: 4, name: "Vintage Rolex Watch", price: 12500, endsIn: "2 days", image: logo },
-    ];
+    const [auctions, setAuctions] = useState([]);
+    const [auctionStanding, setAuctionStanding] = useState(null);
+    const [auctionsDone, setAuctionsDone] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [timeRemaining, setTimeRemaining] = useState('');
+
+    const fetchData = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            const [auctionList, standingAuction, completedAuctions] = await Promise.all([
+                AuctionService.getList({ limit: 4, page: 1 }),
+                AuctionService.getOutstanding(),
+                AuctionService.getList({
+                    limit: 4,
+                    page: 1,
+                    // status: 'done'
+                })
+            ]);
+
+            setAuctions(auctionList.docs);
+            setAuctionStanding(standingAuction);
+            setAuctionsDone(completedAuctions.docs);
+        } catch (error) {
+            console.error("Error fetching auction data:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    const updateCountdown = useCallback(() => {
+        if (auctionStanding) {
+            setTimeRemaining(countdown(auctionStanding.startTime));
+        }
+    }, [auctionStanding]);
+
+    useEffect(() => {
+        updateCountdown();
+        const timer = setInterval(updateCountdown, 1000);
+        return () => clearInterval(timer);
+    }, [updateCountdown]);
+
+    if (isLoading) return <LoadingSpinner />;
+
     return (
         <div className=' relative mx-auto'>
             <div className='w-full min-h-[90vh] h-auto flex justify-center '>
@@ -31,13 +75,15 @@ const Home = () => {
                         </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {products.map((product) => (
+                        {auctions && auctions?.map((product) => (
                             <ProductItem
                                 key={product.id}
                                 image={product.image}
-                                name={product.name}
-                                price={product.price}
-                                endsIn={product.endsIn}
+                                name={product.productName}
+                                slug={product.slug}
+                                price={product.startingPrice}
+                                currentViews={product.currentViews || 1}
+                                endsIn={product.registrationOpenDate || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
                             />
                         ))}
                     </div>
@@ -59,20 +105,18 @@ const Home = () => {
                             />
                         </div>
                         <div>
-                            <h3 className="text-2xl font-bold mb-4">Vintage Typewriter</h3>
+                            <h3 className="text-2xl font-bold mb-4">{auctionStanding.productName}</h3>
                             <p className="text-muted-foreground mb-6">
-                                This fully restored 1950s typewriter is a true piece of history. With its classic design and smooth
-                                typing action, it's a must-have for any vintage enthusiast or writer looking to add a touch of
-                                nostalgia to their workspace.
+                                {auctionStanding.productDescription}
                             </p>
                             <div className="flex items-center justify-between mb-6">
                                 <div>
                                     <p className="text-muted-foreground">Time Remaining:</p>
-                                    <p className="text-2xl font-bold">2 days 12 hours</p>
+                                    <p className="text-2xl font-bold">{timeRemaining}</p>
                                 </div>
                                 <div>
                                     <p className="text-muted-foreground">Current Bid:</p>
-                                    <p className="text-2xl font-bold">$150</p>
+                                    <p className="text-2xl font-bold">{formatCurrency(auctionStanding.startingPrice)}</p>
                                 </div>
                             </div>
                             <button size="lg" className="w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium bg-primary h-11 rounded-md px-8 text-white">
@@ -83,66 +127,28 @@ const Home = () => {
                 </div>
             </section>
 
-            <section className="bg-muted py-12">
+            <section className="py-12">
                 <div className="container mx-auto px-4 md:px-6">
                     <h2 className="text-2xl font-bold mb-6">Sold Items</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                        <div className="bg-background rounded-lg shadow-lg overflow-hidden">
-                            <img
-                                src="/placeholder.svg"
-                                alt="Sold Item 1"
-                                width={400}
-                                height={300}
-                                className="w-full h-48 object-cover"
-                                style={{ aspectRatio: "400/300", objectFit: "cover" }}
-                            />
-                            <div className="p-4">
-                                <h3 className="text-xl font-bold mb-2">Vintage Typewriter</h3>
-                                <p className="text-muted-foreground mb-4">Sold for $250 on June 1, 2023</p>
-                            </div>
-                        </div>
-                        <div className="bg-background rounded-lg shadow-lg overflow-hidden">
-                            <img
-                                src="/placeholder.svg"
-                                alt="Sold Item 2"
-                                width={400}
-                                height={300}
-                                className="w-full h-48 object-cover"
-                                style={{ aspectRatio: "400/300", objectFit: "cover" }}
-                            />
-                            <div className="p-4">
-                                <h3 className="text-xl font-bold mb-2">Antique Vase</h3>
-                                <p className="text-muted-foreground mb-4">Sold for $500 on May 15, 2023</p>
-                            </div>
-                        </div>
-                        <div className="bg-background rounded-lg shadow-lg overflow-hidden">
-                            <img
-                                src="/placeholder.svg"
-                                alt="Sold Item 3"
-                                width={400}
-                                height={300}
-                                className="w-full h-48 object-cover"
-                                style={{ aspectRatio: "400/300", objectFit: "cover" }}
-                            />
-                            <div className="p-4">
-                                <h3 className="text-xl font-bold mb-2">Retro Camera</h3>
-                                <p className="text-muted-foreground mb-4">Sold for $150 on April 30, 2023</p>
-                            </div>
-                        </div>
-                        <div className="bg-background rounded-lg shadow-lg overflow-hidden">
-                            <img
-                                src="/placeholder.svg"
-                                alt="Sold Item 4"
-                                width={400}
-                                height={300}
-                                className="w-full h-48 object-cover"
-                                style={{ aspectRatio: "400/300", objectFit: "cover" }}
-                            />
-                            <div className="p-4">
-                                <h3 className="text-xl font-bold mb-2">Vintage Vinyl</h3>
-                                <p className="text-muted-foreground mb-4">Sold for $300 on March 20, 2023</p>
-                            </div>
-                        </div>
+                        {
+                            auctionsDone?.map(item => (
+                                <div className="bg-background rounded-lg shadow-lg overflow-hidden">
+                                    <img
+                                        src="/placeholder.svg"
+                                        alt="Sold Item 1"
+                                        width={400}
+                                        height={300}
+                                        className="w-full h-48 object-cover"
+                                        style={{ aspectRatio: "400/300", objectFit: "cover" }}
+                                    />
+                                    <div className="p-4">
+                                        <h3 className="text-xl font-bold mb-2">{auctionsDone.productName}</h3>
+                                        <p className="text-muted-foreground mb-4">Sold for {formatCurrency(auctionsDone.startingPrice)} on June 1, 2024</p>
+                                    </div>
+                                </div>
+                            ))
+                        }
                     </div>
                 </div>
             </section>
