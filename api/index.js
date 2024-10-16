@@ -43,6 +43,7 @@ const userRoute = require("./routes/user.route");
 const customerRoute = require("./routes/CustomerRoute");
 const auctionRoute = require("./routes/auction.route");
 const resourceRoute = require("./routes/resouce.rote");
+const role = require('./routes/RoleRoute');
 
 // Config server
 app.use(cookieParser());
@@ -61,6 +62,7 @@ app.use("/api/employee", employeeRoute);
 app.use("/api/customers", customerRoute);
 app.use("/api/auctions", auctionRoute);
 app.use("/api/resource", resourceRoute)
+app.use('/api/role', role);
 
 
 // Error handling middleware
