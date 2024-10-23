@@ -1,7 +1,7 @@
 const UserStatus = Object.freeze({
-    ACTIVE: 'active',
-    INACTIVE: 'inactive',
-    SUSPENDED: 'suspended'
+    ACTIVE: 'Hoạt động',
+    INACTIVE: 'Không hoạt động',
+    SUSPENDED: 'Cấm'
 });
 
 const EmailType = Object.freeze({

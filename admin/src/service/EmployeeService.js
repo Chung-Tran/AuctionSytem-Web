@@ -3,7 +3,7 @@ import axiosClient from "src/utils/axiosConfig"
 
 const employeeApi = {
     getAllEmployee: async () => {
-        const userList = await axiosClient.get(`/employee/getall`);
+        const userList = await axiosClient.get(`/user/getall`);
         if (!userList) {
             toast.error("Không tìm thấy người dùng");
             return;
@@ -11,7 +11,7 @@ const employeeApi = {
         return userList;
     },
     getByID: async (id) => {
-        const userInfo = await axiosClient.get(`/employee/${id}`);
+        const userInfo = await axiosClient.get(`/user/${id}`);
         if (!userInfo) {
             toast.error("Không tìm thấy người dùng");
             return;
@@ -20,12 +20,11 @@ const employeeApi = {
     },
     create: async (values) => {
         try {
-            const result = await axiosClient.post(`/employee`, values);
+            const result = await axiosClient.post(`/user`, values);
             console.log("KQ:", result);
-            if (result.success === false) {
-                toast.error(result.message);
-                return false;
-            } else {
+            if (result.success) {
+                console.log("KQ1:", result.data);
+                toast.success(result.message);
                 // const createUserToRole = {
                 //     UserID: Number(result.user.data.userID),
                 //     RoleID: Number(values.RoleID)
@@ -37,17 +36,21 @@ const employeeApi = {
                 //     toast.error(result2.data.message);
                 //     return false;
                 // }
-    
-                toast.success(result.message);
                 return result;
+            } else {
+                toast.error(result.message);
+                return false;
             }
         } catch (error) {
             // toast.error("An error occurred while creating the user.");
-            return false;
+            console.error("Lỗi khi gọi API:", error);
+            const errorMessage = error.response?.data?.message || "Đăng kí thất bại";
+            toast.error(errorMessage);
+            return { success: false, message: errorMessage };
         }
     },
     delete: async (id) => {
-        return await axiosClient.delete(`/employee/${id}`).then(result => {
+        return await axiosClient.delete(`/user/${id}`).then(result => {
             if (!result.success) {
                 toast.error(result.message);
                 return false
@@ -62,12 +65,14 @@ const employeeApi = {
             fullName: values.fullName,
             username: values.username,
             email: values.email,
+            address: values.address,
+            gender: values.gender,
             phoneNumber: values.phoneNumber,
             rolePermission: values.rolePermission,
             status: values.status,
         }
 
-        return await axiosClient.patch(`employee/${id}`, model).then(result => {
+        return await axiosClient.patch(`/user/${id}`, model).then(result => {
             if (!result.success) 
                 toast.error(result.message);
             toast.success(result.message);

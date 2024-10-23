@@ -183,7 +183,7 @@ const Login = () => {
           </CCol>
         </CRow>
       </CContainer>
-      <ForgotPasswordDialog isOpen={isForgotPasswordOpen} toggle={toggleForgotPassword} /> {/* Include the Forgot Password dialog */}
+      <ForgotPasswordDialog isOpen={isForgotPasswordOpen} toggle={toggleForgotPassword} /> 
 
     </div>
   )

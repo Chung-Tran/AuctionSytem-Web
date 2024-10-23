@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import { CModal, CModalHeader, CModalBody, CModalFooter, CButton, CForm, CFormInput, CInputGroup, CInputGroupText } from '@coreui/react';
 import { toast } from 'react-toastify';
@@ -7,6 +7,10 @@ import authApi from 'src/service/AuthService';
 const ForgotPasswordDialog = ({ isOpen, toggle }) => {
   const [otpSent, setOtpSent] = useState(false);
   const [email, setEmail] = useState('');
+
+  useEffect(()=>{
+    setOtpSent(false);
+  }, [isOpen])
 
   const formik = useFormik({
     initialValues: {
@@ -28,7 +32,8 @@ const ForgotPasswordDialog = ({ isOpen, toggle }) => {
             toast.error(result.message || "Failed to send OTP");
           }
         } catch (error) {
-          toast.error("Failed to send OTP");
+          const errorMessage = error.response?.data?.message || "Failed to send OTP!";
+          toast.error(errorMessage);
         }
       } else {
         // Reset Password
@@ -49,7 +54,9 @@ const ForgotPasswordDialog = ({ isOpen, toggle }) => {
             }
         } catch (error) {
             console.error("Lỗi: ", error.message);
-            toast.error("Failed to reset password!!");
+            const errorMessage = error.response?.data?.message || "Failed to reset password!!";
+            toast.error(errorMessage);
+            return { success: false, message: errorMessage };
         }
       }
     }
@@ -118,7 +125,7 @@ const ForgotPasswordDialog = ({ isOpen, toggle }) => {
         </CForm>
       </CModalBody>
       <CModalFooter>
-        <CButton color="secondary" onClick={toggle}>Close</CButton>
+        <CButton color="secondary" onClick={toggle} >Close</CButton>
       </CModalFooter>
     </CModal>
   );

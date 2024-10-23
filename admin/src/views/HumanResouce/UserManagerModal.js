@@ -47,9 +47,9 @@ function UserManagerModal(props) {
             password: '',
             status: !!userInfo ? userInfo?.status : '',
             phoneNumber: !!userInfo ? userInfo?.phoneNumber : '',
-            // GenderID: !!userInfo ? userInfo?.genderID : 1,
-            // Address: !!userInfo ? userInfo?.address : '',
-            rolePermission: !!userInfo ? userInfo?.rolePermission : '',
+            gender: !!userInfo ? userInfo?.gender : 'Nam',
+            address: !!userInfo ? userInfo?.address : '',
+            rolePermission: !!userInfo ? userInfo?.rolePermission : '66f7729a0fe0c277bc99ca86',
             passwordConfirm: ''
         },
         onSubmit: values => {
@@ -63,9 +63,9 @@ function UserManagerModal(props) {
         return role ? role.role.name : 'Unknown Role';
       };
 
-    const handleSubmit = (values) => {
-        if (!values.email || !values.username) {
-            toast.error("Dữ liệu không hợp lệ");
+    const handleSubmit = async (values) => {
+        if (!values.username || !values.email || !values.phoneNumber || !values.gender) {
+            toast.error("Vui lòng điền đầy đủ thông tin");
             return;
         };
         if (values.passwordConfirm !== values.password) {
@@ -73,20 +73,41 @@ function UserManagerModal(props) {
             return
         }
         if (type == "Thêm") {
-            const createUSer = employeeApi.create({
-                fullName: values.fullName,
-                username: values.username,
-                email: values.email,
-                password: values.password,
-                phoneNumber: values.phoneNumber,
-                rolePermission: values.rolePermission || '66f7729a0fe0c277bc99ca86',
-            });
-            setUserInfo(null)
-            setShow(false);
+            try {
+                const createUSer = await employeeApi.create({
+                    fullName: values.fullName.trim() === '' ? 'Bổ sung sau' : values.fullName,
+                    username: values.username,
+                    email: values.email,
+                    gender: values.gender,
+                    address: values.address.trim() === '' ? 'Bổ sung sau' : values.address,
+                    password: values.password,
+                    phoneNumber: values.phoneNumber,
+                    rolePermission: values.rolePermission,
+                });
+                if (createUSer.success){
+                    setUserInfo(null)
+                    setShow(false);
+                }else{
+                    return;
+                }
+            } catch (error) {
+                console.error("Lỗi: ", error.message);
+                const errorMessage = error.response?.data?.message || "Thêm nhân viên thất bại!";
+                toast.error(errorMessage);
+                return { success: false, message: errorMessage };
+            } 
+            
         } else if (type == "Sửa") {
-            const updateUser = employeeApi.update(values._id, values)
+            try {
+                const updateUser = await employeeApi.update(values._id, values)
+            } catch (error) {
+                console.error("Lỗi: ", error.message);
+                const errorMessage = error.response?.data?.message || "Sửa nhân viên thất bại!";
+                toast.error(errorMessage);
+                return { success: false, message: errorMessage };
+            }    
         }
- 
+
         setShowModal(null);
         
     }
@@ -142,8 +163,7 @@ function UserManagerModal(props) {
                             </CRow>
                         </CCol>
                         
-                        {formik.values.rolePermission && (
-                            <CCol md="6" className='mb-3'>
+                        <CCol md="6" className='mb-3'>
                             <CRow>
                                 <CCol md="4" >
                                     <CFormLabel className='mt-1'>Chức vụ</CFormLabel>
@@ -159,9 +179,7 @@ function UserManagerModal(props) {
                                     </CFormSelect>
                                 </CCol>
                             </CRow>
-                        </CCol>
-                        )} 
-                        
+                        </CCol> 
                     
                         <CCol md="6" className='mb-3'>
                             <CRow>
@@ -179,7 +197,7 @@ function UserManagerModal(props) {
                                     <CFormLabel className='mt-1'>Địa chỉ</CFormLabel>
                                 </CCol>
                                 <CCol md="7" >
-                                    {/* <CFormInput className={type === 'Xem' ? 'input-readonly' : ''} name='Address' onChange={formik.handleChange} defaultValue={formik.values.Address} /> */}
+                                    <CFormInput className={type === 'Xem' ? 'input-readonly' : ''} name='address' onChange={formik.handleChange} defaultValue={formik.values.address} />
                                 </CCol>
                             </CRow>
                         </CCol>
@@ -189,11 +207,12 @@ function UserManagerModal(props) {
                                     <CFormLabel className='mt-1'>Giới tính</CFormLabel>
                                 </CCol>
                                 <CCol md="7" >
-                                    {/* <CFormSelect className={type === 'Xem' ? 'input-readonly' : ''} name='GenderID' onChange={formik.handleChange} value={formik.values.GenderID }>
-                                        <option value={0}></option>
-                                        <option value={1}>Nam</option>
-                                        <option value={2}>Nữ</option>
-                                    </CFormSelect> */}
+                                    <CFormSelect className={type === 'Xem' ? 'input-readonly' : ''} name='gender' onChange={formik.handleChange} value={formik.values.gender}>
+                                        {/* <option value={0}>Chọn</option>  */}
+                                        <option value={'Nam'}>Nam</option>
+                                        <option value={'Nữ'}>Nữ</option>
+                                        <option value={'Khác'}>Khác</option>
+                                    </CFormSelect>
                                 </CCol>
                             </CRow>
                         </CCol>

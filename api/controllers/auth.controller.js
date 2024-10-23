@@ -16,7 +16,7 @@ const employeeLogin = asyncHandle(async (req, res) => {
     const { username, password } = req.body;
 
     // Find employee by username
-    const employee = await Employee.findOne({ username }).populate({
+    const employee = await User.findOne({ username }).populate({
         path: 'rolePermission', 
         populate: {
           path: 'role',        
@@ -130,6 +130,10 @@ const employeeSendOTPCode = asyncHandle(async (req, res) => {
 const employeeResetPassword = asyncHandle(async (req, res) => {
     const { username, otp, newPassword } = req.body;
 
+    const employee = await User.findOne({ username });
+    if (!employee)
+        return res.status(400).json(formatResponse(false, null, "Employee not found."))
+
     // validate otp 
     const value = await redisClient.get(`reset_pass_otp_${username}`);
     const { otpHashed } = value ? JSON.parse(value) : {};
@@ -141,10 +145,6 @@ const employeeResetPassword = asyncHandle(async (req, res) => {
         return res.status(400).json(formatResponse(false, null, "OTP Invalid."));
 
     // change password
-    const employee = await User.findOne({ username });
-    if (!employee)
-        return res.status(400).json(formatResponse(false, null, "Employee not found."))
-
     const hashedPassword = await bcrypt.hash(newPassword, 10)
     employee.hashedPassword = hashedPassword;
     await employee.save();

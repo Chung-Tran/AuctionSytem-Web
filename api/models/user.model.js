@@ -8,12 +8,14 @@ const UserSchema = new Schema(
 		fullName: { type: String, required: true, trim: true },
 		username: { type: String, required: true, unique: true, trim: true },
 		email: { type: String, required: true, unique: true, trim: true, lowercase: true },
+		gender: { type: String, required: true},
 		address: { type: String },
-		phoneNumber: { type: String, required: true, trim: true },
+		phoneNumber: { type: String, required: true, unique: true, trim: true },
 		hashedPassword: { type: String, required: true },
 		status: { type: String, enum: Object.values(UserStatus), default: UserStatus.ACTIVE },
 		avatar: { type: String, default: 'https://i.imgur.com/iNsPoYP.jpg' },
-		roles: [{ type: Schema.Types.ObjectId, ref: 'Role' }], //List role, role->permission
+		// rolePer: [{ type: Schema.Types.ObjectId, ref: 'Role' }], //List role, role->permission
+		rolePermission: { type: mongoose.Schema.Types.ObjectId, ref: 'RolePermission', require: true}, 
 		createdAt: { type: Date, default: Date.now },
 		updatedAt: { type: Date, default: Date.now },
 		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

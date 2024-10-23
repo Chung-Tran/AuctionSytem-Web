@@ -1,6 +1,7 @@
 const Joi = require('joi');
 
 const { UserStatus } = require("../common/constant")
+const mongoose = require('mongoose'); 
 
 
 const createUserSchema = Joi.object({
@@ -72,7 +73,7 @@ const createUserSchema = Joi.object({
     .messages({
         'string.base': "'{#key}' should be a valid URL string",
         'string.uri': "'{#key}' must be a valid absolute URL",
-    }),
+        }),
     status: Joi.string()
         .valid(...Object.values(UserStatus))
         .optional()
@@ -81,6 +82,23 @@ const createUserSchema = Joi.object({
             'string.base': "'{#key}' should be a string",
             'any.only': "'{#key}' must be one of {#valids}",
         }),
+    gender: Joi.string()
+        .valid('Nam', 'Nữ', 'Khác')
+        .required()
+        .messages({
+            'string.base': "'{#key}' should be a string",
+            'string.empty': "'{#key}' cannot be empty",
+            'any.only': "'{#key}' must be one of ['Nam', 'Nữ', 'Khác']",
+            'any.required': "'{#key}' is required",
+        }),
+    rolePermission: Joi.string()
+        .custom((value, helpers) => {
+            if (!mongoose.Types.ObjectId.isValid(value)) {
+                return helpers.error('any.invalid');
+            }
+            return value;
+        })
+        .required()
 });
 
 const updateUserSchema = Joi.object({
@@ -155,6 +173,21 @@ const updateUserSchema = Joi.object({
             'string.base': "'{#key}' should be a string",
             'any.only': "'{#key}' must be one of {#valids}",
         }),
+    gender: Joi.string()
+        .valid('Nam', 'Nữ', 'Khác')
+        .messages({
+            'string.base': "'{#key}' should be a string",
+            'string.empty': "'{#key}' cannot be empty",
+            'any.only': "'{#key}' must be one of ['Nam', 'Nữ', 'Khác']",
+        }),
+    rolePermission: Joi.string()
+        .alphanum()
+        .optional()
+        .messages({
+            'string.base': "'{#key}' should be a string",
+            'string.empty': "'{#key}' cannot be empty",
+            'string.alphanum': "'{#key}' should be a valid alphanumeric ID",
+    })
 });
 
 
