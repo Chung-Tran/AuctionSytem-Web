@@ -58,7 +58,6 @@ app.use(cors(corsOptions));
 // Use routes
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
-app.use("/api/employee", employeeRoute);
 app.use("/api/customers", customerRoute);
 app.use("/api/auctions", auctionRoute);
 app.use("/api/resource", resourceRoute)
