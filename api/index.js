@@ -46,6 +46,7 @@ const authRoute = require("./routes/auth.route");
 const userRoute = require("./routes/UserRoute");
 const employeeRoute = require("./routes/employee.route");
 const customerRoute = require("./routes/CustomerRoute");
+const paymentRoute = require("./routes/payment.route");
 
 
 //Config server
@@ -66,6 +67,7 @@ app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
 app.use("/api/employee", employeeRoute)
 app.use("/api/customers", customerRoute)
+app.use("/api/payment", paymentRoute)
 
 
 // Error handling middleware
