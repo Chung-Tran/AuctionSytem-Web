@@ -1,7 +1,7 @@
 const asyncHandle = require('express-async-handler');
 const bcrypt = require('bcrypt');
 const { formatResponse } = require('../common/MethodsCommon');
-const { Customer } = require('../models/CustomerModel');
+const { Customer } = require('../models/customer.model');
 const { generateAccessToken, generateRefreshToken } = require('../middlewares/Authentication');
 const { sendAccountCreationOTP, sendPasswordResetOTP } = require('../utils/email');
 const redisClient = require('../config/redis');
@@ -11,16 +11,16 @@ const createCustomer = asyncHandle(async (req, res) => {
     const { fullName, username, email, phoneNumber, password, status, otp } = req.body;
 
     if (!email || !otp) {
-        return res.status(400).json(formatResponse(false, { message: "Email or OTP missing!" }, null));
+        return res.status(400).json(formatResponse(false, { message: "Email or OTP missing!" }, "Email or OTP missing!"));
     }
 
     const cachedOtp = await redisClient.get(email.toLowerCase());
     if (!cachedOtp) {
-        return res.status(400).json(formatResponse(false, { message: "OTP expired or invalid!" }, null));
+        return res.status(400).json(formatResponse(false, { message: "OTP expired or invalid!" }, "OTP expired or invalid!"));
     }
 
     if (cachedOtp !== otp) {
-        return res.status(400).json(formatResponse(false, { message: "OTP is incorrect!" }, null));
+        return res.status(400).json(formatResponse(false, { message: "OTP is incorrect!" }, "OTP is incorrect!"));
     }
 
     const existingCustomer = await Customer.findOne({
@@ -28,20 +28,20 @@ const createCustomer = asyncHandle(async (req, res) => {
     });
     if (existingCustomer) {
         if (existingCustomer.username === username)
-            return res.status(400).json(formatResponse(false, { message: "Username already exists!" }, null)); 
+            return res.status(400).json(formatResponse(false, { message: "Username already exists!" }, "Username already exists!"));
         if (existingCustomer.email === email.toLowerCase())
-            return res.status(400).json(formatResponse(false, { message: "Email already exists!" }, null)); 
-        return res.status(400).json(formatResponse(false, { message: "Account already exists!" }, null)); 
+            return res.status(400).json(formatResponse(false, { message: "Email already exists!" }, "Email already exists!"));
+        return res.status(400).json(formatResponse(false, { message: "Account already exists!" }, "Account already exists!"));
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const customer = await Customer.create({ 
-        fullName, 
-        username, 
-        email: email.toLowerCase(), 
-        phoneNumber, 
-        password: hashedPassword, 
-        status 
+    const customer = await Customer.create({
+        fullName,
+        username,
+        email: email.toLowerCase(),
+        phoneNumber,
+        password: hashedPassword,
+        status
     });
 
     const { password: _, ...customerResponse } = customer.toObject();
@@ -53,12 +53,12 @@ const createCustomer = asyncHandle(async (req, res) => {
 const sendOTPCreateAccount = asyncHandle(async (req, res) => {
     const { email } = req.body;
     if (!email)
-    res.status(400).json(formatResponse(false, {message:"Email invalid!"}, null));
+        res.status(400).json(formatResponse(false, { message: "Email invalid!" }, "Email invalid!"));
     const { otp, success } = await sendAccountCreationOTP(email);
     if (!success)
-        res.status(400).json(formatResponse(false, { message: "Send otp failed!" }, null));
+        res.status(400).json(formatResponse(false, { message: "Send otp failed!" }, "Send otp failed!"));
     await redisClient.setEx(email, 180, otp);
-    res.status(200).json(formatResponse(true, {message:"Send OTP successfully!"}, null));
+    res.status(200).json(formatResponse(true, { message: "Send OTP successfully!" }, "Send OTP successfully!"));
 });
 
 const getCustomerById = asyncHandle(async (req, res) => {
@@ -80,9 +80,9 @@ const updateCustomer = asyncHandle(async (req, res) => {
         updates.hashedPassword = await bcrypt.hash(password, 10);
     }
 
-    const customer = await Customer.findOneAndUpdate({username:username}, updates, { 
-        new: true, 
-        runValidators: true 
+    const customer = await Customer.findOneAndUpdate({ username: username }, updates, {
+        new: true,
+        runValidators: true
     });
     if (!customer) {
         return res.status(404).json(formatResponse(false, null, "Customer not found"));
@@ -133,32 +133,32 @@ const loginCustomer = asyncHandle(async (req, res) => {
 //Send otp=>Verify otp=>change password
 const sendOTPForPasswordReset = asyncHandle(async (req, res) => {
     const { email } = req.body;
-    
+
     if (!email) {
-        return res.status(400).json(formatResponse(false, { message: "Email is required!" }, null));
+        return res.status(400).json(formatResponse(false, { message: "Email is required!" }, "Email is required!"));
     }
-    
+
     const customer = await Customer.findOne({ email: email.toLowerCase() });
     if (!customer) {
-        return res.status(400).json(formatResponse(false, { message: "No account found with this email!" }, null));
+        return res.status(400).json(formatResponse(false, { message: "No account found with this email!" }, "No account found with this email!"));
     }
-    
-    const {success,otp} = await sendPasswordResetOTP(email);
-    
+
+    const { success, otp } = await sendPasswordResetOTP(email);
+
     if (!success) {
-        return res.status(500).json(formatResponse(false, { message: "Failed to send OTP!" }, null));
+        return res.status(500).json(formatResponse(false, { message: "Failed to send OTP!" }, "Failed to send OTP!"));
     }
-    
+
     await redisClient.setEx(`pwd_reset_${email.toLowerCase()}`, 180, otp);
-    
-    res.status(200).json(formatResponse(true, { message: "Password reset OTP sent successfully!" }, null));
+
+    res.status(200).json(formatResponse(true, { message: "Password reset OTP sent successfully!" }, "Password reset OTP sent successfully!"));
 });
 
 const verifyOTP = asyncHandle(async (req, res) => {
     const { email, otp } = req.body;
 
     if (!email || !otp) {
-        return res.status(400).json(formatResponse(false, { message: "Email and OTP are required!" }, null));
+        return res.status(400).json(formatResponse(false, { message: "Email and OTP are required!" }, "Email and OTP are required!"));
     }
 
     const cachedOtp = await redisClient.get(`pwd_reset_${email.toLowerCase()}`);
@@ -175,7 +175,7 @@ const verifyOTP = asyncHandle(async (req, res) => {
     await redisClient.setEx(`pwd_reset_token_${email.toLowerCase()}`, 300, resetToken);
     await redisClient.del(`pwd_reset_${email.toLowerCase()}`);
 
-    res.status(200).json(formatResponse(true, {key:resetToken}, "OTP verified successfully!"));
+    res.status(200).json(formatResponse(true, { key: resetToken }, "OTP verified successfully!"));
 });
 
 const resetPassword = asyncHandle(async (req, res) => {
@@ -187,7 +187,7 @@ const resetPassword = asyncHandle(async (req, res) => {
 
     const cachedToken = await redisClient.get(`pwd_reset_token_${email.toLowerCase()}`);
     if (!cachedToken || cachedToken !== otpKey) {
-        return res.status(400).json(formatResponse(false,null, "Cannot reset password!"));
+        return res.status(400).json(formatResponse(false, null, "Cannot reset password!"));
     }
 
     const customer = await Customer.findOne({ email: email.toLowerCase() });
@@ -201,7 +201,7 @@ const resetPassword = asyncHandle(async (req, res) => {
 
     await redisClient.del(`pwd_reset_token_${email.toLowerCase()}`);
 
-    res.status(200).json(formatResponse(true, { message:"Password reset successfully!"  }, "Password reset successfully!" ));
+    res.status(200).json(formatResponse(true, { message: "Password reset successfully!" }, "Password reset successfully!"));
 });
 
 

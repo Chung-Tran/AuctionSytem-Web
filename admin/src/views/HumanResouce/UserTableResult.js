@@ -14,11 +14,19 @@ function UserTableResult(props) {
     const handleFilter = (e) => {
         const { name, value } = e.target;
         const newData = tableBodyValue.filter(row => {
-            const cellValue = String(row[name]);
+            let cellValue = '';
+            if (name === 'rolePermission') {
+                cellValue = row.rolePermission?.role?.name || '';
+            } else if ( name === 'fullName'){
+                cellValue = `${row.fullName} (${row.username})` || '';
+            } 
+            else {
+                cellValue = String(row[name] || '');
+            }
             return cellValue.toLowerCase().includes(value.toLowerCase());
         });
+    
         setDataTable(newData);
-
     };
     const handleChange = (state) => {
         selectValue(state);
@@ -79,21 +87,29 @@ function UserTableResult(props) {
         <div className='container mt-5 bg-container'>
             <CForm className='mb-4 '>
                 <CRow md="8" className='mb-4 fw-bolder fs-6 ms-2'>Thông tin tìm kiếm</CRow>
-                <CRow md="12">
-                    <CRow className='col-md-6 mb-2'>
-                        <CCol md="3" className='d-flex align-items-center'>
-                            <CFormLabel className="mt-2">ID</CFormLabel>
-                        </CCol>
-                        <CCol md="7">
-                            <CFormInput name='userID' onChange={(e) => handleFilter(e)} />
-                        </CCol>
-                    </CRow>
+                <CRow md="12">                    
                     <CRow className='col-md-6 mb-2'>
                         <CCol md="3" className='d-flex align-items-center'>
                             <CFormLabel className="mt-2">Tên nhân viên</CFormLabel>
                         </CCol>
                         <CCol md="7">
-                            <CFormInput name='displayname' onChange={(e) => handleFilter(e)} />
+                            <CFormInput name='fullName' onChange={(e) => handleFilter(e)} />
+                        </CCol>
+                    </CRow>                    
+                    <CRow className='col-md-6 mb-2'>
+                        <CCol md="3" className='d-flex align-items-center'>
+                            <CFormLabel className="mt-2">Email</CFormLabel>
+                        </CCol>
+                        <CCol md="7">
+                        <CFormInput name='email' onChange={(e) => handleFilter(e)} />
+                        </CCol>
+                    </CRow>
+                    <CRow className='col-md-6 mb-2'>
+                        <CCol md="3" className='d-flex align-items-center'>
+                            <CFormLabel className="mt-2">Chức vụ</CFormLabel>
+                        </CCol>
+                        <CCol md="7">
+                            <CFormInput name='rolePermission' onChange={(e) => handleFilter(e)} />
                         </CCol>
                     </CRow>
                     <CRow className='col-md-6 mb-2'>
@@ -101,15 +117,7 @@ function UserTableResult(props) {
                             <CFormLabel className="mt-2">Số điện thoại</CFormLabel>
                         </CCol>
                         <CCol md="7">
-                            <CFormInput name='phone' onChange={(e) => handleFilter(e)} />
-                        </CCol>
-                    </CRow>
-                    <CRow className='col-md-6 mb-2'>
-                        <CCol md="3" className='d-flex align-items-center'>
-                            <CFormLabel className="mt-2">Email</CFormLabel>
-                        </CCol>
-                        <CCol md="7">
-                        <CFormInput name='email' onChange={(e) => handleFilter(e)} />
+                            <CFormInput name='phoneNumber' onChange={(e) => handleFilter(e)} />
                         </CCol>
                     </CRow>
                 </CRow>

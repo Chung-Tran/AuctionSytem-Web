@@ -1,9 +1,10 @@
 const Joi = require('joi');
 
-const { EmployeeStatus } = require("../common/constant")
+const { UserStatus } = require("../common/constant")
+const mongoose = require('mongoose'); 
 
 
-const createEmployeeSchema = Joi.object({
+const createUserSchema = Joi.object({
     fullName: Joi.string()
         .min(3)
         .max(50)
@@ -57,17 +58,50 @@ const createEmployeeSchema = Joi.object({
             'string.min': "'{#key}' should have a minimum length of {#limit}",
             'any.required': "'{#key}' is required",
         }),
-    status: Joi.string()
-        .valid(...Object.values(EmployeeStatus))
+    address: Joi.string()
         .optional()
-        .default(EmployeeStatus.ACTIVE)
+        .custom((value, helpers) => {
+            if (value.trim() === '') return helpers.message("'{#key}' cannot be empty");
+            return value;
+        })
+        .messages({
+            'string.base': "'{#key}' should be a string",
+        }),
+    avatar: Joi.string()
+    .uri({ allowRelative: false }) // Chỉ chấp nhận URL tuyệt đối
+    .optional()
+    .messages({
+        'string.base': "'{#key}' should be a valid URL string",
+        'string.uri': "'{#key}' must be a valid absolute URL",
+        }),
+    status: Joi.string()
+        .valid(...Object.values(UserStatus))
+        .optional()
+        .default(UserStatus.ACTIVE)
         .messages({
             'string.base': "'{#key}' should be a string",
             'any.only': "'{#key}' must be one of {#valids}",
         }),
+    gender: Joi.string()
+        .valid('Nam', 'Nữ', 'Khác')
+        .required()
+        .messages({
+            'string.base': "'{#key}' should be a string",
+            'string.empty': "'{#key}' cannot be empty",
+            'any.only': "'{#key}' must be one of ['Nam', 'Nữ', 'Khác']",
+            'any.required': "'{#key}' is required",
+        }),
+    rolePermission: Joi.string()
+        .custom((value, helpers) => {
+            if (!mongoose.Types.ObjectId.isValid(value)) {
+                return helpers.error('any.invalid');
+            }
+            return value;
+        })
+        .required()
 });
 
-const updateEmployeeSchema = Joi.object({
+const updateUserSchema = Joi.object({
     fullName: Joi.string()
         .min(3)
         .max(50)
@@ -116,16 +150,47 @@ const updateEmployeeSchema = Joi.object({
             'string.empty': "'{#key}' cannot be empty",
             'string.min': "'{#key}' should have a minimum length of {#limit}",
         }),
+    address: Joi.string()
+        .optional()
+        .custom((value, helpers) => {
+            if (value.trim() === '') return helpers.message("'{#key}' cannot be empty");
+            return value;
+        })
+        .messages({
+            'string.base': "'{#key}' should be a string",
+        }),
+    avatar: Joi.string()
+        .uri({ allowRelative: false }) // Chỉ chấp nhận URL tuyệt đối
+        .optional()
+        .messages({
+            'string.base': "'{#key}' should be a valid URL string",
+            'string.uri': "'{#key}' must be a valid absolute URL",
+        }),
     status: Joi.string()
-        .valid(...Object.values(EmployeeStatus))
+        .valid(...Object.values(UserStatus))
         .optional()
         .messages({
             'string.base': "'{#key}' should be a string",
             'any.only': "'{#key}' must be one of {#valids}",
         }),
+    gender: Joi.string()
+        .valid('Nam', 'Nữ', 'Khác')
+        .messages({
+            'string.base': "'{#key}' should be a string",
+            'string.empty': "'{#key}' cannot be empty",
+            'any.only': "'{#key}' must be one of ['Nam', 'Nữ', 'Khác']",
+        }),
+    rolePermission: Joi.string()
+        .alphanum()
+        .optional()
+        .messages({
+            'string.base': "'{#key}' should be a string",
+            'string.empty': "'{#key}' cannot be empty",
+            'string.alphanum': "'{#key}' should be a valid alphanumeric ID",
+    })
 });
 
 
 
 
-module.exports = { createEmployeeSchema, updateEmployeeSchema };
+module.exports = { createUserSchema, updateUserSchema };

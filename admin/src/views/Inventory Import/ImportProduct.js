@@ -9,7 +9,7 @@ import userApi from 'src/service/UserService';
 import { useFormik } from 'formik';
 import moment from 'moment';
 import inventoryApi from 'src/service/InventoryService';
-import partnerApi from 'src/service/PartnerService';
+// import partnerApi from 'src/service/PartnerService';
 import { VND, convertToNumber } from 'src/utils/validateField';
 function ImportProduct({ resetData }) {
     const [allProduct, setAllProduct] = useState([]);
@@ -29,11 +29,11 @@ function ImportProduct({ resetData }) {
                 setProductFilter(result.data)
             }
         });
-        await partnerApi.getAll().then(result => {
-            if (result.success) {
-                setAllPartner(result.data);
-            }
-        });
+        // await partnerApi.getAll().then(result => {
+        //     if (result.success) {
+        //         setAllPartner(result.data);
+        //     }
+        // });
 
     }
     const handleFilter = (e) => {

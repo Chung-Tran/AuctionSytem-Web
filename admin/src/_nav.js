@@ -60,7 +60,7 @@ const _nav = [
   },
   {
     component: CNavItem,
-    name: 'Quản lí người dùng',
+    name: 'Quản lí nhân viên',
     to: '/user/manager',
     icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
     disabled: hasPermission([1,2,3,4]),

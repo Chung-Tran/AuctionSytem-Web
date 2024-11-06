@@ -1,7 +1,7 @@
-const EmployeeStatus = Object.freeze({
-    ACTIVE: 'active',
-    INACTIVE: 'inactive',
-    SUSPENDED: 'suspended'
+const UserStatus = Object.freeze({
+    ACTIVE: 'Hoạt động',
+    INACTIVE: 'Không hoạt động',
+    SUSPENDED: 'Cấm'
 });
 
 const TransactionStatus = Object.freeze({

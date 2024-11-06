@@ -5,7 +5,8 @@ import UserManagerModal from './UserManagerModal.js';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UserTableResult from 'src/views/HumanResouce/UserTableResult.js';
-import userApi from 'src/service/UserService.js';
+import employeeApi from 'src/service/EmployeeService.js';
+// import rolePermission from
 import ModalQuestion from '../Nofitication/ModalQuestion.js';
 import { useSelector } from 'react-redux';
 function UserManager() {
@@ -13,19 +14,21 @@ function UserManager() {
 
     {
       name: 'ID',
-      selector: row => row.userID,
+      selector: row => row.phoneNumber,
       sortable: true,
-      maxWidth: "100px"
+      maxWidth: "150px"
     },
     {
       name: 'Tên nhân viên',
-      selector: row => row.displayname,
+      selector: row => `${row.fullName} (${row.username})`, 
       sortable: true
     },
+    
     {
       name: 'Chức vụ',
-      selector: row => row.roleName,
-      sortable: true
+      // cell: () => 'Chưa có',
+      selector: row => row.rolePermission?.role?.name || 'Chưa có', 
+      sortable: true,
     },
     {
       name: 'Email',
@@ -39,15 +42,17 @@ function UserManager() {
     },
   ]
 
-  const [showModal, setShowModal] = useState(null);
-  const [modalValue, setModalValue] = useState({});
+  const [showModal, setShowModal] = useState(null); //show kiểu gì: xem sửa xóa
+  const [modalValue, setModalValue] = useState({}); //lấy dòng dữ liệu trong bảng
   const [data, setData] = useState(null);
   const [allUser, setAllUser] = useState();
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false); //hiển thị bảng câu hỏi chắc chắn
   const permissionValue = JSON.parse(localStorage.getItem('permission')) || [];
+  
   const fetchData = async () => {
-    await userApi.getAllUser().then(result => {
+    await employeeApi.getAllEmployee().then(result => {
       setAllUser(result.data);
+      console.log("employee: ", result.data)
     });
   }
   useEffect(() => {
@@ -63,6 +68,7 @@ function UserManager() {
     if (modalValue.selectedCount != 1) {
       return toast.info('Vui lòng chỉ chọn 1 dòng dữ liệu ')
     }
+
     setIsModalVisible(true);
   };
 
@@ -70,7 +76,9 @@ function UserManager() {
     if (modalValue.selectedCount !== 1) {
       return toast.info('Vui lòng chọn 1 dòng dữ liệu để xóa');
     }
-    await userApi.delete(modalValue.selectedRows[0].userID);
+    console.log("value:", modalValue.selectedRows[0]._id)
+
+    await employeeApi.delete(modalValue.selectedRows[0]._id);
     setModalValue(null);
     await fetchData();
 
@@ -80,6 +88,7 @@ function UserManager() {
   const handleCancelDelete = () => {
     setIsModalVisible(false);
   };
+
   const tableValues = {
     tableHeaderValue: tableHeaderValue,
     tableBodyValue: allUser,
@@ -97,24 +106,39 @@ function UserManager() {
       setShowModal(type)
     }
   }
-  const hasPermission = (permission) => permissionValue.includes(permission);
 
+  const hasPermission = (permission) => {
+    if (!Array.isArray(permissionValue)) {
+        console.error("permissionValue không phải là một mảng");
+        return false;
+    }
+    // console.log("Checking permission for:", permission);
+    // console.log("Permission values from localStorage:", permissionValue);
+    
+    const hasPerm = permissionValue.includes(permission);
+    
+    // console.log("Permission found:", hasPerm);
+
+    return hasPerm;
+};
   return (
     <>
       <UserTableResult value={tableValues} selectValue={setModalValue} />
       <div className="d-flex flex-row docs-highlight mb-3 mt-3"  >
-        {hasPermission(1) && (
+      
+        {hasPermission("66f57f96e62ef5bb68740b71") && (
           <CButton className='mx-2 btn btn-warning' style={{ minWidth: 70 }} onClick={() => handleShowModal('Xem')}>Xem</CButton>
         )}
-        {hasPermission(2) && (
+        {hasPermission("66e094ab2cba24638a4f7f03") && (
           <CButton className='mx-2 btn btn-warning' style={{ minWidth: 70 }} onClick={() => handleShowModal('Thêm')}>Thêm</CButton>
         )}
-        {hasPermission(3) && (
+        {hasPermission("66e0954162c8fba003707c5f") && (
           <CButton className='mx-2 btn btn-warning' style={{ minWidth: 70 }} onClick={() => handleShowModal('Sửa')}>Sửa</CButton>
         )}
-        {hasPermission(4) && (
+        {hasPermission("66e094bbb7f66bcb0f5431d5") && (
           <CButton className='mx-2 btn btn-warning' style={{ minWidth: 70 }} onClick={() => handleDeleteClick()}>Xóa</CButton>
         )}
+        
       </div>
       <UserManagerModal type={showModal} setShowModal={setShowModal} data={data} />
       <ModalQuestion

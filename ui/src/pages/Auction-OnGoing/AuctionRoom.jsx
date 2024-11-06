@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Clock, CircleDollarSign } from 'lucide-react';
-import AuctionChat from '../Auction-Rooms/AuctionChat';
+import AuctionChat from './AuctionChat';
+import { useAuctionSocket } from '../../config/socket';
+import CheckAuctionAccess from './CheckAuctionAccess';
+//Allow action (registered)
+const AuctionRoom = () => {
+    const { isConnected, auctionData, error, placeBid } = useAuctionSocket('123');
 
-const AuctionLive = () => {
     const [currentBid, setCurrentBid] = useState(14120000000);
     const [bidAmount, setBidAmount] = useState(5000000);
     const [timeLeft, setTimeLeft] = useState(0);
@@ -79,7 +83,7 @@ const AuctionLive = () => {
         }, 1000);
         return () => clearInterval(timer);
     }, []);
-
+    
     return (
         <div className="flex h-screen bg-[#000116] text-white w-full" >
             <div className="flex-1 flex flex-col items-center justify-start pt-8 relative bg-auctionroom w-1/2 h-full">
@@ -194,4 +198,4 @@ const AuctionLive = () => {
     );
 }
 
-export default AuctionLive
+export default AuctionRoom

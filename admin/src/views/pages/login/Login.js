@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
+
 import {
   CButton,
   CCard,
@@ -20,53 +21,94 @@ import { ToastContainer, toast } from 'react-toastify'
 import { useFormik } from 'formik'
 import Cookies from 'js-cookie'
 import { useDispatch, useSelector } from 'react-redux'
+import ForgotPasswordDialog from 'src/components/Login/ForgotPasswordDialog'; 
+import RegistrationDialog from 'src/components/Login/RegistrationDialog';
 
 const Login = () => {
   const navigate = useNavigate();
   const [loginSuccess, setLoginSuccess] = useState(false);
 
+  const [isForgotPasswordOpen, setForgotPasswordOpen] = useState(false); 
+
+  const [isRegistrationOpen, setRegistrationOpen] = useState(false);
+
+  const toggleForgotPassword = () => {
+    setForgotPasswordOpen(!isForgotPasswordOpen);
+  };
+
+  const toggleRegistration = () => {
+    setRegistrationOpen(!isRegistrationOpen);
+  };
  
   const handleLogin = async (values) => {
-
-    if (!values.Email || !values.Password) {
+    console.log("Submitted Values:", values); 
+    if (!values.username || !values.password) {
       toast.error("Email và mật khẩu bắt buộc nhập");
       return;
     }
-    const result = await authApi.login(values);
-      console.log('result',result)
+    try {
+      // const result = await authApi.login(values);
+      const result = await authApi.login({
+        username: values.username,
+        password: values.password
+      });
+      console.log('result',result)  
       if (result.success) {
         toast.success("Đăng nhập thành công");
         setLoginSuccess(true);
         // dispatch(setPermission(result.data.listPermission));
-        localStorage.setItem("permission", JSON.stringify(result.data.listPermission));
+        localStorage.setItem("permission", JSON.stringify(result.data.permissions));
+        localStorage.setItem("accessToken", JSON.stringify(result.data.accessToken));
+        localStorage.setItem("userId", JSON.stringify(result.data._id));
         localStorage.setItem("userinfo", JSON.stringify(result.data));
-        checkCookie()
+        navigate('/')
+        // checkCookie()
+      } else {
+        toast.error(result.message || "Đăng nhập thất bại");
       }
-  }
-  const checkCookie = () => {
-    const userData = Cookies.get('user');
-    if (userData) {
-      console.log('login sucess');
-      navigate('/')
+    } catch (error) {
+        console.error("Error logging in:", error.message);
+        toast.error(`Đăng nhập thất bại !`);
     }
   };
-  
+  const checkCookie = () => {
+    // const userData = Cookies.get('username');
+    // console.log('User Data:', userData); 
+    // if (userData) {
+    //   console.log('login sucess');
+    //   navigate('/')
+    // }
+    const accessToken = Cookies.get('accessToken');  
+    const userId = Cookies.get('userId');            
+    
+    if (accessToken && userId) {
+        console.log('User is authenticated');
+        navigate('/')
+        return true;       
+    } else {
+        console.log('User is not authenticated');
+        return false;
+    }
+  };
+
  
   const formik=useFormik(
     {
       initialValues: {
-        Email: '',
-        Password:''
+        username: '',
+        password:''
       },
       onSubmit: values => {
         handleLogin(values)
       },
   }
   )
-  useEffect(() => {
-    checkCookie()
-  }, [loginSuccess])
-  console.log('render')
+
+  // useEffect(() => {
+  //   checkCookie()
+  // }, [])
+  // console.log('render')
+
   return (
     <div className="bg-light min-vh-100 d-flex flex-row align-items-center">
       <CContainer>
@@ -78,12 +120,20 @@ const Login = () => {
                   <CForm onSubmit={formik.handleSubmit}>
                     <h1>Login</h1>
                     <p className="text-medium-emphasis">Sign In to your account</p>
+
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
                         <CIcon icon={cilUser} />
                       </CInputGroupText>
-                      <CFormInput placeholder="Username" autoComplete="username" name='Email' onChange={formik.handleChange} />
+                      <CFormInput 
+                        placeholder="Username" 
+                        autoComplete="username" 
+                        name='username' 
+                        value={formik.values.username}
+                        onChange={formik.handleChange} 
+                        />
                     </CInputGroup>
+
                     <CInputGroup className="mb-4">
                       <CInputGroupText>
                         <CIcon icon={cilLockLocked} />
@@ -92,7 +142,8 @@ const Login = () => {
                         type="password"
                         placeholder="Password"
                         autoComplete="current-password"
-                        name='Password'
+                        name='password'                      
+                        value={formik.values.password}
                         onChange={formik.handleChange}
 
                       />
@@ -104,8 +155,8 @@ const Login = () => {
                         </CButton>
                       </CCol>
                       <CCol xs={6} className="text-right">
-                        <CButton color="link" className="px-0">
-                          Forgot password?
+                      <CButton color="link" className="px-0" onClick={toggleForgotPassword}>
+                      Forgot password?
                         </CButton>
                       </CCol>
                     </CRow>
@@ -120,11 +171,11 @@ const Login = () => {
                       Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
                       tempor incididunt ut labore et dolore magna aliqua.
                     </p>
-                    <Link to="/register">
-                      <CButton color="primary" className="mt-3" active tabIndex={-1}>
-                        Register Now!
-                      </CButton>
-                    </Link>
+                    <CButton color="primary" className="mt-3" active tabIndex={-1} onClick={toggleRegistration}>
+                      Register Now!
+                    </CButton>
+
+                    <RegistrationDialog isOpen={isRegistrationOpen} toggle={toggleRegistration} />
                   </div>
                 </CCardBody>
               </CCard>
@@ -132,6 +183,8 @@ const Login = () => {
           </CCol>
         </CRow>
       </CContainer>
+      <ForgotPasswordDialog isOpen={isForgotPasswordOpen} toggle={toggleForgotPassword} /> 
+
     </div>
   )
 }
