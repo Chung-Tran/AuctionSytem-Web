@@ -1,6 +1,6 @@
 // index.js
 
-const express = require("express");
+const express = require('express');
 const app = express();
 const http = require('http');
 const socketIo = require('socket.io');
@@ -19,16 +19,16 @@ const server = http.createServer(app);
 
 // Khởi tạo Socket.IO
 const io = socketIo(server, {
-    cors: {
-        origin: "http://localhost:3033",  // Thay đổi thành URL của client
-        methods: ["GET", "POST"],
-        credentials: true
-    }
+	cors: {
+		origin: 'http://localhost:3033', // Thay đổi thành URL của client
+		methods: ['GET', 'POST'],
+		credentials: true,
+	},
 });
 initializeSocket(io);
 
 cloudinary.config({
-    secure: true
+	secure: true,
 });
 
 // Connect db
@@ -38,11 +38,13 @@ dbConnect();
 redisClient.connect();
 
 //Define routes
-const authRoute = require("./routes/auth.route");
-const userRoute = require("./routes/UserRoute");
-const employeeRoute = require("./routes/employee.route");
-const customerRoute = require("./routes/CustomerRoute");
-const paymentRoute = require("./routes/payment.route");
+const authRoute = require('./routes/auth.route');
+const userRoute = require('./routes/user.route');
+const customerRoute = require('./routes/CustomerRoute');
+const auctionRoute = require('./routes/auction.route');
+const resourceRoute = require('./routes/resouce.rote');
+const role = require('./routes/RoleRoute');
+const paymentRoute = require('./routes/payment.route');
 
 // Config server
 app.use(cookieParser());
@@ -50,17 +52,18 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json());
 const corsOptions = {
-    exposedHeaders: ['x-new-access-token', 'x-token-resetpassword'],
+	exposedHeaders: ['x-new-access-token', 'x-token-resetpassword'],
 };
 app.use(cors(corsOptions));
 
 //Use routes
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
-app.use("/api/employee", employeeRoute)
-app.use("/api/customers", customerRoute)
-app.use("/api/payment", paymentRoute)
-
+app.use('/api/customers', customerRoute);
+app.use('/api/auctions', auctionRoute);
+app.use('/api/resource', resourceRoute);
+app.use('/api/role', role);
+app.use('/api/payment', paymentRoute);
 
 // Error handling middleware
 app.use(errorHandler);
@@ -68,5 +71,5 @@ app.use(errorHandler);
 // Start server
 const PORT = process.env.PORT;
 server.listen(PORT, () => {
-    console.log(`Server start in PORT ${PORT}`);
+	console.log(`Server start in PORT ${PORT}`);
 });
