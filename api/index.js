@@ -37,13 +37,12 @@ dbConnect();
 // Connect redis server in docker
 redisClient.connect();
 
-// Define routes
+//Define routes
 const authRoute = require("./routes/auth.route");
-const userRoute = require("./routes/user.route");
+const userRoute = require("./routes/UserRoute");
+const employeeRoute = require("./routes/employee.route");
 const customerRoute = require("./routes/CustomerRoute");
-const auctionRoute = require("./routes/auction.route");
-const resourceRoute = require("./routes/resouce.rote");
-const role = require('./routes/RoleRoute');
+const paymentRoute = require("./routes/payment.route");
 
 // Config server
 app.use(cookieParser());
@@ -55,13 +54,12 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// Use routes
+//Use routes
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
-app.use("/api/customers", customerRoute);
-app.use("/api/auctions", auctionRoute);
-app.use("/api/resource", resourceRoute)
-app.use('/api/role', role);
+app.use("/api/employee", employeeRoute)
+app.use("/api/customers", customerRoute)
+app.use("/api/payment", paymentRoute)
 
 
 // Error handling middleware
