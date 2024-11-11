@@ -109,17 +109,17 @@ const loginCustomer = asyncHandle(async (req, res) => {
     });
 
     if (!customer) {
-        return res.status(401).json(formatResponse(false, null, "Invalid username or password"));
+        return res.status(400).json(formatResponse(false, null, "Invalid username or password"));
     }
 
     const isMatch = await bcrypt.compare(password, customer.password);
     if (!isMatch) {
-        return res.status(401).json(formatResponse(false, null, "Invalid username or password"));
+        return res.status(400).json(formatResponse(false, null, "Invalid username or password"));
     }
 
     // Tạo access token và refresh token
     const { sessionKey } = await generateRefreshToken(customer._id)
-    const accessToken = generateAccessToken(customer._id, sessionKey);
+    const accessToken = generateAccessToken(customer._id, sessionKey,customer.userCode);
     res.setHeader('x-new-access-token', accessToken);
     res.status(200).json(formatResponse(true, {
         _id: customer._id,

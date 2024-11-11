@@ -22,7 +22,7 @@ router.put('/reject/:auctionId', rejectAuction);
 //get cho client
 router.get('/outstanding', getAuctionOutstanding); 
 router.get('/ongoing', ongoingList); 
-router.get('/check-valid-access', checkValidAccess); 
+router.get('/check-valid-access',verifyAccessToken, checkValidAccess); 
 router.get('/:auctionSlug', getAuctionDetails);
 router.get('/', listAuctions);
 module.exports = router;

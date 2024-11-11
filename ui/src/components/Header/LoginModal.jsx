@@ -118,9 +118,7 @@ const LoginModal = ({ isOpen, setIsOpen, onLoginSuccess }) => {
                       setUserData(login);
                       openNotify('success', 'Login successfully');
                       onLoginSuccess();
-                    } else {
-                      openNotify('error', login?.message || 'Login failed');
-                    }
+                    } 
                   } catch (error) {
                     openNotify('error', error.message || 'An error occurred during login');
                   } finally {

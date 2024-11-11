@@ -1,76 +1,192 @@
-// hooks/useAuctionSocket.js
-
-import { useEffect, useState, useCallback } from 'react';
-import io from 'socket.io-client';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import io, { connect } from 'socket.io-client';
+import { openNotify } from '../commons/MethodsCommons';
 
 const SOCKET_SERVER_URL = process.env.REACT_APP_SOCKET_SERVER_URL;
 
-export const useAuctionSocket = (auctionId) => {
-  const [socket, setSocket] = useState(null);
+export const useAuctionSocket = (auctionId,
+  { onBidUpdate,
+    onRoomJoined,
+    onGetMessage,
+    onNewMessage,
+    onRoomEnd,
+  } = {}) => {
+  const socketRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [auctionData, setAuctionData] = useState(null);
   const [currentBid, setCurrentBid] = useState(0);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-      const newSocket = io(SOCKET_SERVER_URL);
-    setSocket(newSocket);
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
 
-    newSocket.on('connect', () => {
-      setIsConnected(true);
-      console.log('Connected to socket server');
-    });
+    const connectToSocket = () => {
+      setIsConnecting(true);
+      const newSocket = io(SOCKET_SERVER_URL, {
+        auth: {
+          token: localStorage.getItem("token")
+        }
+      });
+      socketRef.current = newSocket;
 
-    newSocket.on('disconnect', () => {
-      setIsConnected(false);
-      console.log('Disconnected from socket server');
-    });
+      const handleConnect = () => {
+        setIsConnected(true);
+        setIsConnecting(false);
+        console.log('Connected to socket server');
+      };
 
-    newSocket.on('error', (error) => {
-      setError(error.message);
-    });
+      const handleDisconnect = () => {
+        setIsConnected(false);
+        setIsConnecting(false);
+        console.log('Disconnected from socket server');
+        // Reconnect after 5 seconds
+        setTimeout(connectToSocket, 5000);
+      };
 
-    return () => {
-      newSocket.disconnect();
+      const handleError = (errorMessage) => {
+        setError(errorMessage.message);
+        setIsConnecting(false);
+      };
+
+      const handleNewToken = ({ token }) => {
+        localStorage.setItem('token', token);
+      };
+
+      newSocket.on('connect', handleConnect);
+      newSocket.on('disconnect', handleDisconnect);
+      newSocket.on('error', handleError);
+      newSocket.on('newToken', handleNewToken);
+
+      return () => {
+        newSocket.off('connect', handleConnect);
+        newSocket.off('disconnect', handleDisconnect);
+        newSocket.off('error', handleError);
+        newSocket.off('newToken', handleNewToken);
+        newSocket.disconnect();
+      };
     };
+
+    connectToSocket();
   }, []);
 
+  // Xử lý auction room events
   useEffect(() => {
+    const socket = socketRef.current;
     if (!socket || !auctionId) return;
 
-    socket.emit('joinAuctionRoom', auctionId);
+    const handleRoomJoined = (data) => {
+      if (onRoomJoined) {
+        onRoomJoined(data);
+      }
+    };
 
-    socket.on('roomInfo', (data) => {
-      setAuctionData(data);
+    const handleBidUpdate = (data) => {
       setCurrentBid(parseFloat(data.currentBid));
-    });
+      if (onBidUpdate) {
+        onBidUpdate(data);
+      }
+    };
 
-    socket.on('bidUpdated', (data) => {
-      setCurrentBid(parseFloat(data.currentBid));
-    });
+    const handleGetMessage = (data) => {
+      if (onGetMessage) {
+        onGetMessage(data);
+      }
+    };
 
-    socket.on('auctionEnded', (data) => {
-      setAuctionData((prevData) => ({ ...prevData, ended: true, winner: data.winner, winningBid: data.winningBid }));
-    });
+    const handleReceiveMessage = (data) => {
+      if (onNewMessage) {
+        onNewMessage(data);
+      }
+    };
+
+
+    const handleAuctionEnd = (data) => {
+      if (onRoomEnd)
+      {
+        console.log('end')
+        onRoomEnd(data);
+      }
+    };
+
+    if (socket.connected) {
+      socket.emit('joinAuctionRoom', auctionId);
+    } else {
+      socket.once('connect', () => {
+        socket.emit('joinAuctionRoom', auctionId);
+      });
+    }
+
+    socket.on('roomJoined', handleRoomJoined);
+    socket.on('bidUpdated', handleBidUpdate);
+    socket.on('auctionEnd', handleAuctionEnd);
+
+    socket.on('chat-history', handleGetMessage);
+    socket.on('new-message', handleReceiveMessage);
+
 
     return () => {
-      socket.off('roomInfo');
-      socket.off('bidUpdated');
-      socket.off('auctionEnded');
-    };
-  }, [socket, auctionId]);
+      socket.off('roomJoined', handleRoomJoined);
+      socket.off('bidUpdated', handleBidUpdate);
+      socket.off('auctionEnded', handleAuctionEnd);
 
-  const placeBid = useCallback((amount) => {
-    if (socket) {
-      socket.emit('placeBid', { roomId: auctionId, bidAmount: amount });
+      socket.off('chat-history', handleGetMessage);
+      socket.off('new-message', handleReceiveMessage);
+    };
+  }, [auctionId]);
+
+  // Xử lý error và hiển thị notify
+  useEffect(() => {
+    if (error) {
+      openNotify('error', error);
+      setError(null);
     }
-  }, [socket, auctionId]);
+  }, [error]);
+
+  //Đặt giá
+  const placeBid = useCallback((amount) => {
+    if (socketRef.current) {
+      const accessToken = localStorage.getItem('token');
+      socketRef.current.emit('placeBid', {
+        roomId: auctionId,
+        bidAmount: amount,
+        token: accessToken
+      });
+    }
+  }, [auctionId]);
+
+  //Get history chat đấu giá
+  const getHistoryChat = useCallback(() => {
+    if (socketRef.current) {
+      const accessToken = localStorage.getItem('token');
+      socketRef.current.emit('get-chat-history', {
+        roomId: auctionId,
+        token: accessToken
+      });
+    }
+  }, [auctionId]);
+  //Send chat đấu giá
+  const sendChat = useCallback((message) => {
+    if (socketRef.current) {
+      const accessToken = localStorage.getItem('token');
+      socketRef.current.emit('send-message', {
+        roomId: auctionId,
+        message: message,
+        token: accessToken
+      });
+    }
+  }, [auctionId]);
 
   return {
     isConnected,
+    isConnecting,
     auctionData,
     currentBid,
     error,
-    placeBid
+    placeBid,
+    sendChat,
+    getHistoryChat,
   };
 };

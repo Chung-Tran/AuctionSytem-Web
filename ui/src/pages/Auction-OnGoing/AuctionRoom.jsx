@@ -1,201 +1,315 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Clock, CircleDollarSign } from 'lucide-react';
+import { useLocation, useParams } from 'react-router-dom';
 import AuctionChat from './AuctionChat';
 import { useAuctionSocket } from '../../config/socket';
-import CheckAuctionAccess from './CheckAuctionAccess';
-//Allow action (registered)
-const AuctionRoom = () => {
-    const { isConnected, auctionData, error, placeBid } = useAuctionSocket('123');
+import { formatCurrency, formatDate, formatDateTime, openNotify } from '../../commons/MethodsCommons';
+import toast from 'react-hot-toast';
+import AuctionEndToast from '../../components/Auctions/AuctionEndToast';
+import { useNavigate } from 'react-router-dom';
+// Constants
+const INITIAL_BID_AMOUNT = 5000000;
+const NOTIFICATION_DURATION = 2000;
 
-    const [currentBid, setCurrentBid] = useState(14120000000);
-    const [bidAmount, setBidAmount] = useState(5000000);
-    const [timeLeft, setTimeLeft] = useState(0);
-    const [quantity, setQuantity] = useState(1);
-    const [notifications, setNotifications] = useState([]);
-    const [showNotification, setShowNotification] = useState(false);
+const formatTime = (totalSeconds) => {
+  const days = Math.floor(totalSeconds / (24 * 3600));
+  const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
 
-    const handleDecrease = () => {
-        if (quantity > 1) {
-            setQuantity(quantity - 1);
-        }
-    };
+  const timeUnits = [
+    { value: days, label: 'Ngày' },
+    { value: hours, label: 'Giờ' },
+    { value: minutes, label: 'Phút' },
+    { value: seconds, label: 'Giây' }
+  ];
 
-    const handleIncrease = () => {
-        if (!isNaN(quantity)) {
-            setQuantity(quantity + 1);
-        } else {
-            setQuantity(0);
-        }
-    };
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setTimeLeft(prevTime => (prevTime > 0 ? prevTime - 1 : 0));
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
+  // Lọc ra các đơn vị thời gian > 0, bắt đầu từ đơn vị lớn nhất
+  const significantUnits = timeUnits.reduce((acc, unit, index) => {
+    if (unit.value > 0 || index === timeUnits.length - 1 || acc.length > 0) {
+      acc.push({
+        value: unit.value.toString().padStart(2, '0'),
+        label: unit.label
+      });
+    }
+    return acc;
+  }, []);
 
-    const formatTime = (seconds) => {
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-    };
+  return significantUnits;
+};
 
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(amount);
-    };
-    const handleInputChange = (e) => {
-        const value = e.target.value;
-        if (!isNaN(value) || !!value) {
-            setQuantity(parseInt(value, 10));
-        } else {
-            setQuantity(0);
-        }
-    };
 
-    const handleBlur = () => {
-        if (quantity <= 0 || isNaN(quantity)) {
-            setQuantity(1);
-        }
-    };
-    const addNotification = useCallback((message) => {
-        setNotifications(prevNotifications => [...prevNotifications, { message, id: Date.now() }]);
-    }, []);
-    const removeNotification = useCallback((id) => {
-        setNotifications(prevNotifications => prevNotifications.filter(notification => notification.id !== id));
-    }, []);
-    useEffect(() => {
-        if (notifications.length > 0) {
-            const timer = setTimeout(() => {
-                removeNotification(notifications[0].id);
-            }, 2000);
-            return () => clearTimeout(timer);
-        }
-    }, [notifications, removeNotification]);
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setTimeLeft(prevTime => {
-                if (prevTime <= 0) {
-                    clearInterval(timer);
-                    return 0;
-                }
-                return prevTime - 1;
-            });
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
-    
-    return (
-        <div className="flex h-screen bg-[#000116] text-white w-full" >
-            <div className="flex-1 flex flex-col items-center justify-start pt-8 relative bg-auctionroom w-1/2 h-full">
-                <div className="absolute top-0 left-0 bg-red-600 text-white px-4 py-1 text-sm ">TRỰC TIẾP</div>
-                {/* Time remain */}
-                <div className='mt-[15%]'>
-                    {notifications.map((notification, index) => (
-                        <div
-                            key={notification.id}
-                            className={`absolute top-[-20px] left-1/2 transform -translate-x-1/2 bg-[#000116] text-white px-4 py-3 rounded transition-all duration-500 border border-white 
-                                ${index === 0 ? 'opacity-100 translate-y-full' : 'opacity-0 -translate-y-3/4'}
-                                `}
-                            style={{ zIndex: notifications.length - index }}
-                        >
-                            <p className="text-gray-400 text-sm mb-2">10:46:18</p>
-                            <p className="text-white text-lg "><b>Nguyễn Văn B</b> vừa trả giá <b>5.000.000đ</b></p>
-                        </div>
-                    ))}
-
-                    <div className='bg-[#000116] border-2 border-white p-4 mb-6'>
-                        <h2 className="text-red-500 text-base font-semibold mb-2 text-center tracking-[0.5rem] ">THỜI GIAN CÒN LẠI</h2>
-                        <div className=" p-2 text-red-500 text-5xl font-bold flex justify-center items-center space-x-4">
-                            <div>{formatTime(timeLeft).split(':')[0]} <span className="text-sm">Phút</span></div>
-                            <div>:</div>
-                            <div>{formatTime(timeLeft).split(':')[1]} <span className="text-sm">Giây</span></div>
-                        </div>
-                    </div>
-                    <div className='border border-white h-48 w-48 justify-center  m-auto'></div>
-                </div>
-                <AuctionChat
-                />
-
-            </div>
-            <div className="w-[45%] flex flex-col p-2 items-end ml-auto items-center justify-center">
-                <h2 className='text-center my-4 flex mx-auto text-xl'>Đấu giá viên: &nbsp;<b>Nguyễn Văn A</b></h2>
-                <div className="bg-[#00082C] py-6 px-6 mb-4 rounded-md w-full">
-                    <h2 className="text-xl mb-4 flex items-center">
-                        <Clock className="mr-2" />
-                        Diễn biến cuộc đấu giá
-                    </h2>
-                    <div className="space-y-3">
-                        {[
-                            { bid: 14120000000, time: '15/09/2024 • 10:46:18.922', user: 'VPA-1OZI' },
-                            { bid: 14115000000, time: '15/09/2024 • 10:21:38.761', user: 'VPA-625U' },
-                            { bid: 14105000000, time: '15/09/2024 • 10:21:04.192', user: 'VPA-GFUC' },
-                            { bid: 14105000000, time: '15/09/2024 • 10:21:04.192', user: 'VPA-GFUC' },
-                            { bid: 14105000000, time: '15/09/2024 • 10:21:04.192', user: 'VPA-GFUC' },
-                        ].map((bid, index) => (
-                            <div key={index} className="flex justify-between space-y-2">
-                                <div className='flex flex-col'>
-                                    <span className="text-green-400">{formatCurrency(bid.bid)}</span>
-                                    <span className="text-gray-400">{bid.time}</span>
-                                </div>
-                                <span className="text-yellow-400">{bid.user}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                <div className="bg-[#00082C] py-2 px-6 rounded-md w-full ">
-                    <div className="flex justify-between items-center mb-4 border-b border-color p-4 ">
-                        <h2 className="text-xl flex">     <CircleDollarSign className='mr-2' /> Giá hiện tại</h2>
-                        <div className="text-2xl font-bold text-green-400">{formatCurrency(currentBid)}</div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 mb-6 justify-between items-center">
-                        <div>
-                            <span className='text-base'>Bước giá:</span> &nbsp;
-                            <span className="bg-transparent p-2 px-4 rounded w-32 text-right border border-color rounded-3xl outline-0 ">
-                                {formatCurrency(bidAmount)}
-                            </span>
-                        </div>
-                        <span className='font-bold text-3xl'>x</span>
-                        <div className='flex w-fit border rounded-3xl p-1 space-x-2 border-color'>
-                            <button
-                                className="bg-gray-700 p-2 rounded-full w-8 h-8 flex items-center justify-center font-bold text-white text-2xl"
-                                onClick={handleDecrease}
-                            >
-                                -
-                            </button>
-                            <input
-                                type="text"
-                                value={quantity}
-                                onChange={handleInputChange}
-                                onBlur={handleBlur}
-                                className='border-0 outline-0 text-white bg-transparent w-10 text-center'
-                            />
-                            <button
-                                className="bg-gray-700 p-2 rounded-full h-8 flex items-center justify-center font-bold text-white text-2xl"
-                                onClick={handleIncrease}
-                            >
-                                +
-                            </button>
-                        </div>
-                        <span className='font-bold text-3xl'>=</span>
-                        <span className='border p-2 px-4 border-color rounded-3xl'>
-                            {formatCurrency(bidAmount * quantity)}
-                        </span>
-                    </div>
-
-                    <button
-                        className="w-full bg-blue-600 text-white py-3 rounded-full font-bold text-lg"
-                        onClick={() => addNotification('This is a test notification')}
-                    >
-                        Trả giá {formatCurrency(currentBid + bidAmount)}
-                    </button>
-                    <div className="text-center text-sm mt-2 text-gray-400">
-                        Mười bốn tỷ một trăm hai mươi lăm triệu đồng
-                    </div>
-                </div>
-            </div>
+const BidHistory = ({ bids }) => (
+  <div className="space-y-3">
+    {bids.map((bid, index) => (
+      <div key={index} className="flex justify-between space-y-2">
+        <div className='flex flex-col'>
+          <span className="text-green-400">{formatCurrency(bid.bidAmount)}</span>
+          <span className="text-gray-400">{formatDateTime(bid.timestamp)}</span>
         </div>
-    );
-}
+        <span className="text-yellow-400">{bid.userCode}</span>
+      </div>
+    ))}
+  </div>
+);
 
-export default AuctionRoom
+const QuantityControl = ({ quantity, onDecrease, onIncrease, onChange, onBlur }) => (
+  <div className='flex w-fit border rounded-3xl p-1 space-x-2 border-color'>
+    <button
+      className="bg-gray-700 p-2 rounded-full w-8 h-8 flex items-center justify-center font-bold text-white text-2xl"
+      onClick={onDecrease}
+    >
+      -
+    </button>
+    <input
+      type="text"
+      value={quantity}
+      onChange={onChange}
+      onBlur={onBlur}
+      className='border-0 outline-0 text-white bg-transparent w-10 text-center'
+    />
+    <button
+      className="bg-gray-700 p-2 rounded-full h-8 flex items-center justify-center font-bold text-white text-2xl"
+      onClick={onIncrease}
+    >
+      +
+    </button>
+  </div>
+);
+
+const Notification = ({ notifications }) => (
+  <>
+    {notifications.map((notification, index) => (
+      <div
+        key={notification.id}
+        className={`absolute top-[-20px] left-1/2 transform -translate-x-1/2 bg-[#000116] text-white px-4 py-3 rounded transition-all duration-500 border border-white 
+          ${index === 0 ? 'opacity-100 translate-y-full' : 'opacity-0 -translate-y-3/4'}`}
+        style={{ zIndex: notifications.length - index }}
+      >
+        <p className="text-gray-400 text-sm mb-2">{formatDateTime() }</p>
+        <p className="text-white text-lg"><b>{notification.userCode}</b> vừa trả giá <b>{ formatCurrency(notification.bidAmount)}</b></p>
+      </div>
+    ))}
+  </>
+);
+ 
+const AuctionRoom = () => {
+  const { roomId } = useParams();
+  
+  // State Management
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [connected, setConnected] = useState(false);
+  const [roomInfo, setRoomInfo] = useState(null);
+  const [disable, setDisable] = useState(false);
+  const [currentBid, setCurrentBid] = useState(0);
+  const [bidAmount, setBidAmount] = useState(INITIAL_BID_AMOUNT);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [notifications, setNotifications] = useState([]);
+  const [totalBidAmount, setTotalBidAmount] = useState(bidAmount * quantity);
+  const [bidHistory, setBidHistory] = useState([]);
+
+  // Socket Connection
+  const handleBidUpdate = useCallback((data) => {
+    setCurrentBid(data.currentBid);
+    setBidHistory(prev => [{
+      userId: data.userId,
+      userCode: data.userCode,
+      bidAmount: data.currentBid,
+      timestamp: data.timestamp
+    }, ...prev]);
+    setNotifications(prev => [{
+      userCode: data.userCode,
+      bidAmount: data.currentBid,
+      timestamp: data.timestamp
+    }, ...prev])
+  }, []);
+
+  const handleRoomJoin = useCallback((data) => {
+    const roomData = JSON.parse(data.roomInfo.auction)
+    setRoomInfo(roomData);
+    setCurrentBid(parseFloat(data.roomInfo.currentBid) || 0);
+    setBidHistory(data.bidHistory || []);
+    setConnected(true);
+
+    // Calculate initial time left
+    const endTime = new Date(roomData.endTime);
+    const now = new Date();
+    const timeLeftInSeconds = Math.max(0, Math.floor((endTime - now) / 1000));
+    setTimeLeft(timeLeftInSeconds);
+  });
+
+  const showAuctionEndToast = (winnerData) => {
+    const handleDismissToast = () => {
+      return toast.dismiss('auction-end-toast')
+    }
+    setDisable(true)
+    toast.custom(
+      (t) => (
+        <AuctionEndToast
+          winner={winnerData.winner || null}
+          bidAmount={winnerData.winningBid || ""}
+          dismissToast={handleDismissToast}
+        />
+      ),
+      {
+
+        position: 'top-center',
+        className: 'relative z-50',
+        id: 'auction-end-toast',
+        duration: 5000
+      }
+    );
+  };
+
+  const { isConnected, auctionData, error, placeBid } = useAuctionSocket(roomId, {
+    onBidUpdate: handleBidUpdate,
+    onRoomJoined: handleRoomJoin,
+    onRoomEnd: showAuctionEndToast,
+  });
+
+  // Event Handlers
+  const handlePlaceBid = () => placeBid(totalBidAmount);
+
+  const handleQuantityChange = {
+    decrease: () => setQuantity((prev) => (prev > 1 ? prev - 1 : prev)),
+    increase: () => setQuantity((prev) => (!isNaN(prev) ? prev + 1 : 1)),
+    input: (e) => setQuantity(parseInt(e.target.value, 10) || 0),
+    blur: () => setQuantity((prev) => (prev <= 0 || isNaN(prev) ? 1 : prev))
+  };
+
+  const removeNotification = useCallback((id) => {
+    setNotifications((prev) => prev.filter((notification) => notification.id !== id));
+  }, []);
+
+
+
+  // Effects
+  useEffect(() => {
+    setTotalBidAmount(bidAmount * quantity);
+  }, [quantity, bidAmount]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => {
+      clearInterval(timer)
+      toast.dismiss('auction-end-toast');
+      toast.remove('auction-end-toast');
+    };
+  }, []);
+
+  useEffect(() => {
+    if (notifications.length > 0) {
+      const timer = setTimeout(() => removeNotification(notifications[0].id), NOTIFICATION_DURATION);
+      return () => clearTimeout(timer);
+    }
+  }, [notifications, removeNotification]);
+
+  // Error Handling
+  if (!roomId) {
+    openNotify('error', 'Room not found');
+    return null;
+  }
+
+  return (
+    <div className={`flex h-screen bg-[#000116] text-white w-full`}>
+      {disable && (
+      <div className="absolute inset-0 bg-black bg-opacity-50 z-10 flex items-center justify-center">
+      </div>
+    )}
+      <div className="flex-1 flex flex-col items-center justify-start pt-8 relative bg-auctionroom w-1/2 h-full">
+        <div className="absolute top-0 left-0 bg-red-600 text-white px-4 py-1 text-sm">TRỰC TIẾP</div>
+        
+        <div className='mt-[15%]'>
+          <Notification notifications={notifications} />
+
+          <div className='bg-[#000116] border-2 border-white p-4 mb-6'>
+            <h2 className="text-red-500 text-base font-semibold mb-2 text-center tracking-[0.5rem]">
+              THỜI GIAN CÒN LẠI
+            </h2>
+            <div className="p-2 text-red-500 text-5xl font-bold flex justify-center items-center space-x-4">
+              {formatTime(timeLeft).map((unit, index) => (
+                <React.Fragment key={unit.label}>
+                  {index > 0 && <div>:</div>}
+                  <div>
+                    {unit.value} <span className="text-sm">{unit.label}</span>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+
+          <div className='border border-white h-48 w-48 justify-center m-auto'></div>
+        </div>
+
+        <AuctionChat roomId={roomId} />
+      </div>
+
+      <div className="w-[45%] flex flex-col p-2 items-end ml-auto items-center justify-center">
+        <h2 className='text-center my-4 flex mx-auto text-xl'>
+          Đấu giá viên: &nbsp;<b>{roomInfo?.auctioneer || 'N/A'}</b>
+        </h2>
+        
+        {/* Bid History */}
+        <div className="bg-[#00082C] py-6 px-6 mb-4 rounded-md w-full overflow-y-auto max-h-[350px] no-scrollbar">
+          <h2 className="text-xl mb-4 flex items-center">
+            <Clock className="mr-2" />
+            Diễn biến cuộc đấu giá
+          </h2>
+          <BidHistory bids={bidHistory} />
+        </div>
+
+        {/* Bidding Controls */}
+        <div className="bg-[#00082C] py-2 px-6 rounded-md w-full">
+          <div className="flex justify-between items-center mb-4 border-b border-color p-4">
+            <h2 className="text-xl flex">
+              <CircleDollarSign className='mr-2' /> Giá hiện tại
+            </h2>
+            <div className="text-2xl font-bold text-green-400">
+              {formatCurrency(currentBid)}
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 mb-6 justify-between items-center">
+            <div>
+              <span className='text-base'>Bước giá:</span> &nbsp;
+              <span className="bg-transparent p-2 px-4 rounded w-32 text-right border border-color rounded-3xl outline-0">
+                {formatCurrency(bidAmount)}
+              </span>
+            </div>
+            <span className='font-bold text-3xl'>x</span>
+            
+            <QuantityControl
+              quantity={quantity}
+              onDecrease={handleQuantityChange.decrease}
+              onIncrease={handleQuantityChange.increase}
+              onChange={handleQuantityChange.input}
+              onBlur={handleQuantityChange.blur}
+            />
+            
+            <span className='font-bold text-3xl'>=</span>
+            <span className='border p-2 px-4 border-color rounded-3xl'>
+              {formatCurrency(totalBidAmount)}
+            </span>
+          </div>
+
+          <button
+            className="w-full bg-blue-600 text-white py-3 rounded-full font-bold text-lg"
+            onClick={handlePlaceBid}
+            disabled={timeLeft <= 0}
+          >
+            Trả giá {formatCurrency(totalBidAmount)}
+          </button>
+          
+          <div className="text-center text-sm mt-2 text-gray-400">
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AuctionRoom;
