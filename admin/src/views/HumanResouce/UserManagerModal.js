@@ -1,8 +1,8 @@
 
 import { CButton, CCol, CForm, CFormInput, CFormLabel, CFormSelect, CModal, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react';
 import React, { useEffect, useState } from 'react'
-import roleApi from 'src/service/RoleService';
-import userApi from 'src/service/UserService';
+import rolePermissionApi from 'src/service/RoleService';
+import employeeApi from 'src/service/EmployeeService';
 import { useFormik } from 'formik';
 import { toast } from 'react-toastify';
 
@@ -10,7 +10,8 @@ function UserManagerModal(props) {
     let { type, setShowModal, data  } = props;
     const [show, setShow] = useState(false);
     const [userInfo, setUserInfo] = useState();
-    const [role, setRole] = useState([]);
+    const [rolePermissionByID, setrolePermissionByID] = useState([]);
+    const [rolePermission, setrolePermission] = useState([]);
 
     useEffect(() => {
         type !== null ? setShow(true) : setShow(false);
@@ -18,56 +19,95 @@ function UserManagerModal(props) {
     useEffect(() => {
         const fetchData = async () => {
             if (data !== null ) {
-                await userApi.getByID(data?.selectedRows[0]?.userID).then(result => {
+                await employeeApi.getByID(data?.selectedRows[0]?._id).then(result => {
                     setUserInfo(result.data) 
+                    setrolePermissionByID(result.data.rolePermission);
                 })
             } else {
                 setUserInfo(null)
             }
-            await roleApi.getAllrole().then(result => {
-                setRole(result.data)
+            await rolePermissionApi.getAllRolePermission().then(result => {
+                setrolePermission(result.data)
             })
 
         }
         fetchData();
+        // console.log("em: ", userInfo);
+        // console.log("ro: ", rolePermission);
+
     }, [data]);
 
     const formik = useFormik({
         enableReinitialize: true,
         initialValues: {
-            userID: !!userInfo ? userInfo?.userID : '',
-            Email: !!userInfo ? userInfo?.email : '',
-            DisplayName: !!userInfo ? userInfo?.displayname : '',
-            Password: '',
-            StatusActive: !!userInfo ? userInfo?.status : 1,
-            Phone: !!userInfo ? userInfo?.phone : '',
-            GenderID: !!userInfo ? userInfo?.genderID : 1,
-            Address: !!userInfo ? userInfo?.address : '',
-            RoleID: !!userInfo ? userInfo?.roleID : 1,
-            PasswordConfirm: ''
+            _id: !!userInfo ? userInfo?._id: '',
+            email: !!userInfo ? userInfo?.email : '',
+            username: !!userInfo ? userInfo?.username : '',
+            fullName: !!userInfo ? userInfo?.fullName : '',
+            password: '',
+            status: !!userInfo ? userInfo?.status : '',
+            phoneNumber: !!userInfo ? userInfo?.phoneNumber : '',
+            gender: !!userInfo ? userInfo?.gender : 'Nam',
+            address: !!userInfo ? userInfo?.address : '',
+            rolePermission: !!userInfo ? userInfo?.rolePermission : '66f7729a0fe0c277bc99ca86',
+            passwordConfirm: ''
         },
         onSubmit: values => {
             handleSubmit(values)
 
         },
     });
-    const handleSubmit = (values) => {
-        if (!values.Email || !values.DisplayName || !values.StatusActive  || !values.RoleID) {
-            toast.error("Dữ liệu không hợp lệ");
+
+    const getRoleNameById = (rolePermissionId) => {
+        const role = rolePermission.find(r => r._id === rolePermissionId);
+        return role ? role.role.name : 'Unknown Role';
+      };
+
+    const handleSubmit = async (values) => {
+        if (!values.username || !values.email || !values.phoneNumber || !values.gender) {
+            toast.error("Vui lòng điền đầy đủ thông tin");
             return;
         };
-        if (values.PasswordConfirm !== values.Password) {
+        if (values.passwordConfirm !== values.password) {
             toast.error("Mật khẩu không trùng khớp");
             return
         }
         if (type == "Thêm") {
-            const createUSer = userApi.create(values)
-            setUserInfo(null)
-            setShow(false);
+            try {
+                const createUSer = await employeeApi.create({
+                    fullName: values.fullName.trim() === '' ? 'Bổ sung sau' : values.fullName,
+                    username: values.username,
+                    email: values.email,
+                    gender: values.gender,
+                    address: values.address.trim() === '' ? 'Bổ sung sau' : values.address,
+                    password: values.password,
+                    phoneNumber: values.phoneNumber,
+                    rolePermission: values.rolePermission,
+                });
+                if (createUSer.success){
+                    setUserInfo(null)
+                    setShow(false);
+                }else{
+                    return;
+                }
+            } catch (error) {
+                console.error("Lỗi: ", error.message);
+                const errorMessage = error.response?.data?.message || "Thêm nhân viên thất bại!";
+                toast.error(errorMessage);
+                return { success: false, message: errorMessage };
+            } 
+            
         } else if (type == "Sửa") {
-            const updateUser = userApi.update(values)
+            try {
+                const updateUser = await employeeApi.update(values._id, values)
+            } catch (error) {
+                console.error("Lỗi: ", error.message);
+                const errorMessage = error.response?.data?.message || "Sửa nhân viên thất bại!";
+                toast.error(errorMessage);
+                return { success: false, message: errorMessage };
+            }    
         }
- 
+
         setShowModal(null);
         
     }
@@ -88,17 +128,27 @@ function UserManagerModal(props) {
                                     <CFormLabel className='mt-1'>ID</CFormLabel>
                                 </CCol>
                                 <CCol md="7" >
-                                    <CFormInput className='input-readonly' value={formik.values.userID} />
+                                    <CFormInput className='input-readonly' value={formik.values.phoneNumber} />
                                 </CCol>
                             </CRow>
                         </CCol>
                         <CCol md="6" className='mb-3'>
                             <CRow>
                                 <CCol md="4" >
-                                    <CFormLabel className='mt-1'>Tên nhân viên</CFormLabel>
+                                    <CFormLabel className='mt-1'>Họ tên nhân viên</CFormLabel>
                                 </CCol>
                                 <CCol md="7" >
-                                    <CFormInput className={type === 'Xem' ? 'input-readonly' : ''} name='DisplayName' onChange={formik.handleChange} defaultValue={formik.values.DisplayName} />
+                                    <CFormInput className={type === 'Xem' ? 'input-readonly' : ''} name='fullName' onChange={formik.handleChange} value={formik.values.fullName} />
+                                </CCol>
+                            </CRow>
+                        </CCol>
+                        <CCol md="6" className='mb-3'>
+                            <CRow>
+                                <CCol md="4" >
+                                    <CFormLabel className='mt-1'>Tên gọi</CFormLabel>
+                                </CCol>
+                                <CCol md="7" >
+                                    <CFormInput className={type === 'Xem' ? 'input-readonly' : ''} name='username' onChange={formik.handleChange} value={formik.values.username} />
                                 </CCol>
                             </CRow>
                         </CCol>
@@ -108,31 +158,36 @@ function UserManagerModal(props) {
                                     <CFormLabel className='mt-1'>Email</CFormLabel>
                                 </CCol>
                                 <CCol md="7" >
-                                    <CFormInput className={type === 'Xem' ? 'input-readonly' : ''} type='email' name='Email' onChange={formik.handleChange} defaultValue={formik.values.Email} />
+                                    <CFormInput className={type === 'Xem' ? 'input-readonly' : ''} type='email' name='email' onChange={formik.handleChange} value={formik.values.email} />
                                 </CCol>
                             </CRow>
                         </CCol>
+                        
                         <CCol md="6" className='mb-3'>
                             <CRow>
                                 <CCol md="4" >
                                     <CFormLabel className='mt-1'>Chức vụ</CFormLabel>
                                 </CCol>
                                 <CCol md="7" >
-                                    <CFormSelect className={type === 'Xem' ? 'input-readonly' : ''} name='RoleID' onChange={formik.handleChange} value={formik.values.RoleID}>
-                                        {role && role.map(item => (
-                                            <option value={item?.roleID}>{item.roleName}</option>
+
+                                    <CFormSelect className={type === 'Xem' ? 'input-readonly' : ''} name='rolePermission' onChange={formik.handleChange} value={formik.values.rolePermission}>
+                                        {rolePermission && rolePermission.map(item => (
+                                            <option key={item?._id} value={item?._id}>{getRoleNameById(item?._id)}</option>
+
                                         ))}
+                                            
                                     </CFormSelect>
                                 </CCol>
                             </CRow>
-                        </CCol>
+                        </CCol> 
+                    
                         <CCol md="6" className='mb-3'>
                             <CRow>
                                 <CCol md="4" >
                                     <CFormLabel className='mt-1'>Số điện thoại</CFormLabel>
                                 </CCol>
                                 <CCol md="7" >
-                                    <CFormInput className={type === 'Xem' ? 'input-readonly' : ''} name='Phone' onChange={formik.handleChange} defaultValue={formik.values.Phone} />
+                                    <CFormInput className={type === 'Xem' ? 'input-readonly' : ''} name='phoneNumber' onChange={formik.handleChange} value={formik.values.phoneNumber} />
                                 </CCol>
                             </CRow>
                         </CCol>
@@ -142,7 +197,7 @@ function UserManagerModal(props) {
                                     <CFormLabel className='mt-1'>Địa chỉ</CFormLabel>
                                 </CCol>
                                 <CCol md="7" >
-                                    <CFormInput className={type === 'Xem' ? 'input-readonly' : ''} name='Address' onChange={formik.handleChange} defaultValue={formik.values.Address} />
+                                    <CFormInput className={type === 'Xem' ? 'input-readonly' : ''} name='address' onChange={formik.handleChange} defaultValue={formik.values.address} />
                                 </CCol>
                             </CRow>
                         </CCol>
@@ -152,28 +207,33 @@ function UserManagerModal(props) {
                                     <CFormLabel className='mt-1'>Giới tính</CFormLabel>
                                 </CCol>
                                 <CCol md="7" >
-                                    <CFormSelect className={type === 'Xem' ? 'input-readonly' : ''} name='GenderID' onChange={formik.handleChange} value={formik.values.GenderID }>
-                                        <option value={0}></option>
-                                        <option value={1}>Nam</option>
-                                        <option value={2}>Nữ</option>
+                                    <CFormSelect className={type === 'Xem' ? 'input-readonly' : ''} name='gender' onChange={formik.handleChange} value={formik.values.gender}>
+                                        {/* <option value={0}>Chọn</option>  */}
+                                        <option value={'Nam'}>Nam</option>
+                                        <option value={'Nữ'}>Nữ</option>
+                                        <option value={'Khác'}>Khác</option>
                                     </CFormSelect>
                                 </CCol>
                             </CRow>
                         </CCol>
-                        <CCol md="6" className='mb-3'>
-                            <CRow>
-                                <CCol md="4" >
-                                    <CFormLabel className='mt-1'>Trạng thái</CFormLabel>
-                                </CCol>
-                                <CCol md="7" >
-                                    <CFormSelect className={type === 'Xem' ? 'input-readonly' : ''} name='StatusActive' onChange={formik.handleChange} value={formik.values.StatusActive }>
-                                        <option value={0}></option>
-                                        <option value={1}>Kích hoạt</option>
-                                        <option value={2}>Ngưng kích hoạt</option>
-                                    </CFormSelect>
-                                </CCol>
-                            </CRow>
-                        </CCol>
+
+                        {data && (
+                            <CCol md="6" className='mb-3'>
+                                <CRow>
+                                    <CCol md="4" >
+                                        <CFormLabel className='mt-1'>Trạng thái</CFormLabel>
+                                    </CCol>
+                                    <CCol md="7" >
+                                        <CFormSelect className={type === 'Xem' ? 'input-readonly' : ''} name='status' onChange={formik.handleChange} value={formik.values.status }>
+                                            <option value={'Hoạt động'}>Hoạt động</option>
+                                            <option value={'Không hoạt động'}>Không hoạt động</option>
+                                            <option value={'Cấm'}>Cấm</option>
+                                        </CFormSelect>
+                                    </CCol>
+                                </CRow>
+                            </CCol>
+                        )}
+                                                
                         {!data && (
                             <>
                                 <CCol md="6" className='mb-3'>
@@ -182,7 +242,7 @@ function UserManagerModal(props) {
                                             <CFormLabel className='mt-1' >Mật khẩu đăng nhập</CFormLabel>
                                         </CCol>
                                         <CCol md="7" >
-                                            <CFormInput name='Password' type='password' value={formik.values.Password} onChange={formik.handleChange} />
+                                            <CFormInput name='password' type='password' value={formik.values.password} onChange={formik.handleChange} />
                                         </CCol>
                                     </CRow>
                                 </CCol>
@@ -193,7 +253,7 @@ function UserManagerModal(props) {
                                             <CFormLabel className='mt-1'>Nhập lại mật khẩu</CFormLabel>
                                         </CCol>
                                         <CCol md="7" >
-                                            <CFormInput name='PasswordConfirm' value={formik.values.PasswordConfirm} onChange={formik.handleChange} type='password' />
+                                            <CFormInput name='passwordConfirm' value={formik.values.passwordConfirm} onChange={formik.handleChange} type='password' />
                                         </CCol>
                                     </CRow>
                                 </CCol>

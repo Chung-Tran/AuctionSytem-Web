@@ -21,8 +21,9 @@ function RoleManager() {
     }, [])
 
     const fetchData = async () => {
-        await roleApi.getAllrole().then(result => {
+        await roleApi.getAllRolePermission().then(result => {
             setAllRole(result.data)
+            
         });
     }
     
@@ -32,13 +33,14 @@ function RoleManager() {
         setTimeout(() => {
             fetchData();
         },"1000")
+        console.log("role: ", allRole)
     }, [showModal])
     
     const tableHeaderValue = [
 
         {
             name: 'Mã vai trò',
-            selector: row => row.roleID,
+            selector: row => row._id,
             sortable: true,
             maxWidth: "150px"
         },

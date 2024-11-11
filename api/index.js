@@ -39,10 +39,12 @@ dbConnect();
 // Connect redis server in docker
 redisClient.connect();
 
-// Define routes
+//Define routes
 const authRoute = require("./routes/auth.route");
-const userRoute = require("./routes/user.route");
+const userRoute = require("./routes/UserRoute");
+const employeeRoute = require("./routes/employee.route");
 const customerRoute = require("./routes/CustomerRoute");
+const paymentRoute = require("./routes/payment.route");
 const auctionRoute = require("./routes/auction.route");
 const resourceRoute = require("./routes/resouce.rote");
 const { verifySocketToken } = require("./middlewares/Authentication");
@@ -61,12 +63,14 @@ app.use(cors(corsOptions));
 //Sync data khi start server
 initializeAuctionSystem();
 
-// Use routes
+//Use routes
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
 app.use("/api/customers", customerRoute);
 app.use("/api/auctions", auctionRoute);
 app.use("/api/resource", resourceRoute)
+app.use("/api/employee", employeeRoute)
+app.use("/api/payment", paymentRoute)
 
 
 // Error handling middleware
