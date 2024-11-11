@@ -13,6 +13,7 @@ const errorHandler = require('./middlewares/errorMiddleware');
 const redisClient = require('./config/redis');
 const cloudinary = require('cloudinary').v2;
 const { initializeSocket } = require('./controllers/socket.controller');
+const { initializeAuctionSync, initializeAuctionSystem } = require("./common/initializeAuctionSync");
 
 // Tạo server http
 const server = http.createServer(app);
@@ -20,12 +21,13 @@ const server = http.createServer(app);
 // Khởi tạo Socket.IO
 const io = socketIo(server, {
     cors: {
-        origin: "http://localhost:3033",  // Thay đổi thành URL của client
+        origin: "http://localhost:3033", 
         methods: ["GET", "POST"],
         credentials: true
     }
 });
 initializeSocket(io);
+
 
 cloudinary.config({
     secure: true
@@ -43,6 +45,10 @@ const userRoute = require("./routes/UserRoute");
 const employeeRoute = require("./routes/employee.route");
 const customerRoute = require("./routes/CustomerRoute");
 const paymentRoute = require("./routes/payment.route");
+const auctionRoute = require("./routes/auction.route");
+const resourceRoute = require("./routes/resouce.rote");
+const { verifySocketToken } = require("./middlewares/Authentication");
+
 
 // Config server
 app.use(cookieParser());
@@ -54,11 +60,16 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+//Sync data khi start server
+initializeAuctionSystem();
+
 //Use routes
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
+app.use("/api/customers", customerRoute);
+app.use("/api/auctions", auctionRoute);
+app.use("/api/resource", resourceRoute)
 app.use("/api/employee", employeeRoute)
-app.use("/api/customers", customerRoute)
 app.use("/api/payment", paymentRoute)
 
 

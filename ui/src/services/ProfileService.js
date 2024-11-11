@@ -1,4 +1,4 @@
-import { handleResponse, openNotify } from "../commons/MethodsCommons";
+import { handleResponse, handleResponseError, openNotify } from "../commons/MethodsCommons";
 import axiosClient from "../config/axiosClient";
 
 const ProfileService = {
@@ -11,8 +11,7 @@ const ProfileService = {
             const data = await handleResponse(response);
             return data;
         } catch (error) {
-            openNotify('error','Fetch data failed')
-            throw new Error(error.message || 'Fetch data failed');
+            handleResponseError(error)
         }
     },
     updateProfile: async (values) => {

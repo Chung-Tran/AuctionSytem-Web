@@ -1,41 +1,140 @@
 import React, { useState, useEffect } from 'react'
 import { Hammer, Play, Bell } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
+import { useAuctionSocket } from '../../config/socket';
+import { formatCurrency, formatDateTime, maskCustomerCode, openNotify } from '../../commons/MethodsCommons';
+import LoadingSpinner from '../LoadingSpinner';
+import toast, { Toaster } from 'react-hot-toast';
+import { BellRing } from 'lucide-react';
+import AuctionEndToast from '../../components/Auctions/AuctionEndToast';
+
 //Read only
 const AuctionRoomOnlyView = () => {
-  const [timeLeft, setTimeLeft] = useState({ minutes: 22, seconds: 47 })
-  const [currentPrice, setCurrentPrice] = useState(825000000)
-  const userCanBid = true;
+  const { roomId } = useParams();
+
+  // State Management
+  const [connected, setConnected] = useState(false);
+  const [roomInfo, setRoomInfo] = useState(null);
+  const [currentBid, setCurrentBid] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [bidHistory, setBidHistory] = useState([]);
+  const [disable, setDisable] = useState(false);
+  // Socket Connection
+  const { isConnected, auctionData, error } = useAuctionSocket(roomId, {
+    onBidUpdate: (data) => {
+      setCurrentBid(data.currentBid);
+      setBidHistory(prev => [{
+        userId: data.userId,
+        userCode: data.userCode,
+        bidAmount: data.currentBid,
+        timestamp: data.timestamp
+      }, ...prev]);
+      openNotify({ userCode: data.userCode, currentBid: data.currentBid })
+
+    },
+    onRoomJoined: (data) => {
+      const roomData = JSON.parse(data.roomInfo.auction)
+      setRoomInfo(roomData);
+      setCurrentBid(parseFloat(data.roomInfo.currentBid) || 0);
+      setBidHistory(data.bidHistory || []);
+      setConnected(true);
+
+      // Calculate initial time left
+      const endTime = new Date(roomData.endTime);
+      const now = new Date();
+      const timeLeftInSeconds = Math.max(0, Math.floor((endTime - now) / 1000));
+      setTimeLeft(timeLeftInSeconds);
+    },
+    onRoomEnd: (data) => {
+      const handleDismissToast = () => {
+        return toast.dismiss('auction-end-toast')
+      }
+      setDisable(true)
+      toast.custom(
+        (t) => (
+          <AuctionEndToast
+            winner={maskCustomerCode(data.winner) || null}
+            bidAmount={data?.winningBid || 512300000}
+            dismissToast={handleDismissToast}
+          />
+        ),
+        {
+          position: 'top-center',
+          className: 'relative z-50',
+          id: 'auction-end-toast',
+          duration: 5000
+        }
+      );
+    },
+  });
+
+  // Effects
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 }
-        } else if (prev.minutes > 0) {
-          return { minutes: prev.minutes - 1, seconds: 59 }
-        } else {
-          clearInterval(timer)
-          return { minutes: 0, seconds: 0 }
-        }
-      })
-    }, 1000)
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-    return () => clearInterval(timer)
-  }, [])
+  // Error Handling
+  if (!roomId) {
+    openNotify('error', 'Room not found');
+    return null;
+  }
+  const formatTime = (totalSeconds) => {
+    const days = Math.floor(totalSeconds / (24 * 3600));
+    const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('vi-VN').format(price)
+    const timeUnits = [
+      { value: days, label: 'D' },
+      { value: hours, label: 'H' },
+      { value: minutes, label: 'M' },
+      { value: seconds, label: 'S' }
+    ];
+
+    // Lọc ra các đơn vị thời gian > 0, bắt đầu từ đơn vị lớn nhất
+    const significantUnits = timeUnits.reduce((acc, unit, index) => {
+      if (unit.value > 0 || index === timeUnits.length - 1 || acc.length > 0) {
+        acc.push({
+          value: unit.value.toString().padStart(2, '0'),
+          label: unit.label
+        });
+      }
+      return acc;
+    }, []);
+
+    return significantUnits;
+  };
+  const openNotify = (data) => {
+    toast(`${maskCustomerCode(data.userCode || "****")} vừa trả giá ${formatCurrency(data.currentBid)}`,
+      {
+        icon: <BellRing size={22} color='yellow' fontWeight={800} />,
+        style: {
+          borderRadius: '10px',
+          background: '#ff00de',
+          color: '#fff',
+          padding: '10px',
+
+        },
+        className: 'glass-effect neon-border'
+      }
+    );
   }
 
-  const bidHistory = [
-    { price: 825000000, time: '12/09/2024 14:02:03.044', user: 'VPA-***A3W' },
-    { price: 75000000, time: '12/09/2024 14:01:59.804', user: 'VPA-***1P5' },
-    { price: 70000000, time: '12/09/2024 14:00:59.749', user: 'VPA-***1P5' },
-    { price: 65000000, time: '12/09/2024 14:00:58.651', user: 'VPA-***U5W' },
-    { price: 60000000, time: '12/09/2024 14:00:37.450', user: 'VPA-***GJV' },
-  ]
-
-  return (
+  if (!connected || !roomInfo) return <LoadingSpinner />;
+  return <>
+    <Toaster
+      position="top-center"
+      toastOptions={{
+        duration: Infinity,
+        style: {
+          background: 'transparent',
+          boxShadow: 'none'
+        }
+      }}
+    />
     <div className='w-full min-h-screen bg-gradient-to-br from-[#02003F] via-purple-900 to-indigo-900 text-white flex flex-col'>
       <style jsx>{`
         @keyframes neon-pulse {
@@ -52,6 +151,10 @@ const AuctionRoomOnlyView = () => {
         }
       `}</style>
       <header className='w-full p-4 flex justify-between items-center border-b border-indigo-600'>
+        {disable && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 z-10 flex items-center justify-center">
+          </div>
+        )}
         <Link to="/" className="text-xl font-semibold flex items-center text-white hover:text-pink-400 transition-colors duration-300">
           <Hammer className='mr-2' />
           <span className="bg-gradient-to-r from-orange-400 to-pink-500 text-transparent bg-clip-text">Auction House</span>
@@ -70,8 +173,15 @@ const AuctionRoomOnlyView = () => {
             <div className="glass-effect rounded-2xl p-8 flex flex-col items-center neon-border">
               <div className="glass-effect rounded-2xl p-6 text-center mb-4 bg-[#170B5E]">
                 <h2 className="text-white text-base font-semibold mb-2 text-center tracking-[0.5rem] ">THỜI GIAN CÒN LẠI</h2>
-                <div className="text-4xl font-bold text-white tracking-[0.5rem] ">
-                  {timeLeft.minutes.toString().padStart(2, '0')}:{timeLeft.seconds.toString().padStart(2, '0')}
+                <div className="text-4xl font-bold text-white tracking-[0.3rem] flex ">
+                  {formatTime(timeLeft).map((unit, index) => (
+                    <React.Fragment key={unit.label}>
+                      {index > 0 && <div>:</div>}
+                      <div>
+                        {unit.value} <span className="text-sm">{unit.label}</span>
+                      </div>
+                    </React.Fragment>
+                  ))}
                 </div>
               </div>
               <img
@@ -87,21 +197,21 @@ const AuctionRoomOnlyView = () => {
                 <Bell className="w-8 h-8 mr-3 text-yellow-400" />
                 <span className="text-2xl font-bold text-pink-300">Lịch sử đấu giá</span>
               </div>
-              <div className="text-2xl font-bold text-green-400">+750.000.000</div>
+              <div className="text-2xl font-bold text-green-400">+{formatCurrency(currentBid)}</div>
             </div>
-            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 no-scrollbar">
               {bidHistory.map((bid, index) => (
                 <div key={index} className="flex justify-between items-center text-sm p-3 rounded-xl bg-gradient-to-r from-purple-800 to-indigo-800 hover:from-purple-700 hover:to-indigo-700 transition-all duration-300">
-                  <div className="font-bold text-green-400">{formatPrice(bid.price)} Đ</div>
-                  <div className="text-pink-300">{bid.time}</div>
-                  <div className="text-blue-300">{bid.user}</div>
+                  <div className="font-bold text-green-400">{formatCurrency(bid.bidAmount)}</div>
+                  <div className="text-pink-300">{formatDateTime(bid.timestamp)}</div>
+                  <div className="text-blue-300">{maskCustomerCode(bid.userCode || "")}</div>
                 </div>
               ))}
             </div>
             <div className="text-3xl mt-4 text-center">
               Giá hiện tại: <br />
               <span className="text-5xl font-bold bg-gradient-to-r from-green-400 to-blue-500 text-transparent bg-clip-text">
-                {formatPrice(currentPrice)} Đ
+                {formatCurrency(currentBid)}
               </span>
             </div>
           </div>
@@ -123,7 +233,8 @@ const AuctionRoomOnlyView = () => {
       </footer>
 
     </div>
-  )
+  </>
+
 
 }
 

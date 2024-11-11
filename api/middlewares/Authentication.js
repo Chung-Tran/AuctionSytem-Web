@@ -7,10 +7,11 @@ const { RefreshToken } = require('../models/user.model');
 const { formatResponse } = require('../common/MethodsCommon');
 
 // Tạo access token
-function generateAccessToken(userId, sessionKey, expiresIn = "15m") {
+function generateAccessToken(userId, sessionKey, userCode = null, expiresIn = "15m") {
     return jwt.sign({
         userId,
         sessionKey,
+        userCode,
         createdAt: new Date(Date.now()),
     }, process.env.JWT_SECRET, { expiresIn: expiresIn });
 }
@@ -84,4 +85,58 @@ async function verifyAccessToken(req, res, next) {
     }
 }
 
-module.exports = { generateAccessToken, generateRefreshToken, verifyAccessToken };
+// Middleware verify token cho Socket.IO
+const verifySocketToken =async (socket, next) => {
+    try {
+        const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
+        
+        if (!token) {
+            return next(new Error('Token không được cung cấp'));
+        }
+
+        try {
+            // Verify token
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            socket.user = decoded;
+            next();
+        } catch (error) {
+            if (error.name === 'TokenExpiredError') {
+                try {
+                    const decodedToken = jwt.decode(token);
+                    const { userId,userCode, sessionKey } = decodedToken;
+                    
+                    // Kiểm tra refresh token
+                    const refreshTokenRecord = await RefreshToken.findOne({ userId, sessionKey }).exec();
+                    if (!refreshTokenRecord || !refreshTokenRecord.token || new Date() > refreshTokenRecord.expiresAt) {
+                        return next(new Error('Token hết hạn'));
+                    }
+
+                    // Tạo token mới
+                    const { refreshToken: newRefreshToken, sessionKey: newSessionKey } = await generateRefreshToken(userId);
+                    const newAccessToken = generateAccessToken(userId, newSessionKey,userCode);
+
+                    // Cập nhật thông tin user trong socket
+                    socket.user = jwt.verify(newAccessToken, process.env.JWT_SECRET);
+                    
+                    // Gửi token mới về client
+                    socket.emit('newToken', { accessToken: newAccessToken });
+                    next();
+                } catch (refreshError) {
+                    console.error('Lỗi khi làm mới token:', refreshError);
+                    return next(new Error('Lỗi xác thực'));
+                }
+            } else {
+                return next(new Error('Token không hợp lệ'));
+            }
+        }
+    } catch (error) {
+        return next(new Error('Lỗi xác thực'));
+    }
+};
+
+module.exports = {
+    generateAccessToken,
+    generateRefreshToken,
+    verifyAccessToken,
+    verifySocketToken
+};

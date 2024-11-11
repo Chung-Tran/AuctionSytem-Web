@@ -43,6 +43,15 @@ const  IpnResponse = Object.freeze({
     IpnFailChecksum : { RspCode: '97', Message: 'Fail checksum' },
     IpnUnknownError : { RspCode: '99', Message: 'Unknown error' },
 })
+const REDIS_KEYS = {
+    AUCTION_ROOM: (roomId) => `auction:${roomId}`,
+    BID_HISTORY: (roomId) => `auction:${roomId}:bids`,
+    AUCTION_CHAT: (roomId) => `auction:${roomId}:chat`,
+    SCHEDULED_AUCTIONS: (roomId) => `auction_schedule:${roomId}`,
+  };
 
 
-module.exports = { EmployeeStatus, EmailType, TransactionStatus, PaymentGateways, VNPayResponse, IpnResponse };
+module.exports = {
+    EmployeeStatus, EmailType, TransactionStatus, PaymentGateways, VNPayResponse, IpnResponse
+    REDIS_KEYS
+};

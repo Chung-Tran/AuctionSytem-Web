@@ -8,7 +8,7 @@ const AuctioningPage = () => {
     const [searchOptions, setSearchOptions] = useState({
         limit: 8,
         page: 1,
-        // status:'active'
+        status:'active'
     });
     useEffect(() => {
         const fetchData = async () => {

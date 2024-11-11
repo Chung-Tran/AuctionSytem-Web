@@ -3,6 +3,7 @@ const Schema = mongoose.Schema;
 
 const CustomerSchema = new Schema({
     username: { type: String, required: true, unique: true },
+    userCode: { type: String, required: true, unique: true }, //Mã KH(UID show trong auction room)
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     fullName: { type: String, required: true },
