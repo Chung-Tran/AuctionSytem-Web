@@ -1,4 +1,5 @@
 import { toast } from 'react-hot-toast';
+import { Navigate } from 'react-router-dom';
 
 const openNotify = (type, message) => {
   if (type === 'success') {
@@ -33,12 +34,14 @@ const handleResponseError = async (error) => {
       const { status, data } = error.response;
       
       if (status === 400) {
-          // Xử lý lỗi 400 Bad Request
           const errorMessage = data.message || 'Bad Request';
           openNotify('error', errorMessage);
       } else if (status === 401) {
           // Xử lý lỗi 401 Unauthorized
-          openNotify('error', 'Unauthorized access. Please log in again.');
+        openNotify('error', 'Unauthorized access. Please log in again.');
+        setTimeout(() => {
+          window.location.href = '/';
+      }, 1000);
       } else if (status === 403) {
           // Xử lý lỗi 403 Forbidden
           openNotify('error', 'You do not have permission to perform this action.');
@@ -64,7 +67,7 @@ const handleResponseError = async (error) => {
 
 const formatCurrency = (value) => {
   if (!value)
-    value = 123456;
+    value = 0;
   return new Intl.NumberFormat('vi-VN', { 
     style: 'currency', 
     currency: 'VND',
@@ -94,7 +97,7 @@ function formatDate(date) {
   const pad = (num) => num < 10 ? '0' + num : num;
 
   const year = date.getFullYear();
-  const month = pad(date.getMonth() + 1); // getMonth() trả về 0-11, nên cần +1
+  const month = pad(date.getMonth() + 1);
   const day = pad(date.getDate());
   const hours = pad(date.getHours());
   const minutes = pad(date.getMinutes());
@@ -102,11 +105,38 @@ function formatDate(date) {
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
+function formatDateTime(timestamp) {
+  if (!timestamp) return "";
+  const date = new Date(timestamp);
+
+  // Lấy các thành phần ngày, tháng, năm, giờ, phút, giây
+  const day = String(date.getDate()).padStart(2, '0'); // Đảm bảo 2 chữ số
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Tháng bắt đầu từ 0
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0'); // Đảm bảo 2 chữ số
+  const minutes = String(date.getMinutes()).padStart(2, '0'); // Đảm bảo 2 chữ số
+  const seconds = String(date.getSeconds()).padStart(2, '0'); // Đảm bảo 2 chữ số
+
+  // Trả về chuỗi đã định dạng theo dd/mm/yyyy hh:mm:ss
+  return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+}
+
+function maskCustomerCode(customerCode) {
+  if (!customerCode) return "";
+  if (customerCode.length <= 2 ) {
+      // Nếu mã nhân viên ngắn hơn hoặc bằng 2 ký tự, thay bằng dấu *
+      return '*'.repeat(customerCode?.length);
+  }
+  // Mã hóa 2 ký tự cuối thành '*'
+  return customerCode.slice(0, -2) + '**';
+}
 export {
     openNotify,
   handleResponse,
   handleResponseError,
   formatCurrency,
   countdown,
-  formatDate
+  formatDate,
+  formatDateTime,
+  maskCustomerCode
 }

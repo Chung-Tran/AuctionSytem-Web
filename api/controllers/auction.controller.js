@@ -1,8 +1,9 @@
 const asyncHandler = require('express-async-handler');
 const Product = require('../models/product.model');
-const {Auction} = require('../models/auction.model');
+const { Auction } = require('../models/auction.model');
 const Customer = require('../models/customer.model');
 const { formatResponse } = require('../common/MethodsCommon');
+const redisClient = require('../config/redis');
 
 const registerAuctionProduct = asyncHandler(async (req, res) => {
     const {
@@ -239,7 +240,7 @@ const getAuctionOutstanding = asyncHandler(async (req, res) => {
             }
         );
         const auctions = await Auction.aggregate(pipeline);
-        res.status(200).json(formatResponse(true, auctions[0] , ""));
+        res.status(200).json(formatResponse(true, auctions[0], ""));
     } catch (error) {
         console.error('Lỗi khi lấy thông phiên đấu giá:', error);
         res.status(500).json(formatResponse(false, null, "Đã xảy ra lỗi khi lấy danh sách phiên đấu giá"));
@@ -272,7 +273,7 @@ const listAuctions = asyncHandler(async (req, res) => {
             {
                 $unwind: '$product'
             });
-        
+
         pipeline.push({
             $sort: { createdAt: -1 }
         });
@@ -280,14 +281,14 @@ const listAuctions = asyncHandler(async (req, res) => {
             { $skip: (pageInt - 1) * limitInt },
             { $limit: limitInt }
         );
-        
+
         const totalAuctions = await Auction.countDocuments(status ? { status } : {});
         pipeline.push({
             $project: {
                 productName: "$product.productName",
                 productImages: "$product.images",
                 productDescription: "$product.description",
-                slug:1,
+                slug: 1,
                 currentViews: 1,
                 startingPrice: 1,
                 registrationOpenDate: 1,
@@ -307,7 +308,7 @@ const listAuctions = asyncHandler(async (req, res) => {
 });
 
 //Đấu giá đang diễn ra
-const ongoingList= asyncHandler(async (req, res) => {
+const ongoingList = asyncHandler(async (req, res) => {
     const { status, page = 1, limit = 10 } = req.query;
 
     try {
@@ -342,12 +343,12 @@ const ongoingList= asyncHandler(async (req, res) => {
                 $unwind: '$product'
             }
         );
-        
+
         pipeline.push(
             {
                 $addFields: {
                     highestBid: { $cond: { if: { $gt: [{ $size: "$bidshistory" }, 0] }, then: { $max: "$bidshistory.amount" }, else: null } },
-                    timeRemain: { $subtract: [ "$endTime", new Date() ] } // Tính thời gian còn lại
+                    timeRemain: { $subtract: ["$endTime", new Date()] } // Tính thời gian còn lại
                 }
             }
         );
@@ -360,7 +361,7 @@ const ongoingList= asyncHandler(async (req, res) => {
             { $skip: (pageInt - 1) * limitInt },
             { $limit: limitInt }
         );
-        
+
         const totalAuctions = await Auction.countDocuments(status ? { status } : {});
         pipeline.push({
             $project: {
@@ -368,8 +369,8 @@ const ongoingList= asyncHandler(async (req, res) => {
                 productImages: "$product.images",
                 productDescription: "$product.description",
 
-                participants:1,
-                slug:1,
+                participants: 1,
+                slug: 1,
                 currentViews: 1,
                 startingPrice: 1,
                 registrationOpenDate: 1,
@@ -392,7 +393,7 @@ const ongoingList= asyncHandler(async (req, res) => {
 
 //Check customer có trong danh sách đăng ký đấu giá hay không
 const checkValidAccess = asyncHandler(async (req, res) => {
-    const customerId = req.user.userId; 
+    const customerId = req.user.userId;
 
     try {
         const auction = await Auction.findOne({
@@ -403,7 +404,7 @@ const checkValidAccess = asyncHandler(async (req, res) => {
                 $elemMatch: {
                     customer: customerId,
                     status: 'active',
-                    transaction: { $exists: true }
+                    // transaction: { $exists: true }
                 }
             }
         }).select('registeredUsers.$');
@@ -411,7 +412,7 @@ const checkValidAccess = asyncHandler(async (req, res) => {
         if (auction && auction.registeredUsers.length > 0) {
             res.status(200).json(formatResponse(true, { allow: true }, "Allow access"));
         } else {
-            res.status(403).json(formatResponse(false, { allow: false }, "Access denied"));
+            res.status(200).json(formatResponse(true, { allow: false, viewOnly: true }, "Allow access: View only"));
         }
     } catch (error) {
         console.error('Error checking auction access:', error);
@@ -419,11 +420,65 @@ const checkValidAccess = asyncHandler(async (req, res) => {
     }
 });
 
+const syncAuctionsToMongoDB = async () => {
+    try {
+        // Lấy tất cả các phiên đấu giá từ Redis
+        const auctionKeys = await redisClient.keys('auction:*');
+
+        for (const auctionKey of auctionKeys) {
+            const auctionData = await redisClient.hGetAll(auctionKey);
+
+            // Kiểm tra xem phiên đấu giá đã tồn tại trong MongoDB chưa
+            let auction = await Auction.findOne({ _id: auctionData.id });
+
+            if (!auction) {
+                // Nếu chưa tồn tại, tạo một phiên đấu giá mới trong MongoDB
+                auction = new Auction({
+                    _id: auctionData.id,
+                    product: auctionData.product,
+                    title: auctionData.title,
+                    // Chuyển các trường khác từ Redis sang MongoDB
+                    status: auctionData.status,
+                    startTime: new Date(auctionData.startTime),
+                    endTime: new Date(auctionData.endTime),
+                    // ...
+                });
+                await auction.save();
+            } else {
+                // Nếu đã tồn tại, cập nhật thông tin phiên đấu giá
+                auction.currentPrice = auctionData.currentPrice;
+                auction.currentViews = auctionData.currentViews;
+                // Cập nhật các trường khác từ Redis sang MongoDB
+                await auction.save();
+            }
+
+            // Đồng bộ lịch sử đấu giá từ Redis sang MongoDB
+            const bidKeys = await redisClient.lrange(`${auctionKey}:bids`, 0, -1);
+            for (const bidKey of bidKeys) {
+                const bidData = JSON.parse(await redisClient.lIndex(`${auctionKey}:bids`, bidKey));
+                const bid = new BidHistory({
+                    auction: auction._id,
+                    bidder: bidData.bidderId,
+                    amount: bidData.bidAmount,
+                    time: new Date(bidData.time)
+                });
+                await bid.save();
+            }
+        }
+
+        console.log('Sync completed. Room: ',);
+    } catch (err) {
+        console.error('Error syncing data from Redis to MongoDB:', err);
+    }
+};
+
+module.exports = syncAuctionsToMongoDB;
+
 module.exports = {
     registerAuctionProduct,
     approveAuction,
     rejectAuction,
-    listAuctions, 
+    listAuctions,
     getAuctionDetails,
     getAuctionOutstanding,
     ongoingList,

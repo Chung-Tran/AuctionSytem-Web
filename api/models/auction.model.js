@@ -20,8 +20,8 @@ const AuctionSchema = new Schema({
     registrationCloseDate: { type: Date }, // Thời gian kết thúc đăng ký
     status: {
         type: String,
-        enum: ['pending', 'active', 'ended', 'cancelled'],
-        default: 'pending'
+        enum: ['new','pending', 'active', 'ended', 'cancelled'],
+        default: 'new'
     },
     deposit: { type: Number }, // Đặt cọc
     registrationFee: { type: Number }, // Phí đăng ký

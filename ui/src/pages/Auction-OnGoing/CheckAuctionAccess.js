@@ -1,39 +1,45 @@
-// src/components/CheckAuctionAccess.js
 import React, { useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
-import { openNotify } from '../../commons/MethodsCommons';
+import { useNavigate, useParams } from 'react-router-dom';
 import { AppContext } from '../../AppContext';
-import AuctionService from '../../services/AuctionService';
 import AuctionRoomOnlyView from './AuctionRoomOnlyView';
+import AuctionService from '../../services/AuctionService'
+import LoadingSpinner from '../LoadingSpinner';
 
-const CheckAuctionAccess = ({ children, roomId }) => {
+const CheckAuctionAccess = ({children}) => {
     const navigate = useNavigate();
-    const { user } = useContext(AppContext);
+    const { roomId } = useParams();
+    const { user, toggleLoginModal } = useContext(AppContext);
     const [hasRegistered, setHasRegistered] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+  
     useEffect(() => {
-        const checkAccess = async () => {
-            if (!user) {
-                openNotify('error', 'Must be login.')
-                return;
-            }
-
-            const registered = await AuctionService.checkUserRegistration(roomId);
-            setHasRegistered(registered);
-            if (!registered) {
-                navigate(`/auctions/room/${roomId}/view-only`);
-            }
+      const checkAccess = async () => {
+        try {
+          const registered = await AuctionService.checkUserRegistration(roomId);
+          setHasRegistered(registered?.allow || false);
+        } catch (error) {
+          console.error('Error checking user registration:', error);
+          setHasRegistered(false);
+        } finally {
+          setIsLoading(false);
+        }
         };
-
-        checkAccess();
-    }, [roomId, navigate]);
-
-    if (!hasRegistered) {
-        return <AuctionRoomOnlyView roomId={roomId} />;
+      checkAccess();
+    }, [roomId]);
+  
+    if (isLoading) return <LoadingSpinner />;
+  
+    if (!user) {
+      toggleLoginModal(true);
+      return null;
     }
+  
+    if (!hasRegistered) {
+      return <AuctionRoomOnlyView roomId={roomId} />;
+    }
+  
     return <>{children}</>;
-};
+  };
 
 export default CheckAuctionAccess;
 
-// Bạn sẽ cần định nghĩa checkLogin và checkUserRegistration là các hàm API phù hợp

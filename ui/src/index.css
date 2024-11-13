@@ -22,6 +22,10 @@ body::-webkit-scrollbar{
   background: #f0f0f0; /* Track color */
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 .bg-muted{
   background-color:  #F3F4F5;
 }
