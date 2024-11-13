@@ -16,13 +16,13 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
-import authApi from 'src/service/AuthService'
+import authApi from '../../../service/AuthService'
 import { ToastContainer, toast } from 'react-toastify'
 import { useFormik } from 'formik'
 import Cookies from 'js-cookie'
 import { useDispatch, useSelector } from 'react-redux'
-import ForgotPasswordDialog from 'src/components/Login/ForgotPasswordDialog'; 
-import RegistrationDialog from 'src/components/Login/RegistrationDialog';
+import ForgotPasswordDialog from '../../../components/Login/ForgotPasswordDialog'; 
+import RegistrationDialog from '../../../components/Login/RegistrationDialog';
 
 const Login = () => {
   const navigate = useNavigate();

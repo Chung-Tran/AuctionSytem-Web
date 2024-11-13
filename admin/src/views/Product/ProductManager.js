@@ -4,9 +4,9 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ProductTableResult from './ProductTableResult';
 import ProductModal from './ProductModal';
-import productApi from 'src/service/ProductService';
+import productApi from '../../service/ProductService';
 import ModalQuestion from '../Nofitication/ModalQuestion';
-import { VND } from 'src/utils/validateField';
+import { VND } from '../../utils/validateField';
 function ProductManager() {
   const tableHeader = [
 

@@ -2,19 +2,13 @@ import { CButton, CCol, CForm, CFormInput, CFormLabel, CFormSelect, CModal, CMod
 import React, { useEffect, useState } from 'react'
 import { DatePicker, Radio, Space } from 'antd';
 import { useDropzone } from 'react-dropzone';
-import productApi from 'src/service/ProductService';
+import productApi from '../../service/ProductService';
 import moment from 'moment';
 import { useFormik } from 'formik';
 import { toast } from "react-toastify";
 import { SyncLoader } from 'react-spinners';
 import { cilDelete } from '@coreui/icons';
 import CIcon from '@coreui/icons-react';
-// import dialShapeApi from 'src/service/DialShapeService';
-// import dialSizeApi from 'src/service/DialSizeService';
-// import waterResistanceApi from 'src/service/WaterResistanceService';
-// import strapMaterialApi from 'src/service/StrapMaterialService';
-// import brandApi from 'src/service/BrandService';
-import { VND, convertToNumber } from 'src/utils/validateField';
 function ProductModal(props) {
     let { type, setShowModal, data } = props;
     const [show, setShow] = useState(false);

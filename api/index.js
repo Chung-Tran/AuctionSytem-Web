@@ -39,10 +39,11 @@ redisClient.connect();
 
 //Define routes
 const authRoute = require("./routes/auth.route");
-const userRoute = require("./routes/UserRoute");
-const employeeRoute = require("./routes/employee.route");
+const userRoute = require("./routes/user.route");
+const roleRoute = require("./routes/RoleRoute");
 const customerRoute = require("./routes/CustomerRoute");
 const paymentRoute = require("./routes/payment.route");
+const auctionRoute = require("./routes/auction.route");
 
 // Config server
 app.use(cookieParser());
@@ -52,14 +53,19 @@ app.use(express.json());
 const corsOptions = {
     exposedHeaders: ['x-new-access-token', 'x-token-resetpassword'],
 };
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
+app.use(cors({
+    origin: 'http://localhost:3000', // Chỉ định nguồn gốc được phép
+    credentials: true // Cho phép gửi cookie và các thông tin xác thực khác
+}));
 
 //Use routes
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
-app.use("/api/employee", employeeRoute)
+app.use('/api/role', roleRoute);
 app.use("/api/customers", customerRoute)
 app.use("/api/payment", paymentRoute)
+app.use("/api/auction", auctionRoute)
 
 
 // Error handling middleware

@@ -38,6 +38,17 @@ const _nav = [
   },
   {
     component: CNavTitle,
+    name: 'Quản lí đấu giá',
+  },
+  {
+    component: CNavItem,
+    name: 'Quản lí phiên',
+    to: '/auction',
+    icon: <CIcon icon={cibAppStore} customClassName="nav-icon" />,
+
+  },
+  {
+    component: CNavTitle,
     name: 'Bán hàng',
   },
   {

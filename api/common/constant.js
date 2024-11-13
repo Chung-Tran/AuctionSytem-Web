@@ -45,4 +45,4 @@ const  IpnResponse = Object.freeze({
 })
 
 
-module.exports = { EmployeeStatus, EmailType, TransactionStatus, PaymentGateways, VNPayResponse, IpnResponse };
+module.exports = { UserStatus, EmailType, TransactionStatus, PaymentGateways, VNPayResponse, IpnResponse };

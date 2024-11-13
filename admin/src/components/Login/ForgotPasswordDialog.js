@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import { CModal, CModalHeader, CModalBody, CModalFooter, CButton, CForm, CFormInput, CInputGroup, CInputGroupText } from '@coreui/react';
 import { toast } from 'react-toastify';
-import authApi from 'src/service/AuthService';
+import authApi from '../../service/AuthService';
 
 const ForgotPasswordDialog = ({ isOpen, toggle }) => {
   const [otpSent, setOtpSent] = useState(false);
