@@ -23,8 +23,9 @@ import Cookies from 'js-cookie'
 import { useDispatch, useSelector } from 'react-redux'
 import ForgotPasswordDialog from '../../../components/Login/ForgotPasswordDialog'; 
 import RegistrationDialog from '../../../components/Login/RegistrationDialog';
+const DefaultLayout = React.lazy(() => import('../../../layout/DefaultLayout'))
 
-const Login = () => {
+const Login = (props) => {
   const navigate = useNavigate();
   const [loginSuccess, setLoginSuccess] = useState(false);
 
@@ -61,9 +62,13 @@ const Login = () => {
         localStorage.setItem("accessToken", JSON.stringify(result.data.accessToken));
         localStorage.setItem("userId", JSON.stringify(result.data._id));
         localStorage.setItem("userinfo", JSON.stringify(result.data));
+        
+        if (props.onLoginSuccess) {
+          props.onLoginSuccess(); // Cập nhật trạng thái trong component cha
+        }
         navigate('/')
         // checkCookie()
-      } else {
+      }else {
         toast.error(result.message || "Đăng nhập thất bại");
       }
     } catch (error) {

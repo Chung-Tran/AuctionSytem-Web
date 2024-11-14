@@ -1,5 +1,5 @@
 import React from 'react';
-import '../../scss/CompletedAuctions.scss';
+import '../../scss/AuctionsComponentManager.scss';
 
 const CompletedAuctions = ({ auctions }) => {
   return (

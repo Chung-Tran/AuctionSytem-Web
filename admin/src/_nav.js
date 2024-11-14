@@ -42,8 +42,15 @@ const _nav = [
   },
   {
     component: CNavItem,
+    name: 'Phê duyệt phiên',
+    to: '/auction/approve',
+    icon: <CIcon icon={cibAppStore} customClassName="nav-icon" />,
+
+  },
+  {
+    component: CNavItem,
     name: 'Quản lí phiên',
-    to: '/auction',
+    to: '/auction/manager',
     icon: <CIcon icon={cibAppStore} customClassName="nav-icon" />,
 
   },
