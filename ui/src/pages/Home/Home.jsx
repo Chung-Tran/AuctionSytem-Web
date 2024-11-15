@@ -78,11 +78,11 @@ const Home = () => {
                         {auctions && auctions?.map((product) => (
                             <ProductItem
                                 key={product.id}
-                                image={product.image}
+                                image={product?.productImages[0] ?? null}
                                 name={product.productName}
                                 slug={product.slug}
                                 price={product.startingPrice}
-                                currentViews={product.currentViews || 1}
+                                currentViews={product.viewCount || 0}
                                 endsIn={product.registrationOpenDate || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
                             />
                         ))}

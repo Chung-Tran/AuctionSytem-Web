@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Clock, CircleDollarSign } from 'lucide-react';
-import { useLocation, useParams } from 'react-router-dom';
+import { Navigate, useLocation, useParams } from 'react-router-dom';
 import AuctionChat from './AuctionChat';
 import { useAuctionSocket } from '../../config/socket';
 import { formatCurrency, formatDate, formatDateTime, openNotify } from '../../commons/MethodsCommons';
 import toast from 'react-hot-toast';
 import AuctionEndToast from '../../components/Auctions/AuctionEndToast';
 import { useNavigate } from 'react-router-dom';
+import productTemplate from '../../assets/productTemplate.jpg'
 // Constants
 const INITIAL_BID_AMOUNT = 5000000;
 const NOTIFICATION_DURATION = 2000;
@@ -97,10 +98,9 @@ const AuctionRoom = () => {
   const { roomId } = useParams();
   
   // State Management
-  const navigate = useNavigate();
-  const location = useLocation();
   const [connected, setConnected] = useState(false);
   const [roomInfo, setRoomInfo] = useState(null);
+  const [productInfo, setProductInfo] = useState(null);
   const [disable, setDisable] = useState(false);
   const [currentBid, setCurrentBid] = useState(0);
   const [bidAmount, setBidAmount] = useState(INITIAL_BID_AMOUNT);
@@ -127,8 +127,10 @@ const AuctionRoom = () => {
   }, []);
 
   const handleRoomJoin = useCallback((data) => {
-    const roomData = JSON.parse(data.roomInfo.auction)
+    const roomData = JSON.parse(data.roomInfo.auction);
+    const productData = roomData.product;
     setRoomInfo(roomData);
+    setProductInfo(productData);
     setCurrentBid(parseFloat(data.roomInfo.currentBid) || 0);
     setBidHistory(data.bidHistory || []);
     setConnected(true);
@@ -209,9 +211,9 @@ const AuctionRoom = () => {
   }, [notifications, removeNotification]);
 
   // Error Handling
-  if (!roomId) {
+  if (!roomId || timeLeft == 0) {
     openNotify('error', 'Room not found');
-    return null;
+    return <Navigate to="/" />;
   }
 
   return (
@@ -242,7 +244,12 @@ const AuctionRoom = () => {
             </div>
           </div>
 
-          <div className='border border-white h-48 w-48 justify-center m-auto'></div>
+          <div className='border border-white h-48 w-48 justify-center m-auto'>
+            <img
+              src={productInfo?.images[0] || productTemplate}
+              className='w-full h-full object-cover'
+            />
+          </div>
         </div>
 
         <AuctionChat roomId={roomId} />

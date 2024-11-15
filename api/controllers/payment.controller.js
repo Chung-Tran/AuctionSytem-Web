@@ -11,15 +11,17 @@ const {
   IpnResponse,
   PaymentGateways,
 } = require("../common/constant");
+const { Auction } = require("../models/auction.model");
 
 // tạo Paymment url cảu vnpay
 const vnpayCreatePaymentUrl = asyncHandle(async (req, res) => {
   process.env.TZ = "Asia/Ho_Chi_Minh";
 
-  const { amount, bankCode } = req.body;
+  const { amount, bankCode, auctionId } = req.body;
   const transaction = await Transaction.create({
     userId: req.user.userId,
     amount: amount,
+    auctionId: auctionId
   });
   const date = new Date();
   const createDate = moment(date).format("YYYYMMDDHHmmss");
@@ -118,16 +120,40 @@ const vnpayReturn = asyncHandle(async (req, res) => {
       transaction.status = TransactionStatus.FAILURE;
       await transaction.save();
     } else {
+      //success => add user vào list register
+      const auction = await Auction.findByIdAndUpdate(
+        transaction.auctionId,
+        {
+          $push: {
+            registeredUsers: {
+              customer: transaction.userId, // ID của khách hàng từ transaction
+              registrationTime: new Date(),     // Thời gian đăng ký
+              status: 'active',                 // Trạng thái mặc định
+              transaction: transaction._id      // ID của giao dịch
+            }
+          }
+        },
+        { new: true }
+      );
+
+      // Cập nhật trạng thái giao dịch thành công
       transaction.status = TransactionStatus.SUCCESSED;
       await transaction.save();
     }
   }
-
-  const FERedirectUrl =
-    process.env.vnp_ReturnUrl_FE +
-    "?" +
-    querystring.stringify(vnp_Params, { encode: false });
-  return res.redirect(FERedirectUrl);
+  res.send(`
+      <html>
+        <body>
+          <script>
+            // Tạo độ trễ 3 giây (3000ms) rồi đóng tab
+            setTimeout(() => {
+              window.close();
+            }, 3000);
+          </script>
+          <p>Payment successful! This tab will close automatically in 3 seconds.</p>
+        </body>
+      </html>
+    `);
 });
 
 // API này để VNPay gọi ở background sau khi pay successed.
@@ -190,7 +216,7 @@ const vnpayTransactionDetail = asyncHandle(async (req, res) => {
       .status(404)
       .json(formatResponse(false, undefined, "Not found Transaction"));
   }
-  return res.status(200).json(formatResponse(false, transaction, undefined));
+  return res.status(200).json(formatResponse(true, transaction, undefined));
 });
 
 // có validate token nha

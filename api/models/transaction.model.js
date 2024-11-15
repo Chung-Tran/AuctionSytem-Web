@@ -10,6 +10,11 @@ const TransactionSchema = new Schema(
       ref: "Customer",
       required: true,
     },
+    auctionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Auction",
+      required: true,
+    },
     amount: {
       type: Number,
       required: true,
