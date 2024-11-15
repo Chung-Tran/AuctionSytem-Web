@@ -1,8 +1,8 @@
 
 import { CButton, CCol, CForm, CFormInput, CFormLabel, CFormSelect, CModal, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react';
 import React, { useEffect, useState } from 'react'
-import rolePermissionApi from 'src/service/RoleService';
-import employeeApi from 'src/service/EmployeeService';
+import rolePermissionApi from '../../service/RoleService';
+import employeeApi from '../../service/EmployeeService';
 import { useFormik } from 'formik';
 import { toast } from 'react-toastify';
 

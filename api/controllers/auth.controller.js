@@ -4,6 +4,7 @@ const crypto = require('crypto');
 
 
 const { User } = require('../models/user.model');
+const { RolePermission } = require('../models/Role&Permission');
 const { formatResponse } = require('../common/MethodsCommon');
 const { generateAccessToken, generateRefreshToken } = require('../middlewares/Authentication')
 const { sendEmail } = require("../utils/email")

@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react'
 import UserManagerModal from './UserManagerModal.js';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import UserTableResult from 'src/views/HumanResouce/UserTableResult.js';
-import employeeApi from 'src/service/EmployeeService.js';
+import UserTableResult from './UserTableResult.js';
+import employeeApi from '../../service/EmployeeService.js';
 // import rolePermission from
 import ModalQuestion from '../Nofitication/ModalQuestion.js';
 import { useSelector } from 'react-redux';

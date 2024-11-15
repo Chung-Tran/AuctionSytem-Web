@@ -1,7 +1,7 @@
 import { CButton, CCol, CForm, CFormCheck, CModal, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react';
 import React, { useEffect, useState } from 'react';
-import { SYSTEM_PERMISSION } from 'src/commons/PermissionCommons';
-import roleApi from 'src/service/RoleService';
+import { SYSTEM_PERMISSION } from '../../commons/PermissionCommons';
+import roleApi from '../../service/RoleService';
 
 function PermissionModal(props) {
   let { type, setShowModal, data } = props;

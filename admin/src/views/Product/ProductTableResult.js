@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { CForm, CRow, CCol, CFormLabel, CFormInput, CFormSelect } from '@coreui/react'
 import DataTable from 'react-data-table-component';
-import userApi from 'src/service/UserService';
+import employeeApi from '../../service/EmployeeService';
 function ProductTableResult(props) {
     const { tableHeader, tableBody } = props.value;
     const { selectValue } = props;
@@ -9,7 +9,7 @@ function ProductTableResult(props) {
     const [allUser, setAllUser] = useState();
     useEffect(() => {
         const fetchData = async () => {
-            const userList = await userApi.getAllUser();
+            const userList = await employeeApi.getAllEmployee();
             if (userList) {
                 setAllUser(userList.data)
             }

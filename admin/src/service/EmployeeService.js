@@ -1,6 +1,5 @@
 import { toast } from "react-toastify";
-import axiosClient from "src/utils/axiosConfig"
-
+import axiosClient from "../utils/axiosConfig";
 const employeeApi = {
     getAllEmployee: async () => {
         const userList = await axiosClient.get(`/user/getall`);

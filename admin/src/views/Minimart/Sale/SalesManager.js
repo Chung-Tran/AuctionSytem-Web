@@ -5,8 +5,8 @@ import SalesManagerModal from './SalesManagerModal';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import SaleTable from './SalesTable';
-import invoiceApi from 'src/service/InvoiceService';
-import { VND } from 'src/utils/validateField';
+import invoiceApi from '../../../service/InvoiceService';
+import { VND } from '../../../utils/validateField';
 
 function SalesManager() {
   const [showModal, setShowModal] = useState(null);

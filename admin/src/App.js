@@ -24,36 +24,28 @@ class App extends Component {
     super(props);
     this.state = {
       isAuthenticated: false,
-      loadingAuth: true,
+      loadingAuth: false,
     };
   }
 
   componentDidMount() {
-    this.checkAuthentication();
+    this.checkAuthentication(); // Gọi hàm checkAuthentication khi ứng dụng khởi động
   }
 
   checkAuthentication = () => {
-    // const accessToken = Cookies.get('accessToken');  
-    // const userId = Cookies.get('userId');        
-
-    const accessToken = localStorage.getItem('accessToken');  // Lấy accessToken từ localStorage
-    const userId = localStorage.getItem('userId');  
+    const accessToken = localStorage.getItem('accessToken') || Cookies.get('accessToken');
+    const userId = localStorage.getItem('userId') || Cookies.get('userId');
 
     console.log('Access Token:', accessToken);
     console.log('User ID:', userId);
 
-    const isAuthenticated = !!(accessToken && userId); // Xác định giá trị true/false
+    const isAuthenticated = !!(accessToken && userId); 
     this.setState({ isAuthenticated, loadingAuth: false }); 
   }
-   
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.isAuthenticated !== this.state.isAuthenticated) {
-      console.log('Authentication state changed:', this.state.isAuthenticated);
-      this.checkAuthentication();  
-    }
-  }
-  
+  handleLoginSuccess = () => {
+    this.setState({ isAuthenticated: true });
+  };
 
   render() {
     const { isAuthenticated, loadingAuth } = this.state; 
@@ -67,7 +59,7 @@ class App extends Component {
           <CommonToastContainer />
           <Routes>
             
-            <Route exact path="/login" name="Login Page" element={<Login />} />
+            <Route exact path="/login" name="Login Page" element={<Login onLoginSuccess={this.handleLoginSuccess}/>} />
             <Route exact path="/register" name="Register Page" element={<Register />} />
 
             <Route exact path="/404" name="Page 404" element={<Page404 />} />
@@ -76,7 +68,7 @@ class App extends Component {
             <Route
               path="*"
               name="Home"
-              element={isAuthenticated ? <DefaultLayout /> : <Navigate to="/login" />}
+              element={isAuthenticated ? <DefaultLayout /> : <Navigate to="/login"/>}
             />
           </Routes>
         </Suspense>

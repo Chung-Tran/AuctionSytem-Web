@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { CForm, CRow, CCol, CFormLabel, CFormInput, CFormSelect } from '@coreui/react'
 import DataTable from 'react-data-table-component';
-import userApi from 'src/service/UserService';
+import userApi from '../../service/EmployeeService';
 
 function RoleTableResult(props) {
     const { tableHeaderValue, tableBodyValue } = props.value;
