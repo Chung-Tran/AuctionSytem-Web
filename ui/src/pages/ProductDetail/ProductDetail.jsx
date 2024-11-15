@@ -8,19 +8,26 @@ import AuctionService from '../../services/AuctionService'
 import { useParams } from 'react-router-dom'
 import { formatCurrency, formatDate } from '../../commons/MethodsCommons'
 import LoadingSpinner from '../LoadingSpinner'
-import RegistrationSteps from './RegistrationSteps';  
-import { AppContext } from '../../AppContext'
+import RegistrationSteps from './RegistrationSteps';
+import { AppContext } from '../../AppContext';
+import productTemplate from '../../assets/productTemplate.jpg';
+const REGISTER_STATUS = {
+    NOT_REGISTERED: 1,//User chưa đăng ký
+    REGISTERED: 2, //Đã nằm trong list đăng ký
+    EXPIRED: 3, //Quá hạn cho phép đăng ký
+}
 const ProductDetail = () => {
     const { slug } = useParams()
-    const {user,toggleLoginModal}= useContext(AppContext)
+    const { user, toggleLoginModal } = useContext(AppContext)
     const [auction, setAuction] = useState(null)
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
     const [auctionRelate, setAuctionRelate] = useState([]);
     const [isRegistrationModalVisible, setIsRegistrationModalVisible] = useState(false);
-
+    const [registerStatus, setRegisterStatus] = useState(REGISTER_STATUS.ALLOW)
     useEffect(() => {
         const fetchData = async () => {
             try {
+                
                 const auctionData = await AuctionService.getDetail(slug);
                 const auctionList = await AuctionService.getList({
                     limit: 4,
@@ -28,7 +35,14 @@ const ProductDetail = () => {
                     // status:'active'
                 });
 
-                setAuction(auctionData)
+                setAuction(auctionData);
+                if (auctionData.registrationOpenDate && new Date() > new Date(auctionData.registrationOpenDate)) {
+                    setRegisterStatus(REGISTER_STATUS.EXPIRED);
+                } else if (user && auctionData.registeredUsers?.includes(user.userId)) {
+                    setRegisterStatus(REGISTER_STATUS.REGISTERED);
+                } else {
+                    setRegisterStatus(REGISTER_STATUS.NOT_REGISTERED);
+                }
                 setAuctionRelate(auctionList)
             } catch (error) {
                 console.error('Error fetching auction data:', error)
@@ -64,23 +78,13 @@ const ProductDetail = () => {
         }
     }, [auction, calculateTimeLeft])
 
-    const images = useMemo(() => [
-        {
-            original: "https://picsum.photos/id/1018/1000/600/",
-            thumbnail: "https://picsum.photos/id/1018/250/150/",
-        },
-        {
-            original: "https://picsum.photos/id/1015/1000/600/",
-            thumbnail: "https://picsum.photos/id/1015/250/150/",
-        },
-        {
-            original: "https://picsum.photos/id/1019/1000/600/",
-            thumbnail: "https://picsum.photos/id/1019/250/150/",
-        },
-    ], [])
+    const images = auction?.productImages.map(item => ({
+        original: item,
+        thumbnail: item,
+    })) || [productTemplate]
 
     if (!auction) {
-        return <LoadingSpinner/>
+        return <LoadingSpinner />
     }
     const handleRegister = () => {
         if (!user)
@@ -188,11 +192,19 @@ const ProductDetail = () => {
                             </div>
                             <button
                                 size="lg"
-                                className='w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium bg-primary h-11 rounded-md px-8 text-white'
+                                className={`w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium 
+                                ${registerStatus === REGISTER_STATUS.EXPIRED ? 'bg-gray-400 cursor-not-allowed' :
+                                        registerStatus === REGISTER_STATUS.REGISTERED ? 'bg-green-500 cursor-not-allowed' :
+                                            'bg-primary'} 
+        h-11 rounded-md px-8 text-white`}
                                 onClick={handleRegister}
-                            >Register for Auction</button>
+                                disabled={registerStatus === REGISTER_STATUS.EXPIRED || registerStatus === REGISTER_STATUS.REGISTERED}
+                            >
+                                {registerStatus === REGISTER_STATUS.EXPIRED ? 'Registration Expired' :
+                                    registerStatus === REGISTER_STATUS.REGISTERED ? 'Already Registered' :
+                                        'Register for Auction'}
+                            </button>
                         </div>
-
                     </div>
                 </div>
             </section>
@@ -253,11 +265,11 @@ const ProductDetail = () => {
             </section>
             {/* register form */}
             {isRegistrationModalVisible && (
-    <RegistrationSteps 
-        auction={auction} 
-        onClose={() => setIsRegistrationModalVisible(false)} 
-    />
-)}
+                <RegistrationSteps
+                    auction={auction}
+                    onClose={() => setIsRegistrationModalVisible(false)}
+                />
+            )}
         </div>
     )
 }

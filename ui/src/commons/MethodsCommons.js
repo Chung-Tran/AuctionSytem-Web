@@ -21,46 +21,46 @@ const openNotify = (type, message) => {
 };
 const handleResponse = async (response) => {
   if (response.status >= 200 && response.status < 300 && response.data.success === true) {
-      return response?.data?.data; 
+    return response?.data?.data;
   } else {
-      openNotify('error', response?.data?.message || 'An error occurred'); 
-      return null;
+    openNotify('error', response?.data?.message || 'An error occurred');
+    return null;
   }
 };
 //Show notify error from api
 const handleResponseError = async (error) => {
   if (error.response) {
-      // Lỗi từ server với status code
-      const { status, data } = error.response;
-      
-      if (status === 400) {
-          const errorMessage = data.message || 'Bad Request';
-          openNotify('error', errorMessage);
-      } else if (status === 401) {
-          // Xử lý lỗi 401 Unauthorized
-        openNotify('error', 'Unauthorized access. Please log in again.');
-        setTimeout(() => {
-          window.location.href = '/';
+    // Lỗi từ server với status code
+    const { status, data } = error.response;
+
+    if (status === 400) {
+      const errorMessage = data.message || 'Bad Request';
+      openNotify('error', errorMessage);
+    } else if (status === 401) {
+      // Xử lý lỗi 401 Unauthorized
+      openNotify('error', 'Unauthorized access. Please log in again.');
+      setTimeout(() => {
+        window.location.href = '/';
       }, 1000);
-      } else if (status === 403) {
-          // Xử lý lỗi 403 Forbidden
-          openNotify('error', 'You do not have permission to perform this action.');
-      } else if (status === 404) {
-          // Xử lý lỗi 404 Not Found
-          openNotify('error', 'The requested resource was not found.');
-      } else if (status === 500) {
-          // Xử lý lỗi 500 Internal Server Error
-          openNotify('error', 'An internal server error occurred. Please try again later.');
-      } else {
-          // Xử lý các lỗi khác
-          openNotify('error', data.message || 'An error occurred');
-      }
+    } else if (status === 403) {
+      // Xử lý lỗi 403 Forbidden
+      openNotify('error', 'You do not have permission to perform this action.');
+    } else if (status === 404) {
+      // Xử lý lỗi 404 Not Found
+      openNotify('error', 'The requested resource was not found.');
+    } else if (status === 500) {
+      // Xử lý lỗi 500 Internal Server Error
+      openNotify('error', 'An internal server error occurred. Please try again later.');
+    } else {
+      // Xử lý các lỗi khác
+      openNotify('error', data.message || 'An error occurred');
+    }
   } else if (error.request) {
-      // Yêu cầu được gửi nhưng không nhận được phản hồi
-      openNotify('error', 'No response received from the server. Please check your network connection.');
+    // Yêu cầu được gửi nhưng không nhận được phản hồi
+    openNotify('error', 'No response received from the server. Please check your network connection.');
   } else {
-      // Có lỗi khi thiết lập yêu cầu
-      openNotify('error', error.message || 'An error occurred.');
+    // Có lỗi khi thiết lập yêu cầu
+    openNotify('error', error.message || 'An error occurred.');
   }
 
 };
@@ -68,14 +68,14 @@ const handleResponseError = async (error) => {
 const formatCurrency = (value) => {
   if (!value)
     value = 0;
-  return new Intl.NumberFormat('vi-VN', { 
-    style: 'currency', 
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
     currency: 'VND',
     minimumFractionDigits: 0, // Không hiển thị chữ số thập phân nếu không cần
     maximumFractionDigits: 0
   }).format(value);
 };
- 
+
 const countdown = (targetDate) => {
   if (!targetDate)
     targetDate = new Date();
@@ -92,18 +92,20 @@ const countdown = (targetDate) => {
 }
 
 function formatDate(date) {
-  if (!date)
+  // Nếu không có `date` hoặc `date` không hợp lệ, sử dụng ngày hiện tại
+  if (!(date instanceof Date) || isNaN(date)) {
     date = new Date();
-  const pad = (num) => num < 10 ? '0' + num : num;
+  }
 
   const year = date.getFullYear();
-  const month = pad(date.getMonth() + 1);
-  const day = pad(date.getDate());
-  const hours = pad(date.getHours());
-  const minutes = pad(date.getMinutes());
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
 
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
+
 
 function formatDateTime(timestamp) {
   if (!timestamp) return "";
@@ -123,15 +125,15 @@ function formatDateTime(timestamp) {
 
 function maskCustomerCode(customerCode) {
   if (!customerCode) return "";
-  if (customerCode.length <= 2 ) {
-      // Nếu mã nhân viên ngắn hơn hoặc bằng 2 ký tự, thay bằng dấu *
-      return '*'.repeat(customerCode?.length);
+  if (customerCode.length <= 2) {
+    // Nếu mã nhân viên ngắn hơn hoặc bằng 2 ký tự, thay bằng dấu *
+    return '*'.repeat(customerCode?.length);
   }
   // Mã hóa 2 ký tự cuối thành '*'
   return customerCode.slice(0, -2) + '**';
 }
 export {
-    openNotify,
+  openNotify,
   handleResponse,
   handleResponseError,
   formatCurrency,

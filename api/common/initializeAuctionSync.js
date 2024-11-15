@@ -18,12 +18,12 @@ const initializeAuctionSystem = async () => {
     const pendingAuctions = await Auction.find({
       status: 'pending',
       startTime: { $gt: new Date() }
-    });
+    }).populate('product');
 
     const activeAuctions = await Auction.find({
       status: 'active',
       endTime: { $gt: new Date() }
-    });
+    }).populate('product');
 
     for (const auction of pendingAuctions) {
       const alreadyScheduled = await redisClient.sIsMember(REDIS_KEYS.SCHEDULED_AUCTIONS(auction._id), auction._id.toString());
@@ -107,7 +107,7 @@ auctionQueue.process('end-auction', async (job) => {
 
 const activateAuction = async (auctionId) => {
   try {
-    const auction = await Auction.findById(auctionId);
+    const auction = await Auction.findById(auctionId).populate('product');
     if (auction && auction.status === 'pending') {
       console.log("start auction ", auctionId);
       auction.status = 'active';

@@ -7,7 +7,7 @@ import LoadingSpinner from '../LoadingSpinner';
 import toast, { Toaster } from 'react-hot-toast';
 import { BellRing } from 'lucide-react';
 import AuctionEndToast from '../../components/Auctions/AuctionEndToast';
-
+import productTemplate from '../../assets/productTemplate.jpg'
 //Read only
 const AuctionRoomOnlyView = () => {
   const { roomId } = useParams();
@@ -15,6 +15,7 @@ const AuctionRoomOnlyView = () => {
   // State Management
   const [connected, setConnected] = useState(false);
   const [roomInfo, setRoomInfo] = useState(null);
+  const [productInfo, setProductInfo] = useState(null);
   const [currentBid, setCurrentBid] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [bidHistory, setBidHistory] = useState([]);
@@ -33,8 +34,10 @@ const AuctionRoomOnlyView = () => {
 
     },
     onRoomJoined: (data) => {
-      const roomData = JSON.parse(data.roomInfo.auction)
+      const roomData = JSON.parse(data.roomInfo.auction);
+      const productData = roomData.product;
       setRoomInfo(roomData);
+      setProductInfo(productData);
       setCurrentBid(parseFloat(data.roomInfo.currentBid) || 0);
       setBidHistory(data.bidHistory || []);
       setConnected(true);
@@ -185,7 +188,7 @@ const AuctionRoomOnlyView = () => {
                 </div>
               </div>
               <img
-                src='https://cdn.motor1.com/images/mgl/MkO9NN/s1/future-supercars.webp'
+                 src={productInfo?.images[0] || productTemplate}
                 className='w-48 h-40 hover:scale-105 transform  transition-transform duration-300  shadow-2xl'
               />
             </div>

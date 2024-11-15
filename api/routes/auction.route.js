@@ -12,9 +12,10 @@ const {
     checkValidAccess,
 } = require('../controllers/auction.controller');
 const { verifyAccessToken } = require('../middlewares/Authentication');
+const handleUpload = require('../utils/uploadImages');
 
 
-router.post('/register', verifyAccessToken, registerAuctionProduct);
+router.post('/register', verifyAccessToken,handleUpload, registerAuctionProduct);
 
 router.put('/approve/:auctionId', approveAuction); 
 router.put('/reject/:auctionId', rejectAuction);

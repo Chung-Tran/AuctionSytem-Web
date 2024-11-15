@@ -15,6 +15,7 @@ const AuctionSchema = new Schema({
     reservePrice: { type: Number }, // Giá tối thiểu
     currentPrice: { type: Number },
     currentViews: { type: Number }, // Số lượng người xem
+    viewCount: { type: Number }, // Số lượng người xem
     bidIncrement: { type: Number, required: true }, // Bước giá tối thiểu
     registrationOpenDate: { type: Date }, // Thời gian bắt đầu đăng ký
     registrationCloseDate: { type: Date }, // Thời gian kết thúc đăng ký
@@ -39,7 +40,7 @@ const AuctionSchema = new Schema({
                 enum: ['pending', 'active'],
                 default: 'active'
             },
-            // transaction: { type: Schema.Types.ObjectId, ref: 'Transaction' }
+            transaction: { type: Schema.Types.ObjectId, ref: 'Transaction' }
         }
     ]
     

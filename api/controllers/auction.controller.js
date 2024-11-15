@@ -1,9 +1,11 @@
 const asyncHandler = require('express-async-handler');
 const Product = require('../models/product.model');
 const { Auction } = require('../models/auction.model');
-const Customer = require('../models/customer.model');
+// const Customer = require('../models/customer.model');
 const { formatResponse } = require('../common/MethodsCommon');
 const redisClient = require('../config/redis');
+const cloudinary = require('cloudinary').v2;
+const multer = require('multer');
 
 const registerAuctionProduct = asyncHandler(async (req, res) => {
     const {
@@ -21,15 +23,30 @@ const registerAuctionProduct = asyncHandler(async (req, res) => {
         images
     } = req.body;
     const sellerId = req.user.userId;
-
     try {
+        const uploadPromises = req.files ? req.files.map(file => {
+            return new Promise((resolve, reject) => {
+                const b64 = Buffer.from(file.buffer).toString('base64');
+                const dataURI = `data:${file.mimetype};base64,${b64}`;
+
+                cloudinary.uploader.upload(dataURI, {
+                    folder: 'auction-products',
+                    resource_type: 'auto',
+                }, (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result.secure_url);
+                });
+            });
+        }) : [];
+
+        const imageUrls = await Promise.all(uploadPromises);
         const product = new Product({
             productName,
             description,
             address,
             category,
             seller: sellerId,
-            images: images || [],
+            images: imageUrls,
             condition,
             status: 'pending'
         });
@@ -44,7 +61,9 @@ const registerAuctionProduct = asyncHandler(async (req, res) => {
             deposit,
             status: 'pending',
             createdBy: sellerId,
+
         });
+
         await product.save();
         await auction.save();
 
@@ -132,10 +151,15 @@ const rejectAuction = asyncHandler(async (req, res) => {
 //Get by slug
 const getAuctionDetails = asyncHandler(async (req, res) => {
     const { auctionSlug } = req.params;
-
+    const { viewed } = req.query;
     try {
         let pipeline = [];
-
+        if (!viewed) {//Check số lượng người xem sản phẩm
+            await Auction.updateOne(
+                { slug: auctionSlug }, 
+                { $inc: { viewCount: 1 } } // Tăng currentViews lên 1
+            );
+        }
         pipeline.push(
             {
                 $match: { slug: auctionSlug }
@@ -171,6 +195,7 @@ const getAuctionDetails = asyncHandler(async (req, res) => {
                     contactEmail: 1,
                     
                     currentViews: 1,
+                    viewCount: 1,
                     sellerName: 1,
                     reservePrice: 1,
                     startingPrice: 1,
@@ -182,7 +207,13 @@ const getAuctionDetails = asyncHandler(async (req, res) => {
                     registrationCloseDate: 1,
                     deposit: 1,
                     registrationFee: 1,
-                    
+                    registeredUsers: {
+                        $map: {
+                            input: "$registeredUsers",
+                            as: "registeredUsers",
+                            in: "$$registeredUsers.customer"
+                        }
+                    },
                     winner: 1,
                     createdBy: 1,
                     createdAt: 1,
@@ -310,6 +341,8 @@ const listAuctions = asyncHandler(async (req, res) => {
                 registrationFee: 1,
                 slug: 1,
                 currentViews: 1,
+                viewCount: 1,
+                startingPrice: 1,
                 registrationOpenDate: 1,
                 createdAt: 1,
                 updatedAt: 1,

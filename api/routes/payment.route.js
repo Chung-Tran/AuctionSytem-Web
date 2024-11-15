@@ -15,5 +15,6 @@ router.get("/vnpay/return", vnpayReturn);
 router.get("/vnpay/ipn", vnpayIPN);
 router.get("/vnpay/detail/:transactionId",verifyAccessToken, vnpayTransactionDetail);
 router.get("/vnpay/log", verifyAccessToken, vnpayTransactionLog);
+router.get("/vnpay/log", verifyAccessToken, vnpayTransactionLog);
 
 module.exports = router;

@@ -4,37 +4,44 @@ import axiosClient from "../config/axiosClient";
 const AuctionService = {
     register: async (auctionInfo) => {
         if (!auctionInfo) {
-            openNotify('error','auctionInfo is required')
+            openNotify('error', 'auctionInfo is required')
             return;
         }
-        const payload = JSON.stringify(
-            auctionInfo,
-        );
-
         try {
-            const response = await axiosClient.post('/auctions/register', payload);
+            const response = await axiosClient.post('/auctions/register', auctionInfo, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
             const data = await handleResponse(response);
             return data;
         } catch (error) {
-           handleResponseError(error)
+            handleResponseError(error)
         }
     },
-    getList: async ({limit,page,status}) => {
+    getList: async ({ limit, page, status }) => {
         try {
-            const response = await axiosClient.get('/auctions/',{  params: { limit, page, status }});
+            const response = await axiosClient.get('/auctions/', { params: { limit, page, status } });
             const data = await handleResponse(response);
             return data;
         } catch (error) {
-           handleResponseError(error)
+            handleResponseError(error)
         }
     },
     getDetail: async (auctionSlug) => {
         try {
-            const response = await axiosClient.get(`/auctions/${auctionSlug}`);
+            const hasViewed = sessionStorage.getItem(`viewed-${auctionSlug}`);
+            if (!hasViewed)
+                sessionStorage.setItem(`viewed-${auctionSlug}`, 'true');
+            const response = await axiosClient.get(`/auctions/${auctionSlug}`, {
+                params: {
+                    viewed: !!hasViewed,
+                }
+            });
             const data = await handleResponse(response);
             return data;
         } catch (error) {
-           handleResponseError(error)
+            handleResponseError(error)
         }
     },
     getOutstanding: async () => {
@@ -43,7 +50,7 @@ const AuctionService = {
             const data = await handleResponse(response);
             return data;
         } catch (error) {
-           handleResponseError(error)
+            handleResponseError(error)
         }
     },
     getOnGoing: async () => {
@@ -52,18 +59,38 @@ const AuctionService = {
             const data = await handleResponse(response);
             return data;
         } catch (error) {
-           handleResponseError(error)
+            handleResponseError(error)
         }
     },
     checkUserRegistration: async (roomId) => {
-            try {
-                const response = await axiosClient.get(`auctions/check-valid-access`);
-                const data = await handleResponse(response);
-                return data;
-            } catch (error) {
-               handleResponseError(error)
-            }
-    }
+        try {
+            const response = await axiosClient.get(`auctions/check-valid-access`);
+            const data = await handleResponse(response);
+            return data;
+        } catch (error) {
+            handleResponseError(error)
+        }
+    },
+    getURlPayment: async (paymentData) => {
+        try {
+            const response = await axiosClient.post(`payment/vnpay/create_payment_url`, paymentData);
+            const data = await handleResponse(response);
+            return data;
+        } catch (error) {
+            handleResponseError(error)
+        }
+    },
+    checkPaymentStatus: async (transactionId) => {
+        try {
+            const response = await axiosClient.get(`payment/vnpay/detail/${transactionId}`);
+            const data = await handleResponse(response);
+            return data;
+        } catch (error) {
+            handleResponseError(error)
+        }
+    },
+
+
 }
 
 export default AuctionService;

@@ -1,13 +1,40 @@
-import React, { useState } from 'react';
-import { Steps, Button, message, Modal, Form, Input, Result, Card, Statistic, Radio, Row, Col } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Steps, Button, Modal, Result, Card, Radio, Spin, Col, Form, Statistic, Row, Input } from 'antd';
 import { CheckCircleOutlined, DollarCircleOutlined, SafetyOutlined } from '@ant-design/icons';
-
+import AuctionService from '../../services/AuctionService';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import mastercardLogo from '../../assets/mastercardLogo.png'
+import vnpaylogo from '../../assets/vnpaylogo.jpg'
+import { PAYMENT_STATUS, POLLING_CONFIG } from '../../commons/Constant';
+import { formatCurrency, formatDateTime } from '../../commons/MethodsCommons';
+import { CheckCircle2 } from 'lucide-react';
 const { Step } = Steps;
-
 const RegistrationSteps = ({ auction, onClose }) => {
   const [current, setCurrent] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState('vnpay');
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(null); // trạng thái thanh toán
+  const [paymentInfo, setPaymenInfo] = useState(null); // thông tin biên lai
+
+  // Kiểm tra trạng thái giao dịch
+  const { handleVnpayPayment, paymentStatus, error, isPolling } = usePaymentPolling(
+    (response) => {
+      setPaymentSuccess(true);
+      setPaymenInfo(response)
+      setPaymentLoading(false)
+    },
+    (error) => {
+      setPaymentSuccess(false);
+      setPaymenInfo(null)
+      setPaymentLoading(false)
+      setCurrent(2);
+    }
+  );
+  const handleStartPayment = () => {
+    handleVnpayPayment(auction);
+    setPaymentLoading(true)
+  }
 
   const steps = [
     {
@@ -24,8 +51,8 @@ const RegistrationSteps = ({ auction, onClose }) => {
               </Col>
               <Col span={12}>
                 <Form.Item label="Giá khởi điểm">
-                  <Statistic 
-                    value={auction.startingPrice} 
+                  <Statistic
+                    value={auction.startingPrice}
                     prefix="₫"
                     valueStyle={{ color: '#3f8600' }}
                   />
@@ -33,8 +60,8 @@ const RegistrationSteps = ({ auction, onClose }) => {
               </Col>
               <Col span={12}>
                 <Form.Item label="Phí đăng ký">
-                  <Statistic 
-                    value={auction.registrationFee} 
+                  <Statistic
+                    value={auction.registrationFee}
                     prefix="₫"
                     valueStyle={{ color: '#cf1322' }}
                   />
@@ -42,8 +69,8 @@ const RegistrationSteps = ({ auction, onClose }) => {
               </Col>
               <Col span={12}>
                 <Form.Item label="Tiền đặt cọc">
-                  <Statistic 
-                    value={auction.deposit} 
+                  <Statistic
+                    value={auction.deposit}
                     prefix="₫"
                     valueStyle={{ color: '#1890ff' }}
                   />
@@ -52,45 +79,120 @@ const RegistrationSteps = ({ auction, onClose }) => {
             </Row>
           </Form>
         </Card>
-      ),
+      )
     },
     {
       title: 'Thanh toán',
       icon: <DollarCircleOutlined />,
       content: (
         <Card className="w-full shadow-lg rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">Chọn phương thức thanh toán:</h3>
-          <Radio.Group onChange={(e) => setPaymentMethod(e.target.value)} value={paymentMethod} className="space-y-4">
-            <Radio value="vnpay" className="w-full">
-              <Card className="w-full hover:shadow-md transition-all duration-300 rounded-lg p-4">
-                <div className="flex items-center">
-                  <img src="/path-to-vnpay-logo.png" alt="VNPay" className="w-12 h-12 mr-4" />
-                  <div>
-                    <h4 className="font-semibold">VNPay</h4>
-                    <p className="text-sm text-gray-500">Thanh toán an toàn qua VNPay</p>
+          {paymentSuccess === null ? (
+            <Radio.Group
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              value={paymentMethod}
+              className="space-y-4"
+            >
+              <Radio value="vnpay" className="w-full">
+                <Card className="w-full hover:shadow-md transition-all duration-300 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <img src={vnpaylogo} alt="VNPay" className="w-12 h-12 mr-4" />
+                    <div>
+                      <h4 className="font-semibold">VNPay</h4>
+                      <p className="text-sm text-gray-500">Thanh toán an toàn qua VNPay</p>
+                    </div>
+                  </div>
+                  {paymentMethod === 'vnpay' && (
+                    <div className="mt-4 flex justify-end">
+                      {paymentLoading ? (
+                        <Spin />
+                      ) : (
+                        <Button type="primary" onClick={handleStartPayment}>
+                          Thanh toán
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </Card>
+              </Radio>
+              <Radio value="bank_transfer" className="w-full">
+                <Card className="w-full hover:shadow-md transition-all duration-300 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <img src={mastercardLogo} alt="Chuyển khoản ngân hàng" className="w-12 h-12 mr-4" />
+                    <div>
+                      <h4 className="font-semibold">Chuyển khoản ngân hàng</h4>
+                      <p className="text-sm text-gray-500">Chuyển khoản trực tiếp đến tài khoản của chúng tôi</p>
+                    </div>
+                  </div>
+                </Card>
+              </Radio>
+            </Radio.Group>
+          ) : paymentSuccess ? (
+            <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
+              <div className="flex items-center justify-center mb-6">
+                <CheckCircle2 className="w-12 h-12 text-green-500 mr-3" />
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-green-500">Thanh toán thành công</h2>
+                </div>
+              </div>
+              <div className="border-b border-gray-200 my-6"></div>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Mã giao dịch</p>
+                      <p className="font-medium">{paymentInfo._id}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Mã phiên đấu giá</p>
+                      <p className="font-medium">{paymentInfo.auctionId}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Thời gian thanh toán</p>
+                      <p className="font-medium">{formatDateTime(paymentInfo.createdAt)}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Phí đăng ký</p>
+                      <p className="font-medium text-gray-900">{formatCurrency(auction.registrationFee)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Tiền đặt cọc</p>
+                      <p className="font-medium text-gray-900">{formatCurrency(auction.deposit)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Tổng tiền</p>
+                      <p className="font-semibold text-lg text-green-600">{formatCurrency(paymentInfo.amount)}</p>
+                    </div>
                   </div>
                 </div>
-              </Card>
-            </Radio>
-            <Radio value="bank_transfer" className="w-full">
-              <Card className="w-full hover:shadow-md transition-all duration-300 rounded-lg p-4">
-                <div className="flex items-center">
-                  <img src="/path-to-bank-transfer-icon.png" alt="Chuyển khoản ngân hàng" className="w-12 h-12 mr-4" />
-                  <div>
-                    <h4 className="font-semibold">Chuyển khoản ngân hàng</h4>
-                    <p className="text-sm text-gray-500">Chuyển khoản trực tiếp đến tài khoản của chúng tôi</p>
-                  </div>
-                </div>
-              </Card>
-            </Radio>
-          </Radio.Group>
+              </div>
+              <div className="mt-6 text-sm text-gray-500">
+                <p>* Vui lòng lưu lại mã giao dịch để tra cứu khi cần thiết</p>
+                <p>* Email xác nhận sẽ được gửi đến địa chỉ email của bạn</p>
+              </div>
+            </div>
+          ) : (
+            <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
+              <Result
+                status="error"
+                title="Thanh toán thất bại!"
+                subTitle="Xin vui lòng thử lại."
+                extra={[
+                  <Button type="primary" key="console" onClick={() => setCurrent(1)}>
+                    Thử lại
+                  </Button>
+                ]}
+              />
+            </div>
+          )}
         </Card>
-      ),
+      )
     },
     {
       title: 'Hoàn thành',
       icon: <CheckCircleOutlined />,
-      content: (
+      content: paymentSuccess === true ? (
         <Result
           status="success"
           title="Đăng ký thành công!"
@@ -98,45 +200,141 @@ const RegistrationSteps = ({ auction, onClose }) => {
           extra={[
             <Button type="primary" key="console" onClick={onClose}>
               Đóng
-            </Button>,
+            </Button>
           ]}
         />
-      ),
-    },
+      ) : paymentSuccess === false ? (
+        <Result
+          status="error"
+          title="Thanh toán thất bại!"
+          subTitle="Xin vui lòng thử lại."
+          extra={[
+            <Button type="primary" key="console" onClick={() => setCurrent(1)}>
+              Thử lại
+            </Button>
+          ]}
+        />
+      ) : (
+        <div>Loading...</div>
+      )
+    }
   ];
-
-  const next = () => setCurrent(current + 1);
-  const prev = () => setCurrent(current - 1);
 
   return (
     <Modal
       title={<h2 className="text-2xl font-bold">Đăng ký tham gia đấu giá</h2>}
-      visible={isModalVisible}
+      open={isModalVisible}
       onCancel={onClose}
       footer={null}
       width={800}
       className="custom-modal"
     >
       <Steps current={current} className="mb-8">
-        {steps.map(item => (
+        {steps.map((item) => (
           <Step key={item.title} title={item.title} icon={item.icon} />
         ))}
       </Steps>
-      <div className="steps-content mb-8">{steps[current].content}</div>
+      <div className="steps-content mb-8">{steps[current]?.content}</div>
       <div className="steps-action flex justify-between">
         {current > 0 && (
-          <Button onClick={prev}>
-            Quay lại
-          </Button>
+          <Button onClick={() => setCurrent(current - 1)}>Quay lại</Button>
         )}
         {current < steps.length - 1 && (
-          <Button type="primary" onClick={next}>
-            {current === 1 ? 'Thanh toán' : 'Tiếp tục'}
+          <Button
+            type="primary"
+            onClick={() => setCurrent(current + 1)}
+            disabled={paymentLoading || (current === 1 && !paymentInfo)}
+          >
+            Tiếp tục
           </Button>
         )}
       </div>
     </Modal>
   );
+};
+
+const usePaymentPolling = (onSuccess, onFailure) => {
+  const [isPolling, setIsPolling] = useState(false);
+  const [currentTransactionId, setCurrentTransactionId] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState(PAYMENT_STATUS.DRAFT);
+  const [error, setError] = useState(null);
+
+  const checkTransactionStatus = useCallback(async (transactionId) => {
+    try {
+      const response = await AuctionService.checkPaymentStatus(transactionId);
+
+      if (response.status !== PAYMENT_STATUS.DRAFT) {
+        setPaymentStatus(response.status);
+        setIsPolling(false);
+
+        if (response.status === PAYMENT_STATUS.SUCCESSED) {
+          onSuccess?.(response);
+        } else {
+          onFailure?.(response.failureReason);
+        }
+      }
+    } catch (err) {
+      setError(err.message);
+      setIsPolling(false);
+      onFailure?.(err.message);
+    }
+  }, [onSuccess, onFailure]);
+
+  useEffect(() => {
+    let pollingInterval;
+    let timeoutId;
+
+    if (isPolling && currentTransactionId) {
+      checkTransactionStatus(currentTransactionId);
+
+      timeoutId = setTimeout(() => {
+        setIsPolling(false);
+        setError('Payment timeout');
+        onFailure?.('Payment timeout');
+      }, POLLING_CONFIG.TIMEOUT);
+
+      // Đặt interval để tiếp tục polling
+      pollingInterval = setInterval(() => {
+        checkTransactionStatus(currentTransactionId);
+      }, POLLING_CONFIG.INTERVAL);
+    }
+
+    return () => {
+      if (pollingInterval) clearInterval(pollingInterval);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isPolling, currentTransactionId, checkTransactionStatus]);
+
+  const handleVnpayPayment = useCallback((auction) => {
+    const paymentData = {
+      amount: auction.registrationFee + auction.deposit,
+      bankCode: "",
+      auctionId: auction._id
+    };
+
+    AuctionService.getURlPayment(paymentData)
+      .then(response => {
+        if (response.paymentUrl) {
+          setCurrentTransactionId(response.transactionId);
+          setIsPolling(true);
+          setPaymentStatus(PAYMENT_STATUS.DRAFT);
+          setError(null);
+
+          window.open(response.paymentUrl, '_blank');
+        }
+      })
+      .catch(error => {
+        setError(error.message);
+        onFailure?.(error.message);
+      });
+  }, []);
+
+  return {
+    handleVnpayPayment,
+    paymentStatus,
+    error,
+    isPolling
+  };
 };
 
 export default RegistrationSteps;
