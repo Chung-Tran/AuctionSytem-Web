@@ -6,7 +6,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import RoleTableResult from './RoleTableResult.js';
 import PermissionModal from './PermissionModal.js';
-import roleApi from 'src/service/RoleService.js';
+import roleApi from '../../service/RoleService.js';
 
 function RoleManager() {
     const [allRole, setAllRole] = useState();

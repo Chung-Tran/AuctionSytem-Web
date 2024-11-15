@@ -1,6 +1,5 @@
 import { toast } from "react-toastify";
-import axiosClient from "src/utils/axiosConfig"
-
+import axiosClient from "utils/axiosConfig";
 const productApi = {
     getAllProduct: async () => {
         const productList = await axiosClient.get('/product');

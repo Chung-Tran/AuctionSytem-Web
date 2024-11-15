@@ -42,6 +42,7 @@ redisClient.connect();
 //Define routes
 const authRoute = require("./routes/auth.route");
 const userRoute = require("./routes/user.route");
+const roleRoute = require("./routes/RoleRoute");
 const customerRoute = require("./routes/CustomerRoute");
 const paymentRoute = require("./routes/payment.route");
 const auctionRoute = require("./routes/auction.route");
@@ -57,7 +58,11 @@ app.use(express.json());
 const corsOptions = {
     exposedHeaders: ['x-new-access-token', 'x-token-resetpassword'],
 };
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
+app.use(cors({
+    origin: 'http://localhost:3000', // Chỉ định nguồn gốc được phép
+    credentials: true // Cho phép gửi cookie và các thông tin xác thực khác
+}));
 
 //Sync data khi start server
 initializeAuctionSystem();
@@ -68,7 +73,9 @@ app.use('/api/user', userRoute);
 app.use("/api/customers", customerRoute);
 app.use("/api/auctions", auctionRoute);
 app.use("/api/resource", resourceRoute)
+app.use('/api/role', roleRoute);
 app.use("/api/payment", paymentRoute)
+app.use("/api/auction", auctionRoute)
 
 
 // Error handling middleware

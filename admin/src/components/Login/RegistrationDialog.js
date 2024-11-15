@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Cookies from 'js-cookie'
 import '../../scss/register.scss';
-
 import {
   CModal,
   CModalHeader,
@@ -16,7 +15,7 @@ import {
 } from '@coreui/react';
 import { useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
-import employeeAPI from 'src/service/EmployeeService';
+import employeeAPI from 'service/EmployeeService';
 import { toast } from 'react-toastify';
 
 const RegistrationDialog = ({ isOpen, toggle }) => {

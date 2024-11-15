@@ -2,13 +2,12 @@
 import { CButton, CCol, CForm, CFormInput, CFormLabel, CFormSelect, CModal, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react';
 import { bool } from 'prop-types';
 import React, { useEffect, useState } from 'react'
-import inventoryApi from 'src/service/InventoryService';
 import { DatePicker, Radio, Space } from 'antd';
 import moment from 'moment';
 import { useFormik } from 'formik';
-import invoiceApi from 'src/service/InvoiceService';
+// import invoiceApi from 'src/service/InvoiceService';
 import noImage from '../../../assets/images/no-image.jpg'
-import { VND } from 'src/utils/validateField';
+import { VND } from '../../../utils/validateField';
 function SalesManagerModal(props) {
     let { type, setShowModal, invoiceId } = props;
     console.log(invoiceId)
@@ -22,16 +21,16 @@ function SalesManagerModal(props) {
         type !== null ? setShow(true) : setShow(false);
     }, [type]);
 
-    useEffect(() => {
-        invoiceId && invoiceApi.getByID(invoiceId).then(result => {
-            console.log('from modal:',result)
-            if (result.success)
-            {
-                setInvoiceInfo(result.data)
-                setProductList(result.data.invoiceDetail)
-                }
-        })
-    }, [invoiceId]);
+    // useEffect(() => {
+    //     invoiceId && invoiceApi.getByID(invoiceId).then(result => {
+    //         console.log('from modal:',result)
+    //         if (result.success)
+    //         {
+    //             setInvoiceInfo(result.data)
+    //             setProductList(result.data.invoiceDetail)
+    //             }
+    //     })
+    // }, [invoiceId]);
     const formik = useFormik({
         enableReinitialize: true,
         initialValues: {
@@ -49,7 +48,7 @@ function SalesManagerModal(props) {
             CreatedAt: !!invoiceInfo ? invoiceInfo?.createAt : new Date().toLocaleDateString()
         },
         onSubmit: values => {
-            handleSubmit(values)
+            // handleSubmit(values)
 
         },
     })

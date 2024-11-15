@@ -93,7 +93,7 @@ const approveAuction = asyncHandler(async (req, res) => {
         return res.status(404).json(formatResponse(false, null, "Không tìm thấy phiên đấu giá"));
     }
 
-    if (auction.status !== 'pending') {
+    if (auction.status !== 'new') {
         return res.status(400).json(formatResponse(false, null, "Phiên đấu giá không ở trạng thái chờ duyệt"));
     }
 
@@ -104,7 +104,7 @@ const approveAuction = asyncHandler(async (req, res) => {
         auction.registrationCloseDate = registrationCloseDate;
         auction.reservePrice = reservePrice;
         auction.registrationFee = registrationFee;
-        auction.status = 'active';
+        auction.status = 'pending';
 
         await auction.save();
 
@@ -130,7 +130,7 @@ const rejectAuction = asyncHandler(async (req, res) => {
         return res.status(404).json(formatResponse(false, null, "Không tìm thấy phiên đấu giá"));
     }
 
-    if (auction.status !== 'pending') {
+    if (auction.status !== 'new') {
         return res.status(400).json(formatResponse(false, null, "Phiên đấu giá không ở trạng thái chờ duyệt"));
     }
 
@@ -190,12 +190,18 @@ const getAuctionDetails = asyncHandler(async (req, res) => {
                     productAddress: "$product.address",
 
                     //Auction
+                    title: 1,
+                    description: 1,
+                    contactEmail: 1,
+                    
                     currentViews: 1,
                     viewCount: 1,
                     sellerName: 1,
                     reservePrice: 1,
                     startingPrice: 1,
+                    currentPrice: 1,
                     startTime: 1,
+                    endTime: 1,
                     bidIncrement: 1,
                     registrationOpenDate: 1,
                     registrationCloseDate: 1,
@@ -207,7 +213,12 @@ const getAuctionDetails = asyncHandler(async (req, res) => {
                             as: "registeredUsers",
                             in: "$$registeredUsers.customer"
                         }
-                    }
+                    },
+                    winner: 1,
+                    createdBy: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    approvalTime: 1,
                 }
             },
             {
@@ -320,11 +331,22 @@ const listAuctions = asyncHandler(async (req, res) => {
                 productName: "$product.productName",
                 productImages: "$product.images",
                 productDescription: "$product.description",
+                title: 1,
+                description: 1,
+                contactEmail: 1,
+                sellerName: 1,               
+                startingPrice: 1,
+                bidIncrement: 1,
+                deposit: 1,
+                registrationFee: 1,
                 slug: 1,
                 currentViews: 1,
                 viewCount: 1,
                 startingPrice: 1,
                 registrationOpenDate: 1,
+                createdAt: 1,
+                updatedAt: 1,
+                approvalTime: 1,
             }
         });
         const auctions = await Auction.aggregate(pipeline);
@@ -402,6 +424,15 @@ const ongoingList = asyncHandler(async (req, res) => {
                 productImages: "$product.images",
                 productDescription: "$product.description",
 
+                title: 1,
+                description: 1,
+                contactEmail: 1,
+                sellerName: 1,               
+                startingPrice: 1,
+                bidIncrement: 1,
+                deposit: 1,
+                registrationFee: 1,
+
                 participants: 1,
                 slug: 1,
                 currentViews: 1,
@@ -409,6 +440,10 @@ const ongoingList = asyncHandler(async (req, res) => {
                 registrationOpenDate: 1,
                 startTime: 1,
                 endTime: 1,
+
+                createdAt: 1,
+                updatedAt: 1,
+                approvalTime: 1,
             }
         });
         const auctions = await Auction.aggregate(pipeline);

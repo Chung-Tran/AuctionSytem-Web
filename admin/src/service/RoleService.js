@@ -1,5 +1,5 @@
 import { toast } from "react-toastify";
-import axiosClient from "src/utils/axiosConfig"
+import axiosClient from "../utils/axiosConfig"
 
 const roleApi={
     getAllRolePermission : async ()=> {
