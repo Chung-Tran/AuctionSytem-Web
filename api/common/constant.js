@@ -52,6 +52,11 @@ const REDIS_KEYS = {
 
 
 module.exports = {
-    EmployeeStatus, EmailType, TransactionStatus, PaymentGateways, VNPayResponse, IpnResponse
+    UserStatus,
+    EmailType,
+    TransactionStatus,
+    PaymentGateways,
+    VNPayResponse,
+    IpnResponse,
     REDIS_KEYS
 };

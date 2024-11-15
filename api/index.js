@@ -41,8 +41,7 @@ redisClient.connect();
 
 //Define routes
 const authRoute = require("./routes/auth.route");
-const userRoute = require("./routes/UserRoute");
-const employeeRoute = require("./routes/employee.route");
+const userRoute = require("./routes/user.route");
 const customerRoute = require("./routes/CustomerRoute");
 const paymentRoute = require("./routes/payment.route");
 const auctionRoute = require("./routes/auction.route");
@@ -69,7 +68,6 @@ app.use('/api/user', userRoute);
 app.use("/api/customers", customerRoute);
 app.use("/api/auctions", auctionRoute);
 app.use("/api/resource", resourceRoute)
-app.use("/api/employee", employeeRoute)
 app.use("/api/payment", paymentRoute)
 
 
