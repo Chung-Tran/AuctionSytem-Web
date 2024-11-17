@@ -108,75 +108,12 @@ const _nav = [
     ],
     disabled: hasPermission([10,11,12,13]),
   },
-  {
-    component: CNavGroup,
-    name: 'Quản lí thông số',
-    to: '/buttons',
-    icon: <CIcon icon={cibProcesswire} customClassName="nav-icon" />,
-    items: [
-      {
-        component: CNavItem,
-        name: 'Hãng',
-        to: '/branch',
-      },
-      {
-        component: CNavItem,
-        name: 'Chất liệu dây',
-        to: '/strap_material',
-      },
-      {
-        component: CNavItem,
-        name: 'Kích thước mặt số',
-        to: '/dialsize',
-      },
-      {
-        component: CNavItem,
-        name: 'Mức chống nước',
-        to: '/water_resistance',
-      },
-      {
-        component: CNavItem,
-        name: 'Hình dạng mặt số',
-        to: '/dialshape',
-      },
-    ],
-  },
-  {
-    component: CNavTitle,
-    name: 'Kho',
-  },
-  {
-    component: CNavItem,
-    name: 'Nhập kho',
-    to: '/inventory_import',
-    icon: <CIcon icon={cilStorage} customClassName="nav-icon" />,
-  },
   // {
   //   component: CNavItem,
   //   name: 'Kiểm kho',
   //   to: '/inventory_check',
   //   icon: <CIcon icon={cilStorage} customClassName="nav-icon" />,
   // },
-  {
-    component: CNavTitle,
-    name: 'Khuyến mãi',
-  },
-  {
-    component: CNavItem,
-    name: 'Voucher',
-    to: '/promotion',
-    icon: <CIcon icon={cilStorage} customClassName="nav-icon" />,
-  },
-  {
-    component: CNavTitle,
-    name: 'CRM',
-  },
-  {
-    component: CNavItem,
-    name: 'Đối tác',
-    to: '/partner',
-    icon: <CIcon icon={cilStorage} customClassName="nav-icon" />,
-  },
   // {
   //   component: CNavGroup,
   //   name: 'Pages',

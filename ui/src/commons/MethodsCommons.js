@@ -76,11 +76,12 @@ const formatCurrency = (value) => {
   }).format(value);
 };
 
-const countdown = (targetDate) => {
-  if (!targetDate)
-    targetDate = new Date();
-  const now = Date.now();
-  const timeRemaining = targetDate - now;
+const countdown = (endsIn) => {
+  if (!endsIn) return "";
+  const targetDate = new Date(endsIn); 
+  const now = Date.now(); // Thời gian hiện tại
+  const timeRemaining = targetDate - now; // Thời gian còn lại
+
 
   if (timeRemaining <= 0) return "0d 0h 0m"; // Nếu hết thời gian
 

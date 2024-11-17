@@ -6,7 +6,7 @@ import { AppContext } from '../../AppContext';
 import RegistrationSteps from '../../pages/ProductDetail/RegistrationSteps';
 import AuctionService from '../../services/AuctionService';
 import productTemplate from '../../assets/productTemplate.jpg'
-const ProductItem = ({ image, name, price, endsIn, slug, currentViews }) => {
+const ProductItem = ({ image, name, price, endsIn, slug, currentViews,productDescription }) => {
   const { user, toggleLoginModal } = useContext(AppContext);
   const [isRegistrationModalVisible, setIsRegistrationModalVisible] = useState(false);
   const [auction, setAuction] = useState(null);
@@ -23,7 +23,7 @@ const ProductItem = ({ image, name, price, endsIn, slug, currentViews }) => {
 
   return (
     <>
-      <div className="bg-card rounded-lg overflow-hidden shadow-lg">
+      <div className="bg-card rounded-lg overflow-hidden shadow-lg h-full flex flex-col">
         <Link to={`/auctions/${slug}`}>
           <img
             src={image || productTemplate}
@@ -33,14 +33,14 @@ const ProductItem = ({ image, name, price, endsIn, slug, currentViews }) => {
             className="w-full aspect-[3/2] object-cover"
           />
         </Link>
-        <div className="p-4">
+        <div className="p-4 h-full flex flex-col">
           <Link to={`/auctions/${slug}`}>
             <h3 className="text-lg font-semibold">{name}</h3>
           </Link>
-          <p className="text-muted-foreground text-sm mt-1">
-            Fully restored 1950s typewriter in excellent condition.
+          <p className="text-muted-foreground text-sm mt-1 line-clamp-2	">
+            {productDescription}
           </p>
-          <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center justify-between mt-auto">
             <div>
               <span className="text-primary font-semibold text-lg">{formatCurrency(price)}</span>
               <span className="text-muted-foreground text-sm ml-2">Current Bid</span>
@@ -50,7 +50,7 @@ const ProductItem = ({ image, name, price, endsIn, slug, currentViews }) => {
               <span className="text-muted-foreground text-sm">{countdown(endsIn)}</span>
             </div>
           </div>
-          <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center justify-between ">
             <div className="flex items-center gap-2">
               <EyeIcon className="w-4 h-4 text-muted-foreground" />
               <span className="text-muted-foreground text-sm">{currentViews} watching</span>

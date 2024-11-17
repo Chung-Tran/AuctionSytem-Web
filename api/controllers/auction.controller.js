@@ -315,7 +315,7 @@ const listAuctions = asyncHandler(async (req, res) => {
             },
             {
                 $unwind: '$product'
-            });
+            }); 
 
         pipeline.push({
             $sort: { createdAt: -1 }
@@ -344,9 +344,11 @@ const listAuctions = asyncHandler(async (req, res) => {
                 viewCount: 1,
                 startingPrice: 1,
                 registrationOpenDate: 1,
+                registrationCloseDate: 1,
                 createdAt: 1,
                 updatedAt: 1,
                 approvalTime: 1,
+                status: 1,
             }
         });
         const auctions = await Auction.aggregate(pipeline);

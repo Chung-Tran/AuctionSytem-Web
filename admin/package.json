@@ -31,6 +31,7 @@
     "@coreui/utils": "^2.0.2",
     "@reduxjs/toolkit": "^2.0.1",
     "antd": "^5.10.3",
+    "auction-system": "file:",
     "axios": "^1.6.2",
     "chart.js": "^3.9.1",
     "classnames": "^2.3.2",
@@ -48,11 +49,13 @@
     "react-dropzone-uploader": "^2.11.0",
     "react-redux": "^8.1.1",
     "react-router-dom": "^6.14.0",
+    "react-scripts": "^5.0.1",
     "react-spinners": "^0.13.8",
     "react-toastify": "^9.0.0",
     "redux": "4.2.1",
     "simplebar-react": "^2.4.3",
-    "styled-components": "^6.1.13"
+    "styled-components": "^6.1.13",
+    "yup": "^1.4.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.5",

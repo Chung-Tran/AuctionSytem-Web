@@ -68,7 +68,8 @@ class App extends Component {
             <Route
               path="*"
               name="Home"
-              element={isAuthenticated ? <DefaultLayout /> : <Navigate to="/login"/>}
+              // element={isAuthenticated ? <DefaultLayout /> : <Navigate to="/login"/>}
+              element={ <DefaultLayout />  }
             />
           </Routes>
         </Suspense>

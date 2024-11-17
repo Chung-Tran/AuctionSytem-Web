@@ -254,9 +254,10 @@ const ProductDetail = () => {
                             image={product.image}
                             name={product.productName}
                             slug={product.slug}
+                            productDescription={product.productDescription}
                             price={product.startingPrice}
                             currentViews={product.currentViews || 1}
-                            endsIn={product.registrationOpenDate || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
+                            endsIn={product.registrationCloseDate || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
                         />
                         )
                         )}

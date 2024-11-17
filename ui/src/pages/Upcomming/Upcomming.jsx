@@ -74,12 +74,13 @@ const Upcomming = () => {
                     {auctions && auctions?.map((product) => (
                         <ProductItem
                             key={product.id}
-                            image={product.image}
+                            image={product?.productImages[0] ?? null}
                             name={product.productName}
                             slug={product.slug}
+                            productDescription={product.productDescription}
                             price={product.startingPrice}
-                            currentViews={product.currentViews || 1}
-                            endsIn={product.registrationOpenDate || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
+                            currentViews={product.viewCount || 1}
+                            endsIn={product.registrationCloseDate || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
                         />
                     ))}
                 </div>

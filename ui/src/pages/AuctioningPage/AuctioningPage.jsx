@@ -38,13 +38,13 @@ const AuctioningPage = () => {
                         <AuctioningItem 
                         key={item._id}
                         _id={item._id}
-                        image={item.image}
+                        image={item?.productImages[0] ?? null}
                         name={item.productName}
                         slug={item.slug}
                         price={item.startingPrice}
                         highestBid={item.highestBid || 122222}
                         participants={item.participants || 1}
-                        endsIn={item.registrationOpenDate || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
+                        endsIn={item.registrationCloseDate || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
                         />
                     ))}
                 </div>

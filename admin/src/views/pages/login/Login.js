@@ -53,7 +53,6 @@ const Login = (props) => {
         username: values.username,
         password: values.password
       });
-      console.log('result',result)  
       if (result.success) {
         toast.success("Đăng nhập thành công");
         setLoginSuccess(true);

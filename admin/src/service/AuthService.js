@@ -1,5 +1,5 @@
 import { toast } from "react-toastify";
-import axiosClient from "utils/axiosConfig";
+import axiosClient from "../utils/axiosConfig";
 
 const authApi = {
     login: async (userinfo) => {
