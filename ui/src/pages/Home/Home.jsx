@@ -1,29 +1,28 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
 import Banner from '../../components/Home/Banner'
 import { Filter, SortAsc } from 'lucide-react';
 import ProductItem from '../../components/Product/ProductItem';
 import logo from '../../assets/logo192.png'
+import productTemplate from '../../assets/productTemplate.jpg'
 import AuctionService from '../../services/AuctionService';
-import { countdown, formatCurrency } from '../../commons/MethodsCommons';
+import { countdown, formatCurrency, formatDate } from '../../commons/MethodsCommons';
 import LoadingSpinner from '../LoadingSpinner';
+import { REGISTER_STATUS } from '../../commons/Constant';
+import { AppContext } from '../../AppContext';
 const Home = () => {
     const [auctions, setAuctions] = useState([]);
     const [auctionStanding, setAuctionStanding] = useState(null);
     const [auctionsDone, setAuctionsDone] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [timeRemaining, setTimeRemaining] = useState('');
-
+    const { user, toggleLoginModal } = useContext(AppContext);
     const fetchData = useCallback(async () => {
         try {
             setIsLoading(true);
             const [auctionList, standingAuction, completedAuctions] = await Promise.all([
-                AuctionService.getList({ limit: 4, page: 1 }),
-                AuctionService.getOutstanding(),
-                AuctionService.getList({
-                    limit: 4,
-                    page: 1,
-                    // status: 'done'
-                })
+                AuctionService.getList({ limit: 4, page: 1, status: 'pending' }),
+                AuctionService.getOutstanding({ limit: 4, page: 1, status: 'pending' }),
+                AuctionService.getList({ limit: 4, page: 1, status: 'ended' })
             ]);
 
             setAuctions(auctionList.docs);
@@ -53,11 +52,21 @@ const Home = () => {
     }, [updateCountdown]);
 
     if (isLoading) return <LoadingSpinner />;
-
+    const auctionDetailHightLight = auctionStanding?.[0];
+    let auctionDetailRegisterStatus = null;
+    if (!!auctionDetailHightLight) {
+        if (auctionDetailHightLight.registrationCloseDate && new Date() > new Date(auctionDetailHightLight.registrationCloseDate)) {
+            auctionDetailRegisterStatus = REGISTER_STATUS.EXPIRED;
+        } else if (user && auctionDetailRegisterStatus.registeredUsers?.includes(user.userId)) {
+            auctionDetailRegisterStatus = REGISTER_STATUS.REGISTERED;
+        } else {
+            auctionDetailRegisterStatus = REGISTER_STATUS.NOT_REGISTERED;
+        }
+    }
     return (
         <div className=' relative mx-auto'>
-            <div className='w-full min-h-[90vh] h-auto flex justify-center '>
-                <Banner />
+            <div className='w-full h-auto flex justify-center container mx-auto '>
+                <Banner auctionStanding={auctionStanding} />
             </div>
             <section className="py-12 ">
                 <div className=" mx-auto px-4 container">
@@ -84,50 +93,61 @@ const Home = () => {
                                 productDescription={product.productDescription}
                                 price={product.startingPrice}
                                 currentViews={product.viewCount || 0}
-                                endsIn={product.registrationOpenDate || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
+                                endsIn={product.startTime || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
+                                registeredUsers={product.registeredUsers}
+                                registrationCloseDate={product.registrationCloseDate}
                             />
                         ))}
                     </div>
                 </div>
             </section>
 
-            <section className="bg-muted py-12">
-                <div className="container mx-auto px-4 md:px-6">
-                    <h2 className="text-2xl font-bold mb-6">Product Details</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className='h-[600px]'>
-                            <img
-                                src="/placeholder.svg"
-                                alt="Product Image"
-                                width={600}
-                                height={600}
-                                className="w-full rounded-lg"
-                                style={{ aspectRatio: "600/600", objectFit: "cover" }}
-                            />
-                        </div>
-                        <div>
-                            <h3 className="text-2xl font-bold mb-4">{auctionStanding.productName}</h3>
-                            <p className="text-muted-foreground mb-6">
-                                {auctionStanding.productDescription}
-                            </p>
-                            <div className="flex items-center justify-between mb-6">
-                                <div>
-                                    <p className="text-muted-foreground">Time Remaining:</p>
-                                    <p className="text-2xl font-bold">{timeRemaining}</p>
+            {
+                auctionDetailHightLight && (
+                    <section className="bg-muted py-12">
+                        <div className="container mx-auto px-4 md:px-6">
+                            <h2 className="text-2xl font-bold mb-6">Product Details</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="h-[400px] sm:h-[500px] md:h-[600px] lg:h-[650px]">
+                                    <img
+                                        src={auctionDetailHightLight?.productImages[0] || productTemplate}
+                                        alt="Product Image"
+                                        className="w-full h-full rounded-lg object-cover"
+                                        style={{ aspectRatio: "1 / 1" }}
+                                    />
                                 </div>
-                                <div>
-                                    <p className="text-muted-foreground">Current Bid:</p>
-                                    <p className="text-2xl font-bold">{formatCurrency(auctionStanding.startingPrice)}</p>
+                                <div className="my-auto">
+                                    <h3 className="text-2xl font-bold mb-4">{auctionDetailHightLight.productName}</h3>
+                                    <p className="text-muted-foreground mb-6">
+                                        {auctionDetailHightLight.productDescription}
+                                    </p>
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div>
+                                            <p className="text-muted-foreground">Time Remaining:</p>
+                                            <p className="text-2xl font-bold">{countdown(timeRemaining)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-muted-foreground">Current Bid:</p>
+                                            <p className="text-2xl font-bold">{formatCurrency(auctionDetailHightLight.startingPrice)}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        size="lg"
+                                        className={`w-full inline-flex items-center justify-center text-sm font-medium bg-primary h-11 rounded-md px-8 text-white 
+                ${auctionDetailRegisterStatus === REGISTER_STATUS.REGISTERED || auctionDetailRegisterStatus === REGISTER_STATUS.EXPIRED ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        // onClick={handleSubmit}
+                                        disabled={auctionDetailRegisterStatus === REGISTER_STATUS.REGISTERED || auctionDetailRegisterStatus === REGISTER_STATUS.EXPIRED}
+                                    >
+                                        {auctionDetailRegisterStatus === REGISTER_STATUS.EXPIRED ? 'Registration Closed' :
+                                            auctionDetailRegisterStatus === REGISTER_STATUS.REGISTERED ? 'Already Registered' :
+                                                'Place Bid'}
+                                    </button>
                                 </div>
                             </div>
-                            <button size="lg" className="w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium bg-primary h-11 rounded-md px-8 text-white">
-                                Place Bid
-                            </button>
                         </div>
-                    </div>
-                </div>
-            </section>
-
+                    </section>
+                )
+            }
             <section className="py-12">
                 <div className="container mx-auto px-4 md:px-6">
                     <h2 className="text-2xl font-bold mb-6">Sold Items</h2>
@@ -136,16 +156,16 @@ const Home = () => {
                             auctionsDone?.map(item => (
                                 <div className="bg-background rounded-lg shadow-lg overflow-hidden">
                                     <img
-                                        src="/placeholder.svg"
-                                        alt="Sold Item 1"
+                                        src={item.productImages[0] || productTemplate}
+                                        alt="Sold Item "
                                         width={400}
                                         height={300}
                                         className="w-full h-48 object-cover"
-                                        style={{ aspectRatio: "400/300", objectFit: "cover" }}
+                                        style={{ aspectRatio: "400/300", objectFit: "contain" }}
                                     />
                                     <div className="p-4">
-                                        <h3 className="text-xl font-bold mb-2">{auctionsDone.productName}</h3>
-                                        <p className="text-muted-foreground mb-4">Sold for {formatCurrency(auctionsDone.startingPrice)} on June 1, 2024</p>
+                                        <h3 className="text-xl font-bold mb-2">{item.productName}</h3>
+                                        <p className="text-muted-foreground mb-4">Sold for {formatCurrency(item.currentPrice)} on {formatDate(item.endTime) }</p>
                                     </div>
                                 </div>
                             ))

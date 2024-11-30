@@ -21,7 +21,8 @@ const server = http.createServer(app);
 // Khởi tạo Socket.IO
 const io = socketIo(server, {
     cors: {
-        origin: "http://localhost:3033", 
+        // origin: "http://localhost:3033", 
+        origin: process.env.REACT_APP_CLIENT_URL, 
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -57,8 +58,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json());
 const corsOptions = {
     origin: [
-        'http://localhost:3030',
-        'http://localhost:3033',
+        process.env.REACT_APP_CLIENT_URL,
+        process.env.REACT_APP_ADMIN_URL,
+        // 'http://localhost:3033',
     ],
     credentials: true,
     exposedHeaders: ['x-new-access-token', 'x-token-resetpassword'],

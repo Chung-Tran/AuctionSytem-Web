@@ -11,11 +11,8 @@ import LoadingSpinner from '../LoadingSpinner'
 import RegistrationSteps from './RegistrationSteps';
 import { AppContext } from '../../AppContext';
 import productTemplate from '../../assets/productTemplate.jpg';
-const REGISTER_STATUS = {
-    NOT_REGISTERED: 1,//User chưa đăng ký
-    REGISTERED: 2, //Đã nằm trong list đăng ký
-    EXPIRED: 3, //Quá hạn cho phép đăng ký
-}
+import { REGISTER_STATUS } from '../../commons/Constant'
+
 const ProductDetail = () => {
     const { slug } = useParams()
     const { user, toggleLoginModal } = useContext(AppContext)
@@ -27,7 +24,7 @@ const ProductDetail = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                
+
                 const auctionData = await AuctionService.getDetail(slug);
                 const auctionList = await AuctionService.getList({
                     limit: 4,
@@ -36,7 +33,7 @@ const ProductDetail = () => {
                 });
 
                 setAuction(auctionData);
-                if (auctionData.registrationOpenDate && new Date() > new Date(auctionData.registrationOpenDate)) {
+                if (auctionData.registrationCloseDate && new Date() > new Date(auctionData.registrationCloseDate)) {
                     setRegisterStatus(REGISTER_STATUS.EXPIRED);
                 } else if (user && auctionData.registeredUsers?.includes(user.userId)) {
                     setRegisterStatus(REGISTER_STATUS.REGISTERED);
@@ -54,10 +51,11 @@ const ProductDetail = () => {
         }
     }, [slug])
 
-    const calculateTimeLeft = useCallback((targetDate) => {
+    const calculateTimeLeft = useCallback((startTime) => {
         const now = new Date()
+        const targetDate = new Date(startTime)
         const difference = targetDate - now
-
+        console.log(targetDate,difference)
         if (difference > 0) {
             const days = Math.floor(difference / (1000 * 60 * 60 * 24))
             const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
@@ -72,8 +70,7 @@ const ProductDetail = () => {
 
     useEffect(() => {
         if (auction) {
-            const fakeTime = new Date('2024-10-08T14:00:00')
-            const interval = setInterval(() => calculateTimeLeft(fakeTime), 1000)
+            const interval = setInterval(() => calculateTimeLeft(auction.startTime), 1000)
             return () => clearInterval(interval)
         }
     }, [auction, calculateTimeLeft])
@@ -157,16 +154,20 @@ const ProductDetail = () => {
                                         <div className=' font-semibold'>{formatDate(auction.registrationCloseDate)}</div>
                                     </div>
                                     <div className="flex items-center justify-between">
+                                        <span className="text-muted-foreground">Auction Start:</span>
+                                        <div className=' font-semibold'>{formatDate(auction.startTime)}</div>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-muted-foreground">Auction End:</span>
+                                        <div className=' font-semibold'>{formatDate(auction.endTime)}</div>
+                                    </div>
+                                    <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Registration Fee:</span>
                                         <div className=' font-semibold'>{formatCurrency(auction.registrationFee)}</div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Bid Increment:</span>
                                         <div className=' font-semibold'>{formatCurrency(auction.bidIncrement)}</div>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground">Max Bid Increments:</span>
-                                        <div className=' font-semibold'>20</div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Deposit:</span>
@@ -184,24 +185,21 @@ const ProductDetail = () => {
                                         <span className="text-muted-foreground">Asset Viewing Location:</span>
                                         <div className=' font-semibold'>{auction.productAddress}</div>
                                     </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground">Auction Start:</span>
-                                        <div className=' font-semibold'>{formatDate(auction.startTime)}</div>
-                                    </div>
+                                   
                                 </div>
                             </div>
                             <button
                                 size="lg"
                                 className={`w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium 
-                                ${registerStatus === REGISTER_STATUS.EXPIRED ? 'bg-gray-400 cursor-not-allowed' :
-                                        registerStatus === REGISTER_STATUS.REGISTERED ? 'bg-green-500 cursor-not-allowed' :
+                                            ${registerStatus === REGISTER_STATUS.EXPIRED ? 'bg-gray-400 cursor-not-allowed' :
+                                            registerStatus === REGISTER_STATUS.REGISTERED ? 'bg-green-500 cursor-not-allowed' :
                                             'bg-primary'} 
-        h-11 rounded-md px-8 text-white`}
+                                            h-11 rounded-md px-8 text-white`}
                                 onClick={handleRegister}
                                 disabled={registerStatus === REGISTER_STATUS.EXPIRED || registerStatus === REGISTER_STATUS.REGISTERED}
                             >
-                                {registerStatus === REGISTER_STATUS.EXPIRED ? 'Registration Expired' :
-                                    registerStatus === REGISTER_STATUS.REGISTERED ? 'Already Registered' :
+                                {registerStatus === REGISTER_STATUS.REGISTERED ? 'Already Registered':
+                                    registerStatus === REGISTER_STATUS.EXPIRED ? 'Registration Expired'  :
                                         'Register for Auction'}
                             </button>
                         </div>
@@ -257,7 +255,9 @@ const ProductDetail = () => {
                             productDescription={product.productDescription}
                             price={product.startingPrice}
                             currentViews={product.currentViews || 1}
-                            endsIn={product.registrationCloseDate || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
+                            endsIn={product.startTime || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
+                            registeredUsers={product.registeredUsers}
+                            registrationCloseDate={product.registrationCloseDate}
                         />
                         )
                         )}

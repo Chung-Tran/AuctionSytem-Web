@@ -154,15 +154,19 @@ const syncFinalAuctionData = async (auctionId) => {
     let auctionData = JSON.parse(auction.auction);
     const bidList = await redisClient.lRange(REDIS_KEYS.BID_HISTORY(auctionId), 0, -1);
     let highestBidder = null;
+    const bidHistoryIds = [];
+
     // SYNC lịch sử đấu giá
     for (const bidJson of bidList) {
       const bid = JSON.parse(bidJson);
-      await BidHistory.create({
+      const bidHistory = await BidHistory.create({
         auction: auctionId,
         bidder: bid.userId,
         amount: bid.bidAmount,
         time: new Date(bid.timestamp)
       });
+
+      bidHistoryIds.push(bidHistory._id);
 
       if (
         !highestBidder ||
@@ -178,17 +182,20 @@ const syncFinalAuctionData = async (auctionId) => {
       }
     }
 
-    // update auction
     if (auctionData) {
       await Auction.findByIdAndUpdate(auctionId, {
         winner: highestBidder?.userId || null,
+        winningPrice: highestBidder?.amount || null,
+        bids: bidHistoryIds 
       });
     }
+
     return { highestBidder, auctionData }
   } catch (error) {
     console.error('Error syncing final auction data:', error);
   }
 };
+
 
 module.exports = {
   initializeAuctionSystem
