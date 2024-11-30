@@ -104,7 +104,7 @@ const AuctionRoom = () => {
   const [disable, setDisable] = useState(false);
   const [currentBid, setCurrentBid] = useState(0);
   const [bidAmount, setBidAmount] = useState(INITIAL_BID_AMOUNT);
-  const [timeLeft, setTimeLeft] = useState(0);
+  const [timeLeft, setTimeLeft] = useState();
   const [quantity, setQuantity] = useState(1);
   const [notifications, setNotifications] = useState([]);
   const [totalBidAmount, setTotalBidAmount] = useState(bidAmount * quantity);
@@ -211,7 +211,7 @@ const AuctionRoom = () => {
   }, [notifications, removeNotification]);
 
   // Error Handling
-  if (!roomId || timeLeft == 0) {
+  if (!roomId) {
     openNotify('error', 'Room not found');
     return <Navigate to="/" />;
   }
@@ -223,7 +223,7 @@ const AuctionRoom = () => {
       </div>
     )}
       <div className="flex-1 flex flex-col items-center justify-start pt-8 relative bg-auctionroom w-1/2 h-full">
-        <div className="absolute top-0 left-0 bg-red-600 text-white px-4 py-1 text-sm">TRỰC TIẾP</div>
+        <div className="absolute top-0 left-0 bg-red-600 text-white px-4 py-1 text-base soft-pulse">TRỰC TIẾP</div>
         
         <div className='mt-[15%]'>
           <Notification notifications={notifications} />

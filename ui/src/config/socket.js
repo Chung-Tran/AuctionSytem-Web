@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import io, { connect } from 'socket.io-client';
 import { openNotify } from '../commons/MethodsCommons';
 
-const SOCKET_SERVER_URL = process.env.REACT_APP_SOCKET_SERVER_URL;
+const SOCKET_SERVER_URL = process.env.REACT_APP_API_URL;
 
 export const useAuctionSocket = (auctionId,
   { onBidUpdate,

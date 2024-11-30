@@ -27,6 +27,24 @@ const ProfileService = {
             throw new Error(error.message || 'Fetch data failed');
         }
     },
+    getHistoryRegister: async () => {
+        try {
+            const response = await axiosClient.get(`customers/history-register`);
+            const data = await handleResponse(response);
+            return data;
+        } catch (error) {
+            handleResponseError(error)
+        }
+    },
+    getHistoryTransaction: async () => {
+        try {
+            const response = await axiosClient.get(`customers/history-transactions`);
+            const data = await handleResponse(response);
+            return data;
+        } catch (error) {
+            handleResponseError(error)
+        }
+    },
 }
 
 export default ProfileService;

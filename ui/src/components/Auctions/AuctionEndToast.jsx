@@ -4,7 +4,7 @@ import { Trophy, Home, Timer } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 const AuctionEndToast = ({ winner, bidAmount, dismissToast }) => {
-  const [countdown, setCountdown] = useState(100);
+  const [countdown, setCountdown] = useState(5);
   const navigate = useNavigate();
 
   useEffect(() => {

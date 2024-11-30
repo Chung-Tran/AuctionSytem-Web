@@ -41,44 +41,68 @@ const RegistrationSteps = ({ auction, onClose }) => {
       title: 'Xác nhận thông tin',
       icon: <SafetyOutlined />,
       content: (
-        <Card className="w-full shadow-lg rounded-lg p-6 mb-6">
-          <Form layout="vertical">
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <Form.Item label="Tên sản phẩm">
-                  <Input value={auction.productName} disabled className="bg-gray-100" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="Giá khởi điểm">
-                  <Statistic
-                    value={auction.startingPrice}
-                    prefix="₫"
-                    valueStyle={{ color: '#3f8600' }}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="Phí đăng ký">
-                  <Statistic
-                    value={auction.registrationFee}
-                    prefix="₫"
-                    valueStyle={{ color: '#cf1322' }}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="Tiền đặt cọc">
-                  <Statistic
-                    value={auction.deposit}
-                    prefix="₫"
-                    valueStyle={{ color: '#1890ff' }}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-          </Form>
-        </Card>
+<div className="w-full bg-white rounded-xl shadow-lg overflow-hidden">
+        {/* Header gradient */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-4">
+          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            <SafetyOutlined className="w-5 h-5" />
+            Thông tin xác nhận
+          </h3>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* Product Info */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <label className="block text-sm font-medium text-gray-600 mb-2">
+              Tên sản phẩm
+            </label>
+            <input 
+              type="text" 
+              value={auction.productName}
+              disabled
+              className="w-full bg-white border border-gray-200 rounded-md py-2 px-3 text-gray-700"
+            />
+          </div>
+
+          {/* Price Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Starting Price */}
+            <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
+              <label className="block text-sm font-medium text-green-700 mb-2">
+                Giá khởi điểm
+              </label>
+              <div className="text-xl font-bold text-green-700">
+                {formatCurrency(auction.startingPrice)}
+              </div>
+            </div>
+
+            {/* Registration Fee */}
+            <div className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-lg">
+              <label className="block text-sm font-medium text-red-700 mb-2">
+                Phí đăng ký
+              </label>
+              <div className="text-xl font-bold text-red-700">
+                {formatCurrency(auction.registrationFee)}
+              </div>
+            </div>
+
+            {/* Deposit */}
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
+              <label className="block text-sm font-medium text-blue-700 mb-2">
+                Tiền đặt cọc
+              </label>
+              <div className="text-xl font-bold text-blue-700">
+                {formatCurrency(auction.deposit)}
+              </div>
+            </div>
+          </div>
+
+          {/* Warning Message */}
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg text-sm">
+            Vui lòng kiểm tra kỹ thông tin trước khi xác nhận
+          </div>
+        </div>
+      </div>
       )
     },
     {
@@ -307,7 +331,7 @@ const usePaymentPolling = (onSuccess, onFailure) => {
 
   const handleVnpayPayment = useCallback((auction) => {
     const paymentData = {
-      amount: auction.registrationFee + auction.deposit,
+      amount:( auction.registrationFee + auction.deposit) || 0,
       bankCode: "",
       auctionId: auction._id
     };

@@ -59,7 +59,7 @@ const registerAuctionProduct = asyncHandler(async (req, res) => {
             startingPrice,
             bidIncrement,
             deposit,
-            status: 'pending',
+            status: 'new',
             createdBy: sellerId,
 
         });
@@ -152,9 +152,10 @@ const rejectAuction = asyncHandler(async (req, res) => {
 const getAuctionDetails = asyncHandler(async (req, res) => {
     const { auctionSlug } = req.params;
     const { viewed } = req.query;
+    
     try {
         let pipeline = [];
-        if (!viewed) {//Check số lượng người xem sản phẩm
+        if (!JSON.parse(viewed || 'false')) {//Check số lượng người xem sản phẩm
             await Auction.updateOne(
                 { slug: auctionSlug }, 
                 { $inc: { viewCount: 1 } } // Tăng currentViews lên 1
@@ -235,13 +236,14 @@ const getAuctionDetails = asyncHandler(async (req, res) => {
 //Auction nổi bật(hightlight)
 const getAuctionOutstanding = asyncHandler(async (req, res) => {
     try {
-        let pipeline = [];
-        pipeline.push(
+        const { limit = 10, page = 1 } = req.query;
+        const parsedLimit = parseInt(limit, 10);
+        const parsedPage = parseInt(page, 10); 
+        const skip = (parsedPage - 1) * parsedLimit; 
+
+        let pipeline = [
             {
-                $match: { outstanding: true }
-            },
-            {
-                $lookup: {
+                $lookup: { 
                     from: 'products',
                     localField: 'product',
                     foreignField: '_id',
@@ -250,22 +252,25 @@ const getAuctionOutstanding = asyncHandler(async (req, res) => {
             },
             {
                 $unwind: '$product'
-            });
-
-        pipeline.push({
-            $sort: { createdAt: -1 }
-        });
-
-        pipeline.push(
+            },
             {
-                $project: {
-                    //Product
+                $sort: { viewCount: -1 } 
+            },
+            {
+                $skip: skip 
+            },
+            {
+                $limit: parsedLimit 
+            },
+            {
+                $project: { 
+                    // Product
                     productName: "$product.productName",
                     productImages: "$product.images",
                     productDescription: "$product.description",
                     productAddress: "$product.address",
 
-                    //Auction
+                    // Auction
                     currentViews: 1,
                     sellerName: 1,
                     reservePrice: 1,
@@ -277,19 +282,16 @@ const getAuctionOutstanding = asyncHandler(async (req, res) => {
                     deposit: 1,
                     registrationFee: 1,
                 }
-            },
-            {
-                $limit: 1
             }
-        );
-        const auctions = await Auction.aggregate(pipeline);
-        res.status(200).json(formatResponse(true, auctions[0], ""));
+        ];
+
+        const auctions = await Auction.aggregate(pipeline); 
+        res.status(200).json(formatResponse(true, auctions, ""));
     } catch (error) {
-        console.error('Lỗi khi lấy thông phiên đấu giá:', error);
+        console.error('Lỗi khi lấy thông tin phiên đấu giá:', error);
         res.status(500).json(formatResponse(false, null, "Đã xảy ra lỗi khi lấy danh sách phiên đấu giá"));
     }
 });
-
 const listAuctions = asyncHandler(async (req, res) => {
     const { status, page = 1, limit = 10 } = req.query;
 
@@ -349,6 +351,14 @@ const listAuctions = asyncHandler(async (req, res) => {
                 updatedAt: 1,
                 approvalTime: 1,
                 status: 1,
+                winningPrice: 1,
+                registeredUsers: {
+                    $map: {
+                      input: "$registeredUsers", 
+                      as: "user",              
+                      in: "$$user.customer"    
+                    }
+                  }
             }
         });
         const auctions = await Auction.aggregate(pipeline);
