@@ -5,6 +5,9 @@ const {
     registerAuctionProduct,
     approveAuction,
     rejectAuction,
+    updateAuction,
+    endAuction,
+    kickCustomerOutOfAuction,
     getAuctionDetails,
     listAuctions,
     getAuctionOutstanding,
@@ -19,6 +22,9 @@ router.post('/register', verifyAccessToken,handleUpload, registerAuctionProduct)
 
 router.put('/approve/:auctionId', approveAuction); 
 router.put('/reject/:auctionId', rejectAuction);
+router.put('/update/:auctionId', updateAuction);
+router.put('/end/:auctionId', endAuction);
+router.delete('/kickCustomer/:auctionId/:customerId', kickCustomerOutOfAuction);
 
 //get cho client
 router.get('/outstanding', getAuctionOutstanding); 

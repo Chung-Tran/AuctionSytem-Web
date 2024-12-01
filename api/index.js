@@ -63,8 +63,11 @@ const corsOptions = {
     credentials: true,
     exposedHeaders: ['x-new-access-token', 'x-token-resetpassword'],
 };
-app.use(cors(corsOptions));
-
+// app.use(cors(corsOptions));
+app.use(cors({
+    origin: 'http://localhost:3000', // Chỉ định nguồn gốc được phép
+    credentials: true // Cho phép gửi cookie và các thông tin xác thực khác
+}));
 //Sync data khi start server
 initializeAuctionSystem();
 
