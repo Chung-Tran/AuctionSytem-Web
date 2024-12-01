@@ -44,10 +44,10 @@ const employeeLogin = asyncHandle(async (req, res) => {
     }
 
     // Create JWT access token & refresh token
-    const { sessionKey } = await generateRefreshToken(employee._id, process.env.EMPLOYEERE_FRESH_TOKEN_EXPIRED);
-    const accessToken = generateAccessToken(employee._id, sessionKey, process.env.EMPLOYEE_ACCESS_TOKEN_EXPIRED);
-    // res.setHeader('x-new-access-token', accessToken);
-    
+    const { sessionKey } = await generateRefreshToken(employee._id);
+    const accessToken = generateAccessToken(employee._id, sessionKey);
+    res.setHeader('x-new-access-token', accessToken);
+      
     // Lưu accessToken vào cookie
     res.cookie('accessToken', accessToken, {
         httpOnly: false,          // Chỉ cho phép truy cập từ server-side

@@ -24,16 +24,17 @@ const AuctionManager = () => {
   });
   const [filterParams, setFilterParams] = useState({
     fullName: '',
-    email: '',
-    rolePermission: '',
-    phoneNumber: ''
+    status: '',
   });
+  const [filteredAuctions, setFilteredAuctions] = useState(auctions); 
+
+  const [activeTabKey, setActiveTabKey] = useState("1"); 
+
 
   const formatDateTime = (value) => {
     if (!value || value === 'Đợi duyệt') return '';
     return moment(value).format('HH:mm || DD-MM-YYYY ');
   };
-
 
   const handleAction = (type, auction) => {
     setModalConfig({
@@ -78,15 +79,39 @@ const AuctionManager = () => {
   useEffect(() => {
     fetchAuctions();
     console.log("Auctionnn: ", auctions.ended)
-  }, []);
+  }, [activeTabKey]);
 
   const handleFilter = (e) => {
     const { name, value } = e.target;
     setFilterParams(prev => ({
-      ...prev,
+      // Kiểm tra nếu prev là một đối tượng, nếu không thì khởi tạo một đối tượng rỗng
+      ...(prev || {}),
       [name]: value
     }));
   };
+
+  /*useEffect(() => {
+    if (Array.isArray(auctions)) {
+      const filtered = auctions.filter(item => {
+        const matchProductName = filterParams.fullName
+          ? item.productName.toLowerCase().includes(filterParams.fullName.toLowerCase())
+          : true;
+        
+        const matchStatus = filterParams.status
+          ? item.status.toLowerCase() === filterParams.status.toLowerCase()
+          : true;
+        
+        return matchProductName && matchStatus;
+      });
+  
+      setFilteredAuctions(filtered);  // Cập nhật danh sách đã lọc
+    } else {
+      // Xử lý trường hợp auctions không phải là mảng
+      console.error('auctions is not an array:', auctions);
+      setFilteredAuctions([]);  // Đảm bảo là mảng rỗng khi auctions không phải mảng
+    }
+  }, [filterParams, auctions]); // Cập nhật khi filterParams hoặc auctions thay đổi*/
+  
 
   const renderActionButtons = (status, item) => {
     const buttons = [];
@@ -123,7 +148,7 @@ const AuctionManager = () => {
         </CButton>,
         <CButton key="end" className="btn-danger" onClick={() => handleAction(MODAL_TYPES.END, item)}>
           Đóng phiên 
-        </CButton> // viet API
+        </CButton> 
       );
     }
     else if (status === AUCTION_STATUS.ENDED) {
@@ -241,26 +266,34 @@ const AuctionManager = () => {
           <CRow md="12">
             <CRow className="col-md-6 mb-2">
               <CCol md="3" className="d-flex align-items-center">
-                <CFormLabel className="mt-2">Tên nhân viên</CFormLabel>
+                <CFormLabel className="mt-2">Tên phiên đấu giá</CFormLabel>
               </CCol>
               <CCol md="7">
-                <CFormInput name="fullName" onChange={handleFilter} />
+                <CFormInput
+                  name="fullName"
+                  value={filterParams.fullName || ''}
+                  onChange={handleFilter}
+                />
               </CCol>
             </CRow>
             <CRow className="col-md-6 mb-2">
               <CCol md="3" className="d-flex align-items-center">
-                <CFormLabel className="mt-2">Email</CFormLabel>
+                <CFormLabel className="mt-2">Trạng thái phiên</CFormLabel>
               </CCol>
               <CCol md="7">
-                <CFormInput name="email" onChange={handleFilter} />
+                <CFormInput
+                  name="status"
+                  value={filterParams.status || ''}
+                  onChange={handleFilter}
+                />
               </CCol>
-            </CRow>
-            <CRow className="col-md-6 mb-2">
+          </CRow>
+            {/* <CRow className="col-md-6 mb-2">
               <CCol md="3" className="d-flex align-items-center">
-                <CFormLabel className="mt-2">Chức vụ</CFormLabel>
+                <CFormLabel className="mt-2">Tên sản phẩm</CFormLabel>
               </CCol>
               <CCol md="7">
-                <CFormInput name="rolePermission" onChange={handleFilter} />
+                <CFormInput name="productName" onChange={handleFilter} />
               </CCol>
             </CRow>
             <CRow className="col-md-6 mb-2">
@@ -270,7 +303,7 @@ const AuctionManager = () => {
               <CCol md="7">
                 <CFormInput name="phoneNumber" onChange={handleFilter} />
               </CCol>
-            </CRow>
+            </CRow> */}
           </CRow>
         </CForm>
       </CRow>
@@ -279,7 +312,7 @@ const AuctionManager = () => {
           Kết quả tìm kiếm
         </CRow>
         <CRow>
-          <Tabs defaultActiveKey="1" items={tabItems} />
+          <Tabs defaultActiveKey="1" items={tabItems} onChange={(key) => setActiveTabKey(key)}/>
         </CRow>
       </CRow>
       <AuctionModal

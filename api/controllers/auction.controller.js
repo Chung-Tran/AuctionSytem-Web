@@ -80,7 +80,7 @@ const registerAuctionProduct = asyncHandler(async (req, res) => {
 });
 
 const approveAuction = asyncHandler(async (req, res) => {
-    const { auctionId } = req.params;
+    const { auctionId, userId } = req.params;
     // const userId = req.user.userId;
 
     const {
@@ -96,14 +96,19 @@ const approveAuction = asyncHandler(async (req, res) => {
         return res.status(404).json(formatResponse(false, null, "Không tìm thấy phiên đấu giá"));
     }
 
+    if (auction.managementAction.length === 0) {
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'duyệt'});
+    } else {
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'khôi phục'});
+    }
+
     try {
         auction.startTime = startTime;
         auction.endTime = endTime;
         auction.registrationOpenDate = registrationOpenDate;
         auction.registrationCloseDate = registrationCloseDate;
         auction.registrationFee = registrationFee;
-        // auction.approvalBy = userId,
-        auction.approvalTime = moment();
+        
         auction.status = 'pending';
 
         await auction.save();
@@ -118,9 +123,10 @@ const approveAuction = asyncHandler(async (req, res) => {
 });
 
 const rejectAuction = asyncHandler(async (req, res) => {
-    const { auctionId } = req.params;
+    const { auctionId, userId} = req.params;
     const { reason } = req.body;
     // const userId = req.user.userId;
+   
 
     if (!reason) {
         return res.status(400).json(formatResponse(false, null, "Vui lòng cung cấp lý do từ chối"));
@@ -131,11 +137,15 @@ const rejectAuction = asyncHandler(async (req, res) => {
         return res.status(404).json(formatResponse(false, null, "Không tìm thấy phiên đấu giá"));
     }
 
+    if (auction.managementAction.length === 0) {
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'từ chối'});
+    } else {
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'hủy'});
+    }
+
     try {
         auction.status = 'cancelled';
         auction.cancellationReason = reason;
-        // auction.approvalBy = userId,
-        auction.approvalTime = moment();
 
         await auction.save();
 
@@ -149,7 +159,7 @@ const rejectAuction = asyncHandler(async (req, res) => {
 });
 
 const updateAuction = asyncHandler(async (req, res) => {
-    const { auctionId } = req.params;
+    const { auctionId, userId } = req.params;
     // const userId = req.user.userId;
 
     const {
@@ -175,9 +185,8 @@ const updateAuction = asyncHandler(async (req, res) => {
         auction.registrationOpenDate = registrationOpenDate;
         auction.registrationCloseDate = registrationCloseDate;
         auction.registrationFee = registrationFee;
-        // auction.approvalBy = userId,
-        // auction.approvalTime = auction.approvalTime,
-        
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'điều chỉnh'});
+
         await auction.save();
 
         // await Product.findByIdAndUpdate(auction.product, { status: 'pending' });
@@ -190,7 +199,7 @@ const updateAuction = asyncHandler(async (req, res) => {
 });
 
 const endAuction = asyncHandler(async (req, res) => {
-    const { auctionId } = req.params;
+    const { auctionId, userId } = req.params;
     const { reason } = req.body;
     // const userId = req.user.userId;
 
@@ -206,8 +215,8 @@ const endAuction = asyncHandler(async (req, res) => {
     try {
         auction.status = 'ended';
         auction.cancellationReason = reason;
-        // auction.approvalBy = userId,
-        auction.approvalTime = moment();
+        auction.endTime = moment().toDate();
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'kết thúc'});
 
         await auction.save();
 
@@ -221,7 +230,7 @@ const endAuction = asyncHandler(async (req, res) => {
 });
 
 const kickCustomerOutOfAuction = asyncHandler(async (req, res) => {
-    const { auctionId, customerId } = req.params;
+    const { auctionId, customerId, userId } = req.params;
 
     const auction = await Auction.findById(auctionId);
     if (!auction) {
@@ -234,6 +243,8 @@ const kickCustomerOutOfAuction = asyncHandler(async (req, res) => {
     if (userIndex === -1) {
         return res.status(404).json(formatResponse(false, null, "Không tìm thấy khách hàng trong phòng đấu giá"));
     }
+
+    // auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'xóa khách hàng'});
 
     try {
         auction.registeredUsers.splice(userIndex, 1);
@@ -471,6 +482,18 @@ const listAuctions = asyncHandler(async (req, res) => {
                 }
             }
         ); 
+
+        pipeline.push(
+            {
+              $lookup: {
+                from: 'users', 
+                localField: 'managementAction.userBy', 
+                foreignField: '_id', 
+                as: 'userDetails',
+              },
+            },
+            
+        );
             
         pipeline.push({
             $sort: { createdAt: -1 }
@@ -511,11 +534,12 @@ const listAuctions = asyncHandler(async (req, res) => {
                 deposit: 1,
                 registrationFee: 1,
                 winner: "$customerwinner.fullName",
+                winningPrice: 1,
 
                 createdAt: 1,
                 updatedAt: 1,
-                approvalTime: 1,
-                approvalBy: 1,
+                managementAction: 1,
+                userDetails: 1,
                 status: status,
                 cancellationReason: 1,
 
@@ -530,8 +554,6 @@ const listAuctions = asyncHandler(async (req, res) => {
                 avatar: "$customerwinner.avatar",
                 IndentifyCode: "$customerwinner.IndentifyCode",
                 createdCustomerAt: "$customerwinner.createdAt",
-                winningPrice: 1,
-
             }
         });
         const auctions = await Auction.aggregate(pipeline);
@@ -668,13 +690,12 @@ const ongoingList = asyncHandler(async (req, res) => {
                 deposit: 1,
                 registrationFee: 1,
                 winner: "$customerwinner.fullName",
-
+                winningPrice:1,
                 participants: 1,
 
                 createdAt: 1,
                 updatedAt: 1,
-                approvalTime: 1,
-                approvalBy: 1,
+                managementAction: 1,
                 status: status,
                 cancellationReason: 1,
 

@@ -28,12 +28,18 @@ const AuctionSchema = new Schema({
     registrationFee: { type: Number }, // Phí đăng ký
     winner: { type: Schema.Types.ObjectId, ref: 'Customer' },
     winningPrice: { type: Number }, // Giá trúng
-    approvalTime: { type: Date }, //thời điểm duyệt
-    rejectTime: { type: Date }, //thời điểm duyệt
-    closeTime: { type: Date }, //thời điểm duyệt
+    
+    managementAction: [
+        {
+            timeLine: { type: Date }, 
+            userBy: { type: Schema.Types.ObjectId, ref: 'User' },
+            action: {
+                type: String,
+                enum: [ 'duyệt', 'từ chối', 'điều chỉnh', 'hủy', 'khôi phục', 'kết thúc' ]
+            },
+        }
+    ],  
 
-    approvalBy: { type: Schema.Types.ObjectId, ref: 'User' },
-    updatedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     bids: [{ type: Schema.Types.ObjectId, ref: 'BidHistory' }],
     // outstanding: { type: Boolean, default: false },//Phiên đấu giá được ghim hightlight ở website
     registeredUsers: [

@@ -42,13 +42,13 @@ const auctionAPI = {
         return cancelAuctionAPI 
     },
 
-    approve: async (id, values) => {
+    approve: async (userId, id, values) => {
         try {
             if (!id || typeof id !== 'string') {
                 throw new Error("Invalid Auction ID: ID must be a valid string");
             }
 
-            const approveAPI = await axiosClient.put(`/auction/approve/${id}`, values, 
+            const approveAPI = await axiosClient.put(`/auction/approve/${id}/${userId}`, values, 
                 { 
                     withCredentials: true, 
                     headers: { 
@@ -65,8 +65,8 @@ const auctionAPI = {
         }
     },
 
-    reject: async (id, reason) => {
-        const rejectAPI = await axiosClient.put(`/auction/reject/${id}`,{ reason },
+    reject: async (userId, id, reason) => {
+        const rejectAPI = await axiosClient.put(`/auction/reject/${id}/${userId}`,{ reason },
             { 
                 withCredentials: true, 
                 headers: { 
@@ -79,9 +79,9 @@ const auctionAPI = {
         return rejectAPI 
     },
 
-    updateAuction: async (id, values) => {
+    updateAuction: async (userId, id, values) => {
         try {
-            const updateAuctionAPI = await axiosClient.put(`/auction/update/${id}`, values, 
+            const updateAuctionAPI = await axiosClient.put(`/auction/update/${id}/${userId}`, values, 
                 { 
                     withCredentials: true, 
                     headers: { 
@@ -98,8 +98,8 @@ const auctionAPI = {
         }
     },
 
-    endAuction: async (id, reason) => {
-        const endAuctionAPI = await axiosClient.put(`/auction/end/${id}`,{ reason },
+    endAuction: async (userId, id, reason) => {
+        const endAuctionAPI = await axiosClient.put(`/auction/end/${id}/${userId}`,{ reason },
             { 
                 withCredentials: true, 
                 headers: { 
@@ -112,8 +112,8 @@ const auctionAPI = {
         return endAuctionAPI 
     },
 
-    kickCustomerOutOfAuction: async (auctionId, customerId) => {
-        const kickCustomerOutOfAuctionAPI = await axiosClient.delete(`/auction/kickCustomer/${auctionId}/${customerId}`, { withCredentials: true })
+    kickCustomerOutOfAuction: async (userId, auctionId, customerId) => {
+        const kickCustomerOutOfAuctionAPI = await axiosClient.delete(`/auction/kickCustomer/${auctionId}/${customerId}/${userId}`, { withCredentials: true })
             if (!kickCustomerOutOfAuctionAPI.success) {
                 return toast.error(kickCustomerOutOfAuctionAPI?.message || "Xóa khách hàng khỏi phiên đấu giá thất bại");
             }

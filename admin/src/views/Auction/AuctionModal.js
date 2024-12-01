@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { CButton, CCol, CForm, CFormInput, CFormTextarea, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react';
+import { CButton, CCol, CForm, CTable, CFormInput, CFormTextarea, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react';
 import { useFormik } from 'formik';
 import { toast } from 'react-toastify';
 import * as Yup from 'yup';
 import auctionAPI from '../../service/AuctionService';
 import customerAPI from '../../service/CustomerService';
+import roleApi from 'service/RoleService';
 import moment from 'moment';
 import TabPane from 'antd/es/tabs/TabPane';
 import { List, Tabs } from 'antd';
@@ -31,10 +32,15 @@ const approvalValidationSchema = Yup.object({
 const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
   const [rejectReason, setRejectReason] = useState('');
   const [dataCustomerDetails, setDataCustomerDetails] = useState(data?.customerDetails || []);
+  const [roleName, setRoleName] = useState('');
+
+  const userId = JSON.parse(localStorage.getItem('userId')); 
+
+  const [hoveredItem, setHoveredItem] = useState(null); // Trạng thái để theo dõi dòng đang hover
 
   useEffect(() => {
     setDataCustomerDetails(data?.customerDetails || []);
-}, [data?.customerDetails]);
+  }, [data?.customerDetails]);
   
   const isEditable = type === MODAL_TYPES.APPROVE || type === MODAL_TYPES.UPDATE || type === MODAL_TYPES.RECOVER;
 
@@ -69,6 +75,7 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
       deposit: data?.deposit || '',
       registrationFee: data?.registrationFee || '',
       winner: data?.winner || '',
+      winningPrice: data?.winningPrice || '',
       approvalTime: formatDateTime(data?.approvalTime || ''),
       approvalBy: data?.approvalBy || '',
       updatedAt: formatDateTime(data?.updatedAt || ''),
@@ -138,34 +145,34 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
       switch (type) {
         case MODAL_TYPES.APPROVE:
           console.log("Auction ID:", values._id);
-          response = await auctionAPI.approve(id, formattedValues);
+          response = await auctionAPI.approve(userId, values._id, formattedValues);
           break;
         case MODAL_TYPES.REJECT:
           if (!rejectReason) {
             toast.error('Vui lòng nhập lý do từ chối');
             return;
           }
-          response = await auctionAPI.reject(values._id, rejectReason);
+          response = await auctionAPI.reject(userId, values._id, rejectReason);
           break;
         case MODAL_TYPES.UPDATE:
-          response = await auctionAPI.updateAuction(values._id, formattedValues);
+          response = await auctionAPI.updateAuction(userId, values._id, formattedValues);
           break;
         case MODAL_TYPES.CANCEL:
           if (!rejectReason) {
             toast.error('Vui lòng nhập lý do hủy phiên đấu giá');
             return;
           }
-          response = await auctionAPI.reject(values._id, rejectReason);
+          response = await auctionAPI.reject(userId, values._id, rejectReason);
           break;
         case MODAL_TYPES.RECOVER:
-          response = await auctionAPI.approve(values._id, formattedValues);
+          response = await auctionAPI.approve(userId, values._id, formattedValues);
           break;
         case MODAL_TYPES.END:
           if (!rejectReason) {
             toast.error('Vui lòng nhập lý do đóng phiên đấu giá');
             return;
           }
-          response = await auctionAPI.endAuction(values._id, rejectReason);
+          response = await auctionAPI.endAuction(userId, values._id, rejectReason);
           break;
         default:
           return;
@@ -184,8 +191,8 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
     }
   }
 
-  const handleKickCustomer = async (auctionId, customerId) => {
-    const kickCustomer = await auctionAPI.kickCustomerOutOfAuction(auctionId, customerId);
+  const handleKickCustomer = async (auctionId, customerId, userId) => {
+    const kickCustomer = await auctionAPI.kickCustomerOutOfAuction(userId, auctionId, customerId);
     if(kickCustomer.success){
       setDataCustomerDetails(kickCustomer.data.listCustomers)
       toast.success("Xóa khách hàng khỏi phiên đấu giá thành công");
@@ -243,6 +250,44 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
     return buttons;
   };
 
+  const mergedData = data?.managementAction?.map((action) => ({
+    type: 'action', // Để phân biệt loại dữ liệu
+    ...action,      // Giữ lại dữ liệu từ managementAction
+  })) || [];
+  
+  const userDetailsData = data?.userDetails?.map((user) => ({
+    type: 'user',   // Để phân biệt loại dữ liệu
+    ...user,        // Giữ lại dữ liệu từ userDetails
+  })) || [];
+  
+  // Hợp nhất hai mảng:
+  const dataSource = [...mergedData, ...userDetailsData];
+  
+  const getRoleName = async (userId) => {
+    try {
+      const roleNameResponse = await roleApi.getRoleName(userId); 
+      if (roleNameResponse.success) {
+        setRoleName(roleNameResponse.data); 
+      }
+    } catch (error) {
+      console.error('Error fetching role name:', error);
+      setRoleName('Error fetching role'); 
+    }
+    console.log("rolename", roleName);
+
+  };
+  useEffect(() => {
+    // getRoleName(data?.userDetails.map(u => u.rolePermission));
+    // if (userDetails?.rolePermission) {
+      // console.log("role", data?.userDetails.map(u => u.rolePermission));
+      console.log("rolename", roleName);
+      console.log("dataSouch", dataSource);
+
+      // if (data?.userDetails._id) {
+      //   getRoleName(data?.userDetails._id); // Gọi API khi `userBy` thay đổi
+      // }
+  }, [data?.userDetails]);
+  
   return (
     <CModal
       visible={visible}
@@ -270,7 +315,7 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
                 {renderFormField('Tên đấu phẩm', 'productName')}
                 {renderFormField('Email', 'contactEmail', 'email')}
                 {renderFormField('Giá khởi điểm', 'startingPrice', 'number')}
-                {status === 'active' && (renderFormField('Giá hiện tại', 'currentPrice'))}
+                {/* {status === 'active' && (renderFormField('Giá hiện tại', 'currentPrice'))} */}
 
                 {renderFormField('Bước giá tối thiểu', 'bidIncrement', 'number')}
                 {renderFormField('Thời gian mở đăng ký', 'registrationOpenDate', 'datetime-local')}
@@ -289,7 +334,7 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
                 {(status === 'pending' || status === 'active' || status === 'ended') && (renderFormField('Thời điểm điều chỉnh', 'updatedAt', 'datetime-local'))} */}
 
                 {status === 'ended' && (renderFormField('Người mua', 'winner'))}
-                {status === 'ended' && (renderFormField('Giá mua', 'currentPrice'))}
+                {status === 'ended' && (renderFormField('Giá mua', 'winningPrice'))}
 
                 {status === 'cancelled' && (renderFormField('Lí do phiên đấu giá bị hủy', 'cancellationReason'))}
 
@@ -360,7 +405,6 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
                   <div className="flex-grow-1 text-center column">Thời gian đăng kí</div>
                 </div> */}
 
-                {/* Danh sách khách hàng */}
                 <List
                   className="demo-loadmore-list"
                   itemLayout="horizontal"
@@ -428,6 +472,74 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
               <div>Không có khách hàng đăng ký</div>
             )}
           </TabPane>
+
+          <TabPane tab="Lịch sử quản lí" key="4">
+          {dataSource? (
+            <div>
+              <div className="d-flex w-100 justify-content-between header-row mb-3">
+                {/* <div style={{ width: '20%' }}><strong>Mã nhân viên</strong></div>
+                <div style={{ width: '30%' }}><strong>Tên nhân viên</strong></div>
+                <div style={{ width: '20%' }}><strong>Chức vụ</strong></div> */}
+                <div style={{ width: '20%' }}><strong>Thực hiện hành vi</strong></div>
+                {/* <div style={{ width: '20%' }}><strong>Thời gian</strong></div> */}
+              </div>
+
+              <List
+                className="demo-loadmore-list"
+                itemLayout="horizontal"
+                dataSource={data?.managementAction}
+                renderItem={(item, index) => (
+                  <List.Item
+                  className="d-flex justify-content-start data-row"
+                  onMouseEnter={() => setHoveredItem(index)} // Khi di chuột vào dòng
+                  onMouseLeave={() => setHoveredItem(null)} // Khi bỏ chuột ra khỏi dòng
+                  >
+                    <div className="d-flex w-100 align-items-start">
+                    
+                    {/* {item.type === 'user' && (
+                      <> */}
+                      {/*<div style={{ width: '20%' }}>
+                        <CFormLabel className="mb-0">{item?.username || 'N/A'}</CFormLabel>
+                      </div>
+
+                      <div style={{ width: '30%' }}>
+                        <CFormLabel className="mb-0">{item.fullName}</CFormLabel>
+                      </div>
+
+                      <div style={{ width: '20%' }}>
+                        <CFormLabel className="mb-0">
+                        {item.userBy && getRoleName(item.userBy)}
+                        {roleName || 'Loading...'}
+                        </CFormLabel>
+                      </div> */}
+                      {/* </>
+                    )} */}
+                    {/* {item.type === 'action' && (
+                    <> */}
+                      <div style={{ width: '30%' }}>
+                        <CFormLabel className="mb-0">Đã {item.action} phiên đấu giá </CFormLabel>
+                      </div>
+
+                      <div style={{ width: '20%' }}>
+                        <CFormLabel className="mb-0">{moment(item.timeLine).format('HH:mm || DD-MM-YYYY')}</CFormLabel>
+                      </div>
+
+                      {hoveredItem === index && (
+                        <div className="d-flex gap-2">
+                          {/* <CButton key="details" size="sm" onClick={() => handleDetails(item)}>Xóa</CButton> */}
+                        </div>
+                      )}
+                    {/* </>
+                    )} */}
+                    </div>
+                  </List.Item>
+                )}
+              />
+            </div>
+          ) : (
+            <div>Không có lịch sử quản lý phiên đấu giá</div>
+          )}
+        </TabPane>
 
 
 
