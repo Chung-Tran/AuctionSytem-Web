@@ -91,10 +91,10 @@ const AuctionRoomOnlyView = () => {
     const seconds = totalSeconds % 60;
 
     const timeUnits = [
-      { value: days, label: 'D' },
-      { value: hours, label: 'H' },
-      { value: minutes, label: 'M' },
-      { value: seconds, label: 'S' }
+      { value: days, label: 'Ngày' },
+      { value: hours, label: 'Giờ' },
+      { value: minutes, label: 'Phút' },
+      { value: seconds, label: 'Giây' }
     ];
 
     // Lọc ra các đơn vị thời gian > 0, bắt đầu từ đơn vị lớn nhất
@@ -176,7 +176,7 @@ const AuctionRoomOnlyView = () => {
             <div className="glass-effect rounded-2xl p-8 flex flex-col items-center neon-border">
               <div className="glass-effect rounded-2xl p-6 text-center mb-4 bg-[#170B5E]">
                 <h2 className="text-white text-base font-semibold mb-2 text-center tracking-[0.5rem] ">THỜI GIAN CÒN LẠI</h2>
-                <div className="text-4xl font-bold text-white tracking-[0.3rem] flex ">
+                <div className="text-4xl font-bold text-white tracking-[0.3rem] flex items-center justify-center ">
                   {formatTime(timeLeft).map((unit, index) => (
                     <React.Fragment key={unit.label}>
                       {index > 0 && <div>:</div>}
@@ -221,19 +221,20 @@ const AuctionRoomOnlyView = () => {
         </div>
       </main>
 
-      <footer className='h-16 w-full bgfooter_auctionroom overflow-hidden mb-4'>
-        <div className='h-full w-full rounded-t-2xl flex items-center justify-between px-6'>
+      <footer className="h-16 w-full bgfooter_auctionroom overflow-hidden mb-4">
+        <div className="h-full w-full rounded-t-2xl flex items-center justify-between px-6">
           <div className="w-full relative">
             <div className="text-lg font-bold text-white whitespace-nowrap animate-marquee">
-              SẢN PHẨM ĐẤU GIÁ NGÀY 19/09:
-              <span className='ml-2'>
-                Lamborghini Aventador
+              SẢN PHẨM ĐẤU GIÁ NGÀY {new Date().toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })}:
+              <span className="ml-2">{productInfo.productName}</span>
+              <span className="ml-10 text-lg font-bold text-pink-300">
+                Đăng ký đấu giá ngay tại ACTIONHOUSE.COM.VN
               </span>
-              <span className="ml-10 text-lg font-bold text-pink-300"> Đăng ký đấu giá ngay tại ACTIONHOUSE.COM.VN</span>
             </div>
           </div>
         </div>
       </footer>
+
 
     </div>
   </>

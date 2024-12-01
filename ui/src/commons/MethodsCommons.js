@@ -39,9 +39,6 @@ const handleResponseError = async (error) => {
     } else if (status === 401) {
       // Xử lý lỗi 401 Unauthorized
       openNotify('error', 'Unauthorized access. Please log in again.');
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 1000);
     } else if (status === 403) {
       // Xử lý lỗi 403 Forbidden
       openNotify('error', 'You do not have permission to perform this action.');
@@ -92,10 +89,11 @@ const countdown = (endsIn) => {
   return `${days}d ${hours}h ${minutes}m`;
 }
 
-function formatDate(date) {
+function formatDate(dateString) {
   // Nếu không có `date` hoặc `date` không hợp lệ, sử dụng ngày hiện tại
-  if (!(date instanceof Date) || isNaN(date)) {
-    date = new Date();
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    return "";
   }
 
   const year = date.getFullYear();

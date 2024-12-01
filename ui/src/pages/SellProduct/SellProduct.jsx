@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { Image, Upload, Modal } from 'antd';
+import { Image, Upload, Modal, InputNumber } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import Breadcrumb from '../../components/BreadCrumb/BreadCrumb';
 import AuctionService from '../../services/AuctionService';
 import { formatCurrency, openNotify } from '../../commons/MethodsCommons';
+import { AppContext } from '../../AppContext';
 
 const getBase64 = (file) =>
   new Promise((resolve, reject) => {
@@ -20,7 +21,7 @@ const SellProduct = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
   const [previewTitle, setPreviewTitle] = useState('');
-
+  const { user, toggleLoginModal } = useContext(AppContext);
   const validationSchema = Yup.object().shape({
     sellerName: Yup.string().required('Tên người dùng là bắt buộc'),
     productName: Yup.string().required('Tên sản phẩm là bắt buộc'),
@@ -49,7 +50,7 @@ const SellProduct = () => {
     </div>
   );
 
-  const handleSubmit = async (values, { setSubmitting,resetForm }) => {
+  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
       if (fileList.length === 0) {
         openNotify('error', 'Vui lòng tải lên ít nhất 1 hình ảnh');
@@ -57,7 +58,7 @@ const SellProduct = () => {
       }
 
       const formData = new FormData();
-      
+
       fileList.forEach((file) => {
         formData.append('images', file.originFileObj);
       });
@@ -67,7 +68,8 @@ const SellProduct = () => {
           formData.append(key, values[key]);
         }
       });
-
+      if (!user)
+          return toggleLoginModal(true)
       const response = await AuctionService.register(formData);
       if (!!response) {
         openNotify('success', 'Đăng ký sản phẩm đấu giá thành công');
@@ -161,8 +163,26 @@ const SellProduct = () => {
                     ]}
                   />
 
-                  <FormField name="startingPrice" label="Giá khởi điểm" type="number" format={formatCurrency} />
-                  <FormField name="bidIncrement" label="Bước giá" type="number" format={formatCurrency} />
+                  <FormInputNumber
+                    name="startingPrice"
+                    label="Giá khởi điểm"
+                    formatter={(value) => `${value} ₫`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value) => value.replace(/\₫\s?|(,*)/g, '')}
+                    onChange={(value, form) => {
+                      form.setFieldValue('deposit', value ? (Math.floor(value * 0.1)) : '');
+                    }}
+                  />
+                  <FormInputNumber
+                    name="bidIncrement"
+                    label="Bước giá"
+                    formatter={(value) => `${value} ₫`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value) => value.replace(/\₫\s?|(,*)/g, '')}
+                    onChange={(value, form) => {
+                      form.setFieldValue('deposit', value ? (value * 0.1) : '');
+                    }}
+                  />
+
+                  {/* <FormField name="bidIncrement" label="Bước giá" type="number" format={formatCurrency} /> */}
 
                   <SelectField
                     name="auctionType"
@@ -171,8 +191,14 @@ const SellProduct = () => {
                       { value: 'online', label: 'Đấu giá online' }
                     ]}
                   />
-
-                  <FormField name="deposit" label="Tiền đặt cọc" type="number" format={formatCurrency} />
+                  <FormInputNumber
+                    name="deposit"
+                    label="Tiền đặt cọc (10% giá khởi điểm)"
+                    formatter={(value) => `${value} ₫`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value) => value.replace(/\₫\s?|(,*)/g, '')}
+                    disabled
+                  />
+                  {/* <FormField name="deposit" label="Tiền đặt cọc" type="number" disabled={true} format={formatCurrency} /> */}
                 </div>
 
                 <FormField name="description" label="Mô tả sản phẩm" as="textarea" rows={4} />
@@ -210,6 +236,47 @@ const FormField = ({ name, label, format, ...props }) => (
   </div>
 );
 
+const FormInputNumber = ({ name, label, onChange, formatter, parser, ...props }) => {
+  const handleKeyPress = (e) => {
+    if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete') {
+      e.preventDefault();
+    }
+  };
+
+  return (
+    <div>
+      <label htmlFor={name} className='block text-sm font-medium text-gray-700 mb-1'>
+        {label}
+      </label>
+      <Field name={name}>
+        {({ field, form }) => (
+          <InputNumber
+            id={name}
+            className='w-full p-1.5 focus:border-green-500 focus:ring-1 focus:ring-green-500 text-sm'
+            value={field.value}
+            onChange={(value) => {
+              const integerValue = Math.floor(value); 
+              form.setFieldValue(name, integerValue); 
+              if (onChange) {
+                onChange(integerValue, form);
+              }
+            }}
+            onBlur={() => form.setFieldTouched(name, true)}
+            formatter={formatter || ((value) =>
+              `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') 
+            )}
+            parser={parser || ((value) => value.replace(/\$\s?|(,*)/g, ''))}
+            onKeyPress={handleKeyPress} 
+            {...props}
+          />
+        )}
+      </Field>
+      <ErrorMessage name={name} component='div' className='text-red-500 text-sm mt-1' />
+    </div>
+  );
+};
+
+
 const SelectField = ({ name, label, options }) => (
   <div>
     <label htmlFor={name} className="block text-sm font-medium text-gray-700">
@@ -218,13 +285,12 @@ const SelectField = ({ name, label, options }) => (
     <Field
       name={name}
       as="select"
-      className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm p-2 outline-0 ${
-        options.length === 1 ? 'bg-gray-100' : ''
-      }`}
+      className={`mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm p-2.5 outline-0 ${options.length === 1 ? 'bg-gray-100' : ''
+        }`}
       disabled={options.length === 1}
     >
       {options.map(({ value, label }) => (
-        <option key={value} value={value}>
+        <option key={value} value={value} className='p-2'>
           {label}
         </option>
       ))}

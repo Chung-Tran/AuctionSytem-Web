@@ -27,6 +27,7 @@ const AuctionSchema = new Schema({
     deposit: { type: Number }, // Đặt cọc
     registrationFee: { type: Number }, // Phí đăng ký
     winner: { type: Schema.Types.ObjectId, ref: 'Customer' },
+    winningPrice: { type: Number }, // Giá trúng
     approvalTime: { type: Date }, //thời điểm duyệt
     rejectTime: { type: Date }, //thời điểm duyệt
     closeTime: { type: Date }, //thời điểm duyệt
@@ -34,7 +35,7 @@ const AuctionSchema = new Schema({
     approvalBy: { type: Schema.Types.ObjectId, ref: 'User' },
     updatedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     bids: [{ type: Schema.Types.ObjectId, ref: 'BidHistory' }],
-    outstanding: { type: Boolean, default: false },//Phiên đấu giá được ghim hightlight ở website
+    // outstanding: { type: Boolean, default: false },//Phiên đấu giá được ghim hightlight ở website
     registeredUsers: [
         {
             customer: { type: Schema.Types.ObjectId, ref: 'Customer' },

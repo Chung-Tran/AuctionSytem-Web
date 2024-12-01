@@ -15,22 +15,11 @@ const registerUser = asyncHandle(async (req, res) => {
         return res.status(400).json(formatResponse(false, null, "Register failed! Try again with another username or email."));
     }
 
-    // Lấy userCode mới nhất trong hệ thống để tạo userCode mới
-    const latestUser = await User.findOne({ userCode: { $regex: /^ACM-N\d{4}$/ } }).sort({ createdAt: -1 });
-    
-    // Xử lý tăng mã tự động cho userCode. Quy tắc mã KH: ACM-N + 4 số tự động tăng
-    let newUserCode = "ACM-N0001";
-    if (latestUser && latestUser.userCode) {
-        const lastCode = parseInt(latestUser.userCode.slice(5), 10); // parse 4 số cuối
-        newUserCode = `ACM-N${(lastCode + 1).toString().padStart(4, '0')}`;
-    }
-
     // Mã hóa password và tạo user mới với userCode
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create({
         ...req.body,
         password: hashedPassword,
-        userCode: newUserCode 
     });
 
     return res.status(200).json(formatResponse(true, newUser, null));

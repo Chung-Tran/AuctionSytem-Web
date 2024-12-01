@@ -88,3 +88,19 @@ border-color: #364084;
 .animate-slideDown {
   animation: slideDown 0.3s ease-in-out;
 }
+@keyframes soft-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+.soft-pulse {
+  animation: soft-pulse 2s ease-in-out infinite;
+  color: white;
+  font-weight: bold;
+  border-radius: 4px;
+  display: inline-block;
+  text-align: center;
+}

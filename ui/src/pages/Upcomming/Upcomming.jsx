@@ -14,16 +14,16 @@ const Upcomming = () => {
     const [searchOptions, setSearchOptions] = useState({
         limit: 8,
         page: 1,
-        // status:'active'
+        status:'pending'
     });
     const [totalPages, setTotalPages] = useState(1);
     useEffect(() => {
         const fetchData = async () => {
             const auctionList = await AuctionService.getList(searchOptions);
-            const auctionHighlight = await AuctionService.getOutstanding();
+            const auctionHighlight = await AuctionService.getOutstanding({ limit: 4, page: 1, status: 'pending' });
             if (auctionList && auctionHighlight) {
                 setAuctions(auctionList.docs);
-                setAuctionHighlight(auctionHighlight);
+                setAuctionHighlight(auctionHighlight[0]);
                 setTotalPages(auctionList.total);
             }
         };
@@ -80,7 +80,9 @@ const Upcomming = () => {
                             productDescription={product.productDescription}
                             price={product.startingPrice}
                             currentViews={product.viewCount || 1}
-                            endsIn={product.registrationCloseDate || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
+                            endsIn={product.startTime || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
+                            registeredUsers={product.registeredUsers}
+                            registrationCloseDate={product.registrationCloseDate}
                         />
                     ))}
                 </div>
@@ -139,41 +141,67 @@ const Upcomming = () => {
                 </div>
             </section>}
 
-            <section className=" py-12 mt-10 px-6 ">
-                <div className='container mx-auto'>
+            <section className="py-12 mt-10 px-6">
+                <div className="container mx-auto">
                     <h2 className="text-2xl font-bold">Related Assets</h2>
                     <div className="grid sm:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
-                        {
-                           Array(4).fill(null).map((_, index)  => (
-                                <div className="bg-card rounded-lg overflow-hidden shadow-lg">
-                                    <img
-                                        src="/placeholder.svg"
-                                        alt="Auction Industry Trends"
-                                        width="400"
-                                        height="300"
-                                        className="w-full aspect-[4/3] object-cover"
-                                    />
-                                    <div className="p-4">
-                                        <h3 className="text-lg font-semibold">Auction Industry Trends</h3>
-                                        <p className="text-muted-foreground text-sm mt-1">
-                                            Exploring the latest developments and insights in the world of auctions.
-                                        </p>
-                                        <div className="flex items-center justify-between mt-4">
-                                            <div className="flex items-center gap-2">
-                                                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                                                <span className="text-muted-foreground text-sm">September 1, 2024</span>
-                                            </div>
-                                            <Link href="#" className="text-primary hover:underline" prefetch={false}>
-                                                Read More
-                                            </Link>
+                        {[
+                            {
+                                title: "Auction Industry Trends",
+                                description: "Exploring the latest developments and insights in the world of auctions.",
+                                date: "September 1, 2024",
+                                href: "/auction-trends",
+                                image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT5mPgF1lStvLtPNxk1PGC5wZ9QT4SkOiGwTw&s",
+                            },
+                            {
+                                title: "Bidding Strategies for Success",
+                                description: "Learn effective bidding tactics to improve your chances of winning auctions.",
+                                date: "October 15, 2024",
+                                href: "/bidding-strategies",
+                                image:"https://propscience.s3.ap-south-1.amazonaws.com/backoffice_blogs/master_stories_auction%201.jpg"
+                            },
+                            {
+                                title: "Top Auction Categories of 2024",
+                                description: "Discover the most popular auction categories and what’s driving their demand.",
+                                date: "November 5, 2024",
+                                href: "/top-categories-2024",
+                                image:"https://jaro-website.s3.ap-south-1.amazonaws.com/2024/04/Common-Auction-Types.jpg"
+                            },
+                            {
+                                title: "How to Spot Rare Collectibles",
+                                description: "Tips and tricks to identify valuable and rare items in auctions.",
+                                date: "December 10, 2024",
+                                href: "/spot-rare-collectibles",
+                                image:"https://fastercapital.com/i/Betting-on-Favorites--How-Tips-Spread-Can-Help-You-Win--Understanding-the-Role-of-Tips-Spread-in-Betting-on-Favorites.webp"
+                            },
+                        ].map((item, index) => (
+                            <div key={index} className="bg-card rounded-lg overflow-hidden shadow-lg">
+                                <img
+                                    src={item.image}
+                                    alt={item.title}
+                                    width="400"
+                                    height="300"
+                                    className="w-full aspect-[4/3] object-cover"
+                                />
+                                <div className="p-4">
+                                    <h3 className="text-lg font-semibold">{item.title}</h3>
+                                    <p className="text-muted-foreground text-sm mt-1">{item.description}</p>
+                                    <div className="flex items-center justify-between mt-4">
+                                        <div className="flex items-center gap-2">
+                                            <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                                            <span className="text-muted-foreground text-sm">{item.date}</span>
                                         </div>
+                                        <Link href={item.href} className="text-primary hover:underline" prefetch={false}>
+                                            Read More
+                                        </Link>
                                     </div>
                                 </div>
-                            ))
-                        }
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
+
         </div>
     )
 }

@@ -44,9 +44,9 @@ const AuctionService = {
             handleResponseError(error)
         }
     },
-    getOutstanding: async () => {
+    getOutstanding: async ({ limit, page, status }) => {
         try {
-            const response = await axiosClient.get(`auctions/outstanding`);
+            const response = await axiosClient.get(`auctions/outstanding`, { params: { limit, page,status } });
             const data = await handleResponse(response);
             return data;
         } catch (error) {
