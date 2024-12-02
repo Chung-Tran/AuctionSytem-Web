@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useContext } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, User, Hammer, Bell, LogOut, Settings, UserCircle, ChevronDown, Trash2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Search, User, Hammer, Bell, LogOut, Settings, UserCircle, ChevronDown, Trash2, CheckCircle, AlertCircle,History } from 'lucide-react';
 import LoginModal from './LoginModal';
 import { AppContext } from '../../AppContext';
 import avatarMale from '../../assets/avatarMale.webp'
@@ -225,6 +225,10 @@ const Header = () => {
                     <Link to="/profile/change-password" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                       <Settings className="inline-block mr-2" size={16} />
                       Change Password
+                    </Link>
+                    <Link to="/auction-submissions" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      <History className="inline-block mr-2" size={16} />
+                      Auction Submissions
                     </Link>
                     <button
                       onClick={handleLogout}
