@@ -1,6 +1,7 @@
 const { formatResponse } = require('../common/MethodsCommon');
 const Role_Permission = require('../models/Role&Permission');
 const asyncHandle = require('express-async-handler');
+const { User } = require('../models/user.model');
 
 const createRole = asyncHandle(async (req, res) => {
     const { name, description, permissions, createdBy } = req.body;
@@ -104,9 +105,34 @@ const getAllRolePermissions = asyncHandle(async (req, res) => {
     }
 });
 
+const get_Rolename_By_Id_RolePermissions = asyncHandle(async (req, res) => {
+    const { id_User } = req.params;
+    try {
+        const user = await User.findById(id_User);
+        const id_RolePermission = user.rolePermission;
+        const rolePermission = await Role_Permission.RolePermission.findById(id_RolePermission).populate('role', 'name');
+
+        if (!rolePermission || !rolePermission.role) {
+            return res.status(404).json(formatResponse(false, null, 'Không tìm thấy RolePermission'))
+        }
+
+        const id_Role = rolePermission.role;
+
+        const role = await Role_Permission.Role.findById(id_Role)
+
+        const roleName = role.name;
+
+        return res.status(200).json(formatResponse(true, roleName, 'Lấy tên chức vụ thành công'))
+
+    } catch (error) {
+        return res.status(500).json(formatResponse(false, null, error.message));
+    }
+});
+
 module.exports = {
     createRole,
     createPermission,
     createRolePermission,
     getAllRolePermissions,
+    get_Rolename_By_Id_RolePermissions,
 }

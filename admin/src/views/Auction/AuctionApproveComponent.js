@@ -5,11 +5,13 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import AuctionModal from './AuctionModal';
 import AuctionApproveModal from './AuctionApproveModal';
+import AuctionApproveValues from './AuctionApproveValues';
+import AuctionApprove from './AuctionApprove';
 
-const NewAuctions = ({ auctions , type,  onStatusChange}) => {
+const AuctionApproveComponent = ({ auctions , type,  onStatusChange}) => {
   const [auctionSlug, setAuctionSlug] = useState('');
 
-  const [showModal, setShowModal] = useState(null); //show modal
+  const [showModal, setShowModal] = useState(false); //show modal
   const [showModalType, setShowModalType] = useState(null); //show kiểu gì: xem sửa xóa
   const [modalValue, setModalValue] = useState({}); //lấy dòng dữ liệu trong bảng
 
@@ -74,7 +76,8 @@ const NewAuctions = ({ auctions , type,  onStatusChange}) => {
       setAuctionInfo(getAuction.data);
     }
     setAuctionSlug(auctionSlug);
-    setShowModal("Xem");
+    setShowModal(true);
+    setShowModalType("Xem");
     onStatusChange();
   };
 
@@ -152,13 +155,23 @@ const NewAuctions = ({ auctions , type,  onStatusChange}) => {
           ))}
         </ul>
       ) : (
-        <p style={{ fontSize: '30px' }}>Không có phiên đấu giá nào đang chờ phê duyệt.</p>
+        <div>
+        {/* <p style={{ fontSize: '30px' }}>Không có phiên đấu giá nào đang chờ phê duyệt.</p> */}
+        <p style={{ fontSize: '30px' }}>
+        {type === "New" 
+          ? "Không có phiên đấu giá đang chờ phê duyệt" 
+          : type === "Pending" 
+            ? "Không có phiên đấu giá sắp diễn ra" 
+            : type === "Active" 
+              ? "Không có phiên đấu giá đang diễn ra" 
+              : "Trạng thái không xác định"}
+      </p></div>
       )}
 
 
       {/* Hiển thị Modal khi showApproveModal = true */}
       {showApproveModal && (
-        <AuctionApproveModal auction={auctionInfo} onClose={closeApproveModal} onApprove={handleApprove}/>
+        <AuctionApproveValues auction={auctionInfo} onClose={closeApproveModal} onApprove={handleApprove}/>
       )}
 
       {/* Modal hiển thị khi từ chối */}
@@ -186,11 +199,12 @@ const NewAuctions = ({ auctions , type,  onStatusChange}) => {
       )}
 
       {/* Modal hiển thị khi showModal = true */}
-      
-      <AuctionModal type={showModal} setShowModal={setShowModal} data={auctionInfo} />
+      {showModal && (      
+        <AuctionApproveModal type={showModalType} setShowModal={setShowModalType} data={auctionInfo} />
+      )}
               
     </div>
   );
 };
 
-export default NewAuctions;
+export default AuctionApproveComponent;

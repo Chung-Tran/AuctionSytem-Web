@@ -4,6 +4,32 @@ const UserStatus = Object.freeze({
     SUSPENDED: 'Cấm'
 });
 
+const ProductCategory = Object.freeze({
+    Art_Collectibles: 'Nghệ thuật và Sưu tập',
+    Jewelry_Watches: 'Trang sức và Đồng hồ',
+    Furniture_HomeDecor: 'Đồ nội thất và Trang trí',    
+    Vehicles: 'Xe cộ',
+    Real_Estate: 'Bất động sản',
+    Electronics_Technology: 'Đồ điện tử và Công nghệ',
+    Fashion_Accessories: 'Thời trang và Phụ kiện',
+    Wine_Beverages: 'Rượu và Đồ uống',
+    Books_RareDocuments: 'Sách và Tài liệu quý',
+    EventTickets_Experiences: 'Vé sự kiện và Trải nghiệm',
+});
+
+const ProductCondition = Object.freeze({
+    new: 'Mới',
+    used: 'Đã sử dụng',
+    refurbished: 'Tân trang',    
+});
+
+const ProductStatus = Object.freeze({
+    pending: 'Đang chờ đấu giá',
+    active: 'Đang đấu giá',
+    sold: 'Đã bán', 
+    cancelled: 'Đã hủy',
+});
+
 const TransactionStatus = Object.freeze({
     DRAFT: 'draft',
     SUCCESSED: 'successed',
@@ -53,6 +79,9 @@ const REDIS_KEYS = {
 
 module.exports = {
     UserStatus,
+    ProductCategory,
+    ProductCondition,
+    ProductStatus,
     EmailType,
     TransactionStatus,
     PaymentGateways,

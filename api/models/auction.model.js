@@ -12,9 +12,8 @@ const AuctionSchema = new Schema({
     startTime: { type: Date, },
     endTime: { type: Date, },
     startingPrice: { type: Number, required: true }, // Giá khởi điểm
-    // reservePrice: { type: Number }, // Giá tối thiểu
     currentPrice: { type: Number },
-    currentViews: { type: Number }, // Số lượng người xem
+    currentViews: { type: Number }, // Số lượng người xem hiện tại
     viewCount: { type: Number }, // Số lượng người xem
     bidIncrement: { type: Number, required: true }, // Bước giá tối thiểu
     registrationOpenDate: { type: Date }, // Thời gian bắt đầu đăng ký
@@ -24,12 +23,23 @@ const AuctionSchema = new Schema({
         enum: ['new','pending', 'active', 'ended', 'cancelled'],
         default: 'new'
     },
+    cancellationReason: { type: String},
     deposit: { type: Number }, // Đặt cọc
     registrationFee: { type: Number }, // Phí đăng ký
     winner: { type: Schema.Types.ObjectId, ref: 'Customer' },
     winningPrice: { type: Number }, // Giá trúng
-    approvalTime: { type: Date }, //thời điểm duyệt
-    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    
+    managementAction: [
+        {
+            timeLine: { type: Date }, 
+            userBy: { type: Schema.Types.ObjectId, ref: 'User' },
+            action: {
+                type: String,
+                enum: [ 'duyệt', 'từ chối', 'điều chỉnh', 'hủy', 'khôi phục', 'kết thúc' ]
+            },
+        }
+    ],  
+
     bids: [{ type: Schema.Types.ObjectId, ref: 'BidHistory' }],
     // outstanding: { type: Boolean, default: false },//Phiên đấu giá được ghim hightlight ở website
     registeredUsers: [

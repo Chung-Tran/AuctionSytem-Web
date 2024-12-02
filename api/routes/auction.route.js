@@ -5,6 +5,9 @@ const {
     registerAuctionProduct,
     approveAuction,
     rejectAuction,
+    updateAuction,
+    endAuction,
+    kickCustomerOutOfAuction,
     getAuctionDetails,
     listAuctions,
     getAuctionOutstanding,
@@ -17,8 +20,11 @@ const handleUpload = require('../utils/uploadImages');
 
 router.post('/register', verifyAccessToken,handleUpload, registerAuctionProduct);
 
-router.put('/approve/:auctionId', approveAuction); 
-router.put('/reject/:auctionId', rejectAuction);
+router.put('/approve/:auctionId/:userId', approveAuction); 
+router.put('/reject/:auctionId/:userId', rejectAuction);
+router.put('/update/:auctionId/:userId', updateAuction);
+router.put('/end/:auctionId/:userId', endAuction);
+router.delete('/kickCustomer/:auctionId/:customerId/:userId', kickCustomerOutOfAuction);
 
 //get cho client
 router.get('/outstanding', getAuctionOutstanding); 

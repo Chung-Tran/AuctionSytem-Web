@@ -6,6 +6,8 @@ const { formatResponse } = require('../common/MethodsCommon');
 const redisClient = require('../config/redis');
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
+const moment = require('moment');
+const mongoose = require('mongoose');
 
 const registerAuctionProduct = asyncHandler(async (req, res) => {
     const {
@@ -78,13 +80,14 @@ const registerAuctionProduct = asyncHandler(async (req, res) => {
 });
 
 const approveAuction = asyncHandler(async (req, res) => {
-    const { auctionId } = req.params;
+    const { auctionId, userId } = req.params;
+    // const userId = req.user.userId;
+
     const {
         startTime,
         endTime,
         registrationOpenDate,
         registrationCloseDate,
-        reservePrice,
         registrationFee
     } = req.body;
 
@@ -93,8 +96,10 @@ const approveAuction = asyncHandler(async (req, res) => {
         return res.status(404).json(formatResponse(false, null, "Không tìm thấy phiên đấu giá"));
     }
 
-    if (auction.status !== 'new') {
-        return res.status(400).json(formatResponse(false, null, "Phiên đấu giá không ở trạng thái chờ duyệt"));
+    if (auction.managementAction.length === 0) {
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'duyệt'});
+    } else {
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'khôi phục'});
     }
 
     try {
@@ -102,13 +107,13 @@ const approveAuction = asyncHandler(async (req, res) => {
         auction.endTime = endTime;
         auction.registrationOpenDate = registrationOpenDate;
         auction.registrationCloseDate = registrationCloseDate;
-        auction.reservePrice = reservePrice;
         auction.registrationFee = registrationFee;
+        
         auction.status = 'pending';
 
         await auction.save();
 
-        await Product.findByIdAndUpdate(auction.product, { status: 'active' });
+        await Product.findByIdAndUpdate(auction.product, { status: 'pending' });
 
         res.status(200).json(formatResponse(true, { auctionId: auction._id }, "Phiên đấu giá đã được duyệt và kích hoạt thành công"));
     } catch (error) {
@@ -118,8 +123,10 @@ const approveAuction = asyncHandler(async (req, res) => {
 });
 
 const rejectAuction = asyncHandler(async (req, res) => {
-    const { auctionId } = req.params;
+    const { auctionId, userId} = req.params;
     const { reason } = req.body;
+    // const userId = req.user.userId;
+   
 
     if (!reason) {
         return res.status(400).json(formatResponse(false, null, "Vui lòng cung cấp lý do từ chối"));
@@ -130,13 +137,16 @@ const rejectAuction = asyncHandler(async (req, res) => {
         return res.status(404).json(formatResponse(false, null, "Không tìm thấy phiên đấu giá"));
     }
 
-    if (auction.status !== 'new') {
-        return res.status(400).json(formatResponse(false, null, "Phiên đấu giá không ở trạng thái chờ duyệt"));
+    if (auction.managementAction.length === 0) {
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'từ chối'});
+    } else {
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'hủy'});
     }
 
     try {
         auction.status = 'cancelled';
         auction.cancellationReason = reason;
+
         await auction.save();
 
         await Product.findByIdAndUpdate(auction.product, { status: 'cancelled' });
@@ -147,6 +157,133 @@ const rejectAuction = asyncHandler(async (req, res) => {
         res.status(500).json(formatResponse(false, null, "Đã xảy ra lỗi khi từ chối phiên đấu giá"));
     }
 });
+
+const updateAuction = asyncHandler(async (req, res) => {
+    const { auctionId, userId } = req.params;
+    // const userId = req.user.userId;
+
+    const {
+        title,
+        description,
+        startTime,
+        endTime,
+        registrationOpenDate,
+        registrationCloseDate,
+        registrationFee
+    } = req.body;
+
+    const auction = await Auction.findById(auctionId);
+    if (!auction) {
+        return res.status(404).json(formatResponse(false, null, "Không tìm thấy phiên đấu giá"));
+    }
+    
+    try {
+        auction.title = title;
+        auction.description = description;
+        auction.startTime = startTime;
+        auction.endTime = endTime;
+        auction.registrationOpenDate = registrationOpenDate;
+        auction.registrationCloseDate = registrationCloseDate;
+        auction.registrationFee = registrationFee;
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'điều chỉnh'});
+
+        await auction.save();
+
+        // await Product.findByIdAndUpdate(auction.product, { status: 'pending' });
+
+        res.status(200).json(formatResponse(true, { auctionId: auction._id }, "Phiên đấu giá đã được điều chỉnh"));
+    } catch (error) {
+        console.error('Lỗi khi điều chỉnh phiên đấu giá:', error);
+        res.status(500).json(formatResponse(false, null, "Đã xảy ra lỗi khi điều chỉnh phiên đấu giá"));
+    }
+});
+
+const endAuction = asyncHandler(async (req, res) => {
+    const { auctionId, userId } = req.params;
+    const { reason } = req.body;
+    // const userId = req.user.userId;
+
+    if (!reason) {
+        return res.status(400).json(formatResponse(false, null, "Vui lòng cung cấp lý do đóng phiên"));
+    }
+
+    const auction = await Auction.findById(auctionId);
+    if (!auction) {
+        return res.status(404).json(formatResponse(false, null, "Không tìm thấy phiên đấu giá"));
+    }
+
+    try {
+        auction.status = 'ended';
+        auction.cancellationReason = reason;
+        auction.endTime = moment().toDate();
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'kết thúc'});
+
+        await auction.save();
+
+        // await Product.findByIdAndUpdate(auction.product, { status: 'cancelled' });
+
+        res.status(200).json(formatResponse(true, { auctionId: auction._id }, "Phiên đấu giá đã đóng thành công"));
+    } catch (error) {
+        console.error('Lỗi khi đóng phiên đấu giá:', error);
+        res.status(500).json(formatResponse(false, null, "Đã xảy ra lỗi khi đóng phiên đấu giá"));
+    }
+});
+
+const kickCustomerOutOfAuction = asyncHandler(async (req, res) => {
+    const { auctionId, customerId, userId } = req.params;
+
+    const auction = await Auction.findById(auctionId);
+    if (!auction) {
+        return res.status(404).json(formatResponse(false, null, "Không tìm thấy phiên đấu giá"));
+    }
+
+    const userIndex = auction.registeredUsers.findIndex(
+        (user) => user.customer && user.customer.toString() === customerId.toString()
+    );
+    if (userIndex === -1) {
+        return res.status(404).json(formatResponse(false, null, "Không tìm thấy khách hàng trong phòng đấu giá"));
+    }
+
+    // auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'xóa khách hàng'});
+
+    try {
+        auction.registeredUsers.splice(userIndex, 1);
+        await auction.save();
+
+        const pipeline = [
+            { 
+                $match: { _id: new mongoose.Types.ObjectId(auctionId) } 
+            },
+            {
+                $lookup: {
+                    from: 'customers', 
+                    localField: 'registeredUsers.customer', 
+                    foreignField: '_id', 
+                    as: 'customerDetails'
+                }
+            },
+            {
+                $project: {
+                    _id: 1, 
+                    customerDetails: 1
+                }
+            }
+        ];
+
+        const [result] = await Auction.aggregate(pipeline);
+
+        if (!result || !result.customerDetails) {
+            return res.status(404).json(formatResponse(false, null, "Không tìm thấy thông tin khách hàng"));
+        }
+
+        res.status(200).json(formatResponse(true,{ auctionId: auction._id, removedCustomer: customerId, listCustomers: result.customerDetails },"Khách hàng đã được loại khỏi phòng đấu giá"));
+    } catch (error) {
+        console.error("Lỗi khi loại khách hàng khỏi phòng đấu giá:", error);
+        res.status(500).json(formatResponse(false, null, "Đã xảy ra lỗi khi loại khách hàng khỏi phòng đấu giá"));
+    }
+});
+
+
 
 //Get by slug
 const getAuctionDetails = asyncHandler(async (req, res) => {
@@ -198,7 +335,6 @@ const getAuctionDetails = asyncHandler(async (req, res) => {
                     currentViews: 1,
                     viewCount: 1,
                     sellerName: 1,
-                    reservePrice: 1,
                     startingPrice: 1,
                     currentPrice: 1,
                     startTime: 1,
@@ -273,7 +409,6 @@ const getAuctionOutstanding = asyncHandler(async (req, res) => {
                     // Auction
                     currentViews: 1,
                     sellerName: 1,
-                    reservePrice: 1,
                     startingPrice: 1,
                     startTime: 1,
                     bidIncrement: 1,
@@ -317,8 +452,49 @@ const listAuctions = asyncHandler(async (req, res) => {
             },
             {
                 $unwind: '$product'
-            }); 
+            }
+        ); 
 
+        pipeline.push(
+            {
+              $lookup: {
+                from: 'customers', 
+                localField: 'registeredUsers.customer', 
+                foreignField: '_id', 
+                as: 'customerDetails',
+              },
+            },
+        );
+
+        pipeline.push(
+            {
+                $lookup: {
+                    from: 'customers',
+                    localField: 'winner',
+                    foreignField: '_id',
+                    as: 'customerwinner'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$customerwinner',
+                    preserveNullAndEmptyArrays: true // Giữ lại tài liệu nếu không có dữ liệu customer
+                }
+            }
+        ); 
+
+        pipeline.push(
+            {
+              $lookup: {
+                from: 'users', 
+                localField: 'managementAction.userBy', 
+                foreignField: '_id', 
+                as: 'userDetails',
+              },
+            },
+            
+        );
+            
         pipeline.push({
             $sort: { createdAt: -1 }
         });
@@ -327,38 +503,57 @@ const listAuctions = asyncHandler(async (req, res) => {
             { $limit: limitInt }
         );
 
+        const auction = await Auction.findOne();
+        const registeredUsersCount = auction?.registeredUsers?.length || 0;
         const totalAuctions = await Auction.countDocuments(status ? { status } : {});
         pipeline.push({
             $project: {
                 productName: "$product.productName",
                 productImages: "$product.images",
                 productDescription: "$product.description",
+                productAddress: "$product.address",
+                productCategory: "$product.category",
+                productCondition: "$product.condition",
+                productStatus: "$product.status",
+                productCreate: "$product.createdAt",
+
+                slug: 1,
                 title: 1,
                 description: 1,
                 contactEmail: 1,
-                sellerName: 1,               
+                sellerName: 1,   
+                startTime: 1,
+                endTime: 1,            
                 startingPrice: 1,
-                bidIncrement: 1,
-                deposit: 1,
-                registrationFee: 1,
-                slug: 1,
+                currentPrice: 1,
                 currentViews: 1,
                 viewCount: 1,
-                startingPrice: 1,
+                bidIncrement: 1,
                 registrationOpenDate: 1,
                 registrationCloseDate: 1,
+                deposit: 1,
+                registrationFee: 1,
+                winner: "$customerwinner.fullName",
+                winningPrice: 1,
+
                 createdAt: 1,
                 updatedAt: 1,
-                approvalTime: 1,
-                status: 1,
-                winningPrice: 1,
-                registeredUsers: {
-                    $map: {
-                      input: "$registeredUsers", 
-                      as: "user",              
-                      in: "$$user.customer"    
-                    }
-                  }
+                managementAction: 1,
+                userDetails: 1,
+                status: status,
+                cancellationReason: 1,
+
+                registeredUsers: 1,
+                customerDetails: 1,
+                username: "$customerwinner.username",
+                userCode: "$customerwinner.userCode",
+                email: "$customerwinner.email",
+                fullName: "$customerwinner.fullName",
+                address: "$customerwinner.address",
+                phoneNumber: "$customerwinner.phoneNumber",
+                avatar: "$customerwinner.avatar",
+                IndentifyCode: "$customerwinner.IndentifyCode",
+                createdCustomerAt: "$customerwinner.createdAt",
             }
         });
         const auctions = await Auction.aggregate(pipeline);
@@ -413,6 +608,41 @@ const ongoingList = asyncHandler(async (req, res) => {
 
         pipeline.push(
             {
+              $lookup: {
+                from: 'customers', 
+                localField: 'registeredUsers.customer', 
+                foreignField: '_id', 
+                as: 'customerDetails', 
+              },
+            },
+            // {
+            //   $unwind: {
+            //     path: '$customerDetails', // Tách từng phần tử trong mảng `customerDetails`
+            //     preserveNullAndEmptyArrays: true, // Đảm bảo giữ tài liệu gốc nếu không tìm thấy match
+            //   },
+            // },
+            
+        );
+        
+        pipeline.push(
+            {
+                $lookup: {
+                    from: 'customers',
+                    localField: 'winner',
+                    foreignField: '_id',
+                    as: 'customerwinner'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$customerwinner',
+                    preserveNullAndEmptyArrays: true // Giữ lại tài liệu nếu không có dữ liệu customer
+                }
+            }
+        ); 
+            
+        pipeline.push(
+            {
                 $addFields: {
                     highestBid: { $cond: { if: { $gt: [{ $size: "$bidshistory" }, 0] }, then: { $max: "$bidshistory.amount" }, else: null } },
                     timeRemain: { $subtract: ["$endTime", new Date()] } // Tính thời gian còn lại
@@ -429,33 +659,58 @@ const ongoingList = asyncHandler(async (req, res) => {
             { $limit: limitInt }
         );
 
+        const auction = await Auction.findOne();
+        const registeredUsersCount = auction?.registeredUsers?.length || 0;
         const totalAuctions = await Auction.countDocuments(status ? { status } : {});
         pipeline.push({
             $project: {
                 productName: "$product.productName",
                 productImages: "$product.images",
                 productDescription: "$product.description",
+                productAddress: "$product.address",
+                productCategory: "$product.category",
+                productCondition: "$product.condition",
+                productStatus: "$product.status",
+                productCreate: "$product.createdAt",
 
+                slug: 1,
                 title: 1,
                 description: 1,
                 contactEmail: 1,
-                sellerName: 1,               
+                sellerName: 1,     
+                startTime: 1,
+                endTime: 1,          
                 startingPrice: 1,
+                currentPrice: 1,
+                currentViews: 1,
+                viewCount: 1,
                 bidIncrement: 1,
+                registrationOpenDate: 1,
+                registrationCloseDate: 1,
                 deposit: 1,
                 registrationFee: 1,
-
+                winner: "$customerwinner.fullName",
+                winningPrice:1,
                 participants: 1,
-                slug: 1,
-                currentViews: 1,
-                startingPrice: 1,
-                registrationOpenDate: 1,
-                startTime: 1,
-                endTime: 1,
 
                 createdAt: 1,
                 updatedAt: 1,
-                approvalTime: 1,
+                managementAction: 1,
+                status: status,
+                cancellationReason: 1,
+
+                registeredUsers: 1,
+                customerDetails: 1,
+                username: "$customer.username",
+                userCode: "$customer.userCode",
+                email: "$customer.email",
+                fullName: "$customer.fullName",
+                address: "$customer.address",
+                phoneNumber: "$customer.phoneNumber",
+                avatar: "$customer.avatar",
+                IndentifyCode: "$customer.IndentifyCode",
+                createdCustomerAt: "$customer.createdAt",
+
             }
         });
         const auctions = await Auction.aggregate(pipeline);
@@ -562,5 +817,8 @@ module.exports = {
     getAuctionDetails,
     getAuctionOutstanding,
     ongoingList,
-    checkValidAccess
+    checkValidAccess,
+    updateAuction,
+    endAuction,
+    kickCustomerOutOfAuction,
 };

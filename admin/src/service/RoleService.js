@@ -43,7 +43,7 @@ const roleApi={
         })
     },
     getPermissionByRole: async (id) => {
-        return await axiosClient.get(`/roletopermission/${id}`).then(result => {
+        return await axiosClient.get(`/role/${id}`).then(result => {
             console.log('fetch',result)
             if (!result.success) {
                 toast.error( "Lấy danh sách quyền hạn thất bại");
@@ -55,14 +55,25 @@ const roleApi={
         })
     },
     createRoleToPermission: async (values) => {
-        const updateRole = await axiosClient.post(`roletopermission/createnew`, values);
+        const updateRole = await axiosClient.post(`role/createnew`, values);
         if (!updateRole.success) {
             toast.error(result.message || "Cập nhật vai trò thất bại");
             return false;
         }
         toast.success(updateRole.message || "Cật nhật vai trò thành công");
         return true;
-    }
+    },
+
+    getRoleName: async (id_User) => {
+        const roleName = await axiosClient.get(`role/getRoleName/${id_User}`);
+        if (!roleName.success) {
+            toast.error(result.message || "Lấy roleName thất bại");
+            return false;
+        }
+        // toast.success(roleName.message || "Lấy roleName thành công");
+        return true;
+    },
+ 
 
 }
 
