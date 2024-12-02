@@ -60,7 +60,7 @@ const corsOptions = {
     origin: [
         process.env.REACT_APP_CLIENT_URL,
         process.env.REACT_APP_ADMIN_URL,
-        // 'http://localhost:3033',
+        'http://localhost:3033',
     ],
     credentials: true,
     exposedHeaders: ['x-new-access-token', 'x-token-resetpassword'],

@@ -68,6 +68,7 @@ const SellProduct = () => {
           formData.append(key, values[key]);
         }
       });
+      debugger
       if (!user)
           return toggleLoginModal(true)
       const response = await AuctionService.register(formData);

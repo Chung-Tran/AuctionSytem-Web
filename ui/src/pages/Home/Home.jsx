@@ -2,7 +2,6 @@ import React, { useCallback, useContext, useEffect, useState } from 'react'
 import Banner from '../../components/Home/Banner'
 import { Filter, SortAsc } from 'lucide-react';
 import ProductItem from '../../components/Product/ProductItem';
-import logo from '../../assets/logo192.png'
 import productTemplate from '../../assets/productTemplate.jpg'
 import AuctionService from '../../services/AuctionService';
 import { countdown, formatCurrency, formatDate } from '../../commons/MethodsCommons';
@@ -165,7 +164,7 @@ const Home = () => {
                                     />
                                     <div className="p-4">
                                         <h3 className="text-xl font-bold mb-2">{item.productName}</h3>
-                                        <p className="text-muted-foreground mb-4">Sold for {formatCurrency(item.currentPrice)} on {formatDate(item.endTime) }</p>
+                                        <p className="text-muted-foreground mb-4">Sold for {formatCurrency(item.winningPrice)} on {formatDate(item.endTime) }</p>
                                     </div>
                                 </div>
                             ))

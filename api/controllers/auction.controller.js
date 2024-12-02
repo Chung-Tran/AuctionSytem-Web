@@ -372,7 +372,7 @@ const getAuctionDetails = asyncHandler(async (req, res) => {
 //Auction nổi bật(hightlight)
 const getAuctionOutstanding = asyncHandler(async (req, res) => {
     try {
-        const { limit = 10, page = 1 } = req.query;
+        const { limit = 10, page = 1, status } = req.query;
         const parsedLimit = parseInt(limit, 10);
         const parsedPage = parseInt(page, 10); 
         const skip = (parsedPage - 1) * parsedLimit; 
@@ -419,6 +419,11 @@ const getAuctionOutstanding = asyncHandler(async (req, res) => {
                 }
             }
         ];
+        if (status) {
+            pipeline.push({
+                $match: { status: status }
+            });
+        }
 
         const auctions = await Auction.aggregate(pipeline); 
         res.status(200).json(formatResponse(true, auctions, ""));
@@ -429,7 +434,7 @@ const getAuctionOutstanding = asyncHandler(async (req, res) => {
 });
 const listAuctions = asyncHandler(async (req, res) => {
     const { status, page = 1, limit = 10 } = req.query;
-
+    
     try {
         const pageInt = parseInt(page, 10);
         const limitInt = parseInt(limit, 10);

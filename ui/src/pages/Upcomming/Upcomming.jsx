@@ -9,6 +9,7 @@ import LoadingSpinner from '../LoadingSpinner';
 import { countdown, formatCurrency } from '../../commons/MethodsCommons';
 const Upcomming = () => {
     const buttonSelect = "bg-primary text-white ";
+    const [loading, setLoading] = useState(false);
     const [auctions, setAuctions] = useState([]);
     const [auctionHighlight, setAuctionHighlight] = useState([]);
     const [searchOptions, setSearchOptions] = useState({
@@ -19,6 +20,7 @@ const Upcomming = () => {
     const [totalPages, setTotalPages] = useState(1);
     useEffect(() => {
         const fetchData = async () => {
+            setLoading(true)
             const auctionList = await AuctionService.getList(searchOptions);
             const auctionHighlight = await AuctionService.getOutstanding({ limit: 4, page: 1, status: 'pending' });
             if (auctionList && auctionHighlight) {
@@ -28,6 +30,7 @@ const Upcomming = () => {
             }
         };
         fetchData();
+        setLoading(false)
     }, [searchOptions]);
 
     const handlePreviousPage = () => {
@@ -43,7 +46,7 @@ const Upcomming = () => {
             page: Math.min(prev.page + 1, totalPages),  // Không vượt quá tổng số trang
         }));
     };
-    if (!auctions || auctions?.length < 1 || !auctionHighlight)
+    if (loading)
         return <LoadingSpinner />
     return (
         <div>
@@ -85,6 +88,9 @@ const Upcomming = () => {
                             registrationCloseDate={product.registrationCloseDate}
                         />
                     ))}
+                    {auctions?.length == 0 && (
+                        <h3>Không có sản phẩm đang chờ đấu giá</h3>
+                    )}
                 </div>
                 <div className="flex justify-center mt-6">
                     <button

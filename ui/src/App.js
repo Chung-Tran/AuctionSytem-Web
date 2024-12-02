@@ -15,6 +15,8 @@ import ChangePassword from './pages/Profile/ChangePasswordPage';
 import PrivateRoute from './PrivateRoute';
 import AuctionRoom from './pages/Auction-OnGoing/AuctionRoom';
 import CheckAuctionAccess from './pages/Auction-OnGoing/CheckAuctionAccess';
+import AuctionConfirmation from './pages/AuctionConfirmation/AuctionConfirmation';
+import AuctionSubmissions from './pages/AuctionSubmissions/AuctionSubmissions';
 function App() {
   return (
     <Router>
@@ -36,6 +38,7 @@ function App() {
           <Route element={<PrivateRoute />}>
             <Route path="/profile" element={<ProfilePage />} /> {/* Thông tin cá nhân */}
             <Route path="/profile/change-password" element={<ChangePassword />} /> {/* Đổi mật khẩu */}
+            <Route path="/auction-submissions" element={<AuctionSubmissions />} /> {/* Lịch sử gửi tài sản đấu giá */}
           </Route>
         </Route>
 
@@ -45,7 +48,12 @@ function App() {
             < AuctionRoom />
           </CheckAuctionAccess>
         }
-        /> {/* Phòng đấu giá (cho cả người xem và người tham gia) */}
+        />
+        {/* Confirm thanh toán sản phẩm */}
+        <Route path="/auction/confirmation/:token" element={
+            < AuctionConfirmation />
+        }
+        />
 
         {/* 404 Not Found Route */}
         <Route path="*" element={<NotFound />} />
