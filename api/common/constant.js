@@ -43,7 +43,9 @@ const PaymentGateways = Object.freeze({
 });
 
 const EmailType = Object.freeze({
-    RESET_PASSWORD_OTP: "reset-password-otp"
+    RESET_PASSWORD_OTP: "reset-password-otp",
+    NOTIFY_TO_AUCTION_WINNER: "notify-to-auction-winner",
+    NOTIFY_TO_PRODUCT_OWNER: "notify-to-product-owner"
 });
 
 const VNPayResponse = Object.freeze({

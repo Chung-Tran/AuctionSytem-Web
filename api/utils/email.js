@@ -53,11 +53,15 @@ async function sendEmail(to, type, content) {
     const transporter = createTransporter();
 
     const subjects = {
-        [EmailType.RESET_PASSWORD_OTP]: 'Your OTP Code'
+        [EmailType.RESET_PASSWORD_OTP]: 'Your OTP Code',
+        [EmailType.NOTIFY_TO_AUCTION_WINNER]: 'Thông Báo Trúng Đấu Giá',
+        [EmailType.NOTIFY_TO_PRODUCT_OWNER]: 'Thông Báo Sản Phẩm Đấu Giá Thành Công'
     };
 
     const templatePaths = {
-        [EmailType.RESET_PASSWORD_OTP]: path.join(__dirname, '..', 'email-templates', `${EmailType.RESET_PASSWORD_OTP}.html`)
+        [EmailType.RESET_PASSWORD_OTP]: path.join(__dirname, '..', 'email-templates', `${EmailType.RESET_PASSWORD_OTP}.html`),
+        [EmailType.NOTIFY_TO_AUCTION_WINNER]: path.join(__dirname, '..', 'email-templates', `${EmailType.NOTIFY_TO_AUCTION_WINNER}.html`),
+        [EmailType.NOTIFY_TO_PRODUCT_OWNER]: path.join(__dirname, '..', 'email-templates', `${EmailType.NOTIFY_TO_PRODUCT_OWNER}.html`)
     };
 
     const subject = subjects[type];
