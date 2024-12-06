@@ -7,7 +7,7 @@ import { AUCTION_STATUS, MODAL_TYPES, AuctionStatus} from '../../commons/Constan
 import '../../scss/AuctionApprove.scss';
 import noImage from '../../assets/images/no-image.jpg'
 import moment from 'moment';
-
+//
 const AuctionManager = () => {
   const [auctions, setAuctions] = useState({
     new: [],
@@ -29,6 +29,8 @@ const AuctionManager = () => {
   const [filteredAuctions, setFilteredAuctions] = useState(auctions); 
 
   const [activeTabKey, setActiveTabKey] = useState("1"); 
+
+  const permissionValue = JSON.parse(localStorage.getItem('permission')) || [];
 
 
   const formatDateTime = (value) => {
@@ -79,6 +81,11 @@ const AuctionManager = () => {
   useEffect(() => {
     fetchAuctions();
     console.log("Auctionnn: ", auctions.ended)
+  }, []);
+
+  useEffect(() => {
+    fetchAuctions();
+    console.log("Auctionnn: ", auctions.ended)
   }, [activeTabKey]);
 
   const handleFilter = (e) => {
@@ -112,17 +119,19 @@ const AuctionManager = () => {
     }
   }, [filterParams, auctions]); // Cập nhật khi filterParams hoặc auctions thay đổi*/
   
+  const hasPermission = (permission) => permissionValue.includes(permission);
 
   const renderActionButtons = (status, item) => {
     const buttons = [];
     
-    buttons.push(
-      <CButton key="view" onClick={() => handleAction(MODAL_TYPES.VIEW, item)}>
-        Xem
-      </CButton>
-    );
-  
-    if (status === AUCTION_STATUS.NEW) {
+    if(hasPermission('1')){
+      buttons.push(
+        <CButton key="view" onClick={() => handleAction(MODAL_TYPES.VIEW, item)}>
+          Xem
+        </CButton>
+      );
+    }
+    if (hasPermission('2') && status === AUCTION_STATUS.NEW) {
       buttons.push(
         <CButton key="approve" className="mx-2 btn-success" onClick={() => handleAction(MODAL_TYPES.APPROVE, item)}>
           Duyệt
@@ -131,41 +140,57 @@ const AuctionManager = () => {
           Từ chối
         </CButton>
       );
-    } else if (status === AUCTION_STATUS.PENDING) {
-      buttons.push(
-        <CButton key="update" className="mx-2 btn-success" onClick={() => handleAction(MODAL_TYPES.UPDATE, item)}>
-          Điều chỉnh
-        </CButton>, 
-        <CButton key="cancel" className="btn-danger" onClick={() => handleAction(MODAL_TYPES.CANCEL, item)}>
-          Hủy
-        </CButton>,
-        
-      );
-    } else if (status === AUCTION_STATUS.ACTIVE) {
-      buttons.push(
-        <CButton key="update" className="mx-2 btn-success" onClick={() => handleAction(MODAL_TYPES.UPDATE, item)}>
-          Điều chỉnh
-        </CButton>,
-        <CButton key="end" className="btn-danger" onClick={() => handleAction(MODAL_TYPES.END, item)}>
-          Đóng phiên 
-        </CButton> 
-      );
+    } 
+    if (status === AUCTION_STATUS.PENDING) {
+      if(hasPermission('3')){
+        buttons.push(
+          <CButton key="update" className="mx-2 btn-success" onClick={() => handleAction(MODAL_TYPES.UPDATE, item)}>
+            Điều chỉnh
+          </CButton>, 
+        );
+      }
+      if(hasPermission('4')){
+        buttons.push(
+          <CButton key="cancel" className="btn-danger" onClick={() => handleAction(MODAL_TYPES.CANCEL, item)}>
+            Hủy
+          </CButton>,
+        );
+      }
+    } 
+    if (status === AUCTION_STATUS.ACTIVE) {
+      if(hasPermission('3')){
+        buttons.push(
+          <CButton key="update" className="mx-2 btn-success" onClick={() => handleAction(MODAL_TYPES.UPDATE, item)}>
+            Điều chỉnh
+          </CButton>,
+        );
+      }
+      if(hasPermission('6')){
+        buttons.push(
+          <CButton key="end" className="btn-danger" onClick={() => handleAction(MODAL_TYPES.END, item)}>
+            Đóng phiên 
+          </CButton> 
+        );
+      }
     }
-    else if (status === AUCTION_STATUS.ENDED) {
-      buttons.push(
-        <CButton key="recover" className="mx-2 btn-success" onClick={() => handleAction(MODAL_TYPES.UPDATE, item)}>
-          Điều chỉnh
-        </CButton>, 
-      );
+    if (status === AUCTION_STATUS.ENDED) {
+      if(hasPermission('3')){
+        buttons.push(
+          <CButton key="update" className="mx-2 btn-success" onClick={() => handleAction(MODAL_TYPES.UPDATE, item)}>
+            Điều chỉnh
+          </CButton>,
+        );
+      }
     }
-    else if (status === AUCTION_STATUS.CANCELLED) {
-      buttons.push(
-        <CButton key="recover" className="mx-2 btn-success" onClick={() => handleAction(MODAL_TYPES.RECOVER, item)}>
-          Khôi phục
-        </CButton>, 
-      );
+    if (status === AUCTION_STATUS.CANCELLED) {
+      if(hasPermission('5')){
+        buttons.push(
+          <CButton key="recover" className="mx-2 btn-success" onClick={() => handleAction(MODAL_TYPES.RECOVER, item)}>
+            Khôi phục
+          </CButton>, 
+        );
+      }
     }
-  
     return buttons;
   };
 

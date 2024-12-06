@@ -54,24 +54,7 @@ const _nav = [
     icon: <CIcon icon={cibAppStore} customClassName="nav-icon" />,
 
   },
-  {
-    component: CNavTitle,
-    name: 'Bán hàng',
-  },
-  {
-    component: CNavItem,
-    name: 'Bán hàng',
-    to: '/minimart/sales',
-    icon: <CIcon icon={cibAppStore} customClassName="nav-icon" />,
-
-  },
-  {
-    component: CNavItem,
-    name: 'Trả hàng',
-    to: '/minimart/sale_return',
-    icon: <CIcon icon={cibAppStore} customClassName="nav-icon" />,
-    disabled: hasPermission([22,23,24,25]),
-  },
+  
   {
     component: CNavTitle,
     name: 'Nhân sự',
@@ -90,6 +73,7 @@ const _nav = [
     icon: <CIcon icon={cilPencil} customClassName="nav-icon" />,
     disabled: hasPermission([5,6,7,8]),
   },
+
   {
     component: CNavTitle,
     name: 'Sản phẩm',
@@ -108,6 +92,45 @@ const _nav = [
     ],
     disabled: hasPermission([10,11,12,13]),
   },
+
+  {
+    component: CNavTitle,
+    name: 'Khách hàng',
+  },
+  {
+    component: CNavGroup,
+    name: 'Quản lí khách hàng',
+    to: '/base',
+    icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
+    items: [
+      {
+        component: CNavItem,
+        name: 'Khách hàng',
+        to: '/user/manager',
+      },
+    ],
+    disabled: hasPermission([10,11,12,13]),
+  },
+
+  // {
+  //   component: CNavTitle,
+  //   name: 'Bán hàng',
+  // },
+  // {
+  //   component: CNavItem,
+  //   name: 'Bán hàng',
+  //   to: '/minimart/sales',
+  //   icon: <CIcon icon={cibAppStore} customClassName="nav-icon" />,
+
+  // },
+  // {
+  //   component: CNavItem,
+  //   name: 'Trả hàng',
+  //   to: '/minimart/sale_return',
+  //   icon: <CIcon icon={cibAppStore} customClassName="nav-icon" />,
+  //   disabled: hasPermission([22,23,24,25]),
+  // },
+
   // {
   //   component: CNavItem,
   //   name: 'Kiểm kho',

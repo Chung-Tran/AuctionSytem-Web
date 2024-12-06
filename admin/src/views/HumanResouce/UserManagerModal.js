@@ -10,7 +10,7 @@ function UserManagerModal(props) {
     let { type, setShowModal, data  } = props;
     const [show, setShow] = useState(false);
     const [userInfo, setUserInfo] = useState();
-    const [rolePermissionByID, setrolePermissionByID] = useState([]);
+    const [rolePermissionByID, setrolePermissionByID] = useState();
     const [rolePermission, setrolePermission] = useState([]);
 
     useEffect(() => {
@@ -49,7 +49,7 @@ function UserManagerModal(props) {
             phoneNumber: !!userInfo ? userInfo?.phoneNumber : '',
             gender: !!userInfo ? userInfo?.gender : 'Nam',
             address: !!userInfo ? userInfo?.address : '',
-            rolePermission: !!userInfo ? userInfo?.rolePermission : '66f7729a0fe0c277bc99ca86',
+            rolePermission: !!userInfo ? userInfo?.rolePermission : '6750149f148318b86e3eb569',
             passwordConfirm: ''
         },
         onSubmit: values => {
@@ -60,7 +60,7 @@ function UserManagerModal(props) {
 
     const getRoleNameById = (rolePermissionId) => {
         const role = rolePermission.find(r => r._id === rolePermissionId);
-        return role ? role.role.name : 'Unknown Role';
+        return role ? role.role?.name : 'Unknown Role';
       };
 
     const handleSubmit = async (values) => {
@@ -170,7 +170,12 @@ function UserManagerModal(props) {
                                 </CCol>
                                 <CCol md="7" >
 
-                                    <CFormSelect className={type === 'Xem' ? 'input-readonly' : ''} name='rolePermission' onChange={formik.handleChange} value={formik.values.rolePermission}>
+                                    <CFormSelect className={type === 'Xem' ? 'input-readonly' : ''} 
+                                                name='rolePermission' 
+                                                onChange={formik.handleChange} 
+                                                // onChange={(e) => formik.setFieldValue('rolePermission', e.target.value)}
+                                                value={formik.values.rolePermission._id} defaultValue="">  
+                                        <option value="">-- Chọn chức vụ --</option>
                                         {rolePermission && rolePermission.map(item => (
                                             <option key={item?._id} value={item?._id}>{getRoleNameById(item?._id)}</option>
 
