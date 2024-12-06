@@ -103,7 +103,7 @@ const AuctionRoom = () => {
   const [productInfo, setProductInfo] = useState(null);
   const [disable, setDisable] = useState(false);
   const [currentBid, setCurrentBid] = useState(0);
-  const [bidAmount, setBidAmount] = useState(INITIAL_BID_AMOUNT);
+  const [bidAmount, setBidAmount] = useState();
   const [timeLeft, setTimeLeft] = useState();
   const [quantity, setQuantity] = useState(1);
   const [notifications, setNotifications] = useState([]);
@@ -133,6 +133,7 @@ const AuctionRoom = () => {
     setProductInfo(productData);
     setCurrentBid(parseFloat(data.roomInfo.currentBid) || 0);
     setBidHistory(data.bidHistory || []);
+    setBidAmount(data.bidIncrement);
     setConnected(true);
 
     // Calculate initial time left
