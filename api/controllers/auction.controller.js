@@ -1,7 +1,8 @@
 const asyncHandler = require('express-async-handler');
 const Product = require('../models/product.model');
 const { Auction } = require('../models/auction.model');
-// const Customer = require('../models/customer.model');
+const { Transaction } = require('../models/transaction.model');
+const { Customer } = require('../models/customer.model');
 const { formatResponse } = require('../common/MethodsCommon');
 const redisClient = require('../config/redis');
 const cloudinary = require('cloudinary').v2;
@@ -760,6 +761,58 @@ const checkValidAccess = asyncHandler(async (req, res) => {
     }
 });
 
+// Lấy thông tin phiên đấu giá đã kết thúc
+const getAuctionComfirmInfo = asyncHandler(async (req, res) => {
+    const { auctionId, customerId, productId } = req.user;
+
+	const TransactionSumQuery = await Transaction.aggregate([
+		{
+			$match: {
+				$and: [
+					{ userId: new mongoose.Types.ObjectId(customerId) },
+					{ auctionId: new mongoose.Types.ObjectId(auctionId) },
+				],
+			},
+		},
+		{
+			$group: {
+				_id: {
+					userId: '$userId',
+					auctionId: '$auctionId',
+				},
+				totalAmount: { $sum: '$amount' },
+			},
+		},
+		{
+			$project: {
+				totalAmount: 1,
+				_id: 0,
+			},
+		},
+		{
+			$limit: 1,
+		},
+	]).then((result) => result[0]);
+
+	const result = await Promise.all([
+		Auction.findById(auctionId, { bids: 0, managementAction: 0, __v: 0 }),
+		Customer.findById(customerId, { password: 0, __v: 0 }),
+		Product.findById(productId, { __v: 0 }),
+		TransactionSumQuery,
+	]).then(([auction, customer, product, { totalAmount }]) => {
+		return {
+			auction,
+			customer,
+			product,
+			isPaied: totalAmount === auction.winningPrice,
+			missingAmount: auction.winningPrice - totalAmount,
+		};
+	});
+
+	return res.json(result);
+});
+
+
 const syncAuctionsToMongoDB = async () => {
     try {
         // Lấy tất cả các phiên đấu giá từ Redis
@@ -826,4 +879,5 @@ module.exports = {
     updateAuction,
     endAuction,
     kickCustomerOutOfAuction,
+    getAuctionComfirmInfo,
 };
