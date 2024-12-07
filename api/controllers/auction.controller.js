@@ -10,6 +10,7 @@ const moment = require('moment');
 const mongoose = require('mongoose');
 const { globalIo, getGlobalIo } = require('./socket.controller');
 const { REDIS_KEYS } = require('../common/constant');
+const { pushAuctionToQueue } = require('../common/initializeAuctionSync');
 
 const registerAuctionProduct = asyncHandler(async (req, res) => {
     const {
@@ -113,6 +114,9 @@ const approveAuction = asyncHandler(async (req, res) => {
         auction.registrationFee = registrationFee;
         
         auction.status = 'pending';
+        //Nếu như phê duyệt đấu giá trong ngày thì sẽ push nó vào list auto start
+        if (new Date(startTime).getDate() == new Date().getDate() && new Date(endTime).getDate() == new Date().getDate())
+            pushAuctionToQueue(auction._id);
 
         await auction.save();
 
