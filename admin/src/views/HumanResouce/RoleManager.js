@@ -7,17 +7,20 @@ import 'react-toastify/dist/ReactToastify.css';
 import RoleTableResult from './RoleTableResult.js';
 import PermissionModal from './PermissionModal.js';
 import roleApi from '../../service/RoleService.js';
+import moment from 'moment';
 
 function RoleManager() {
     const [allRole, setAllRole] = useState();
-    const [showModal, setShowModal] = useState(null);
+    const [showModal, setShowModal] = useState(null); //show kiểu gì
     const [showPermissionModal, setShowPermissionModal] = useState(null);
-    const [modalValue, setModalValue] = useState({});
+    const [modalValue, setModalValue] = useState({}); //dữ liệu dòng dã chọn
     const [data, setData] = useState(null);
     const [roleSelected, setRoleSelected] = useState();
     const permissionValue = JSON.parse(localStorage.getItem('permission')) || [];
     useEffect(() => {
         fetchData();
+        console.log("role: ", allRole)
+
     }, [])
 
     const fetchData = async () => {
@@ -39,28 +42,36 @@ function RoleManager() {
     const tableHeaderValue = [
 
         {
-            name: 'Mã vai trò',
+            name: 'Mã chức vụ',
             selector: row => row._id,
             sortable: true,
-            maxWidth: "150px"
+            maxWidth: "170px"
         },
         {
-            name: 'Tên vai trò',
-            selector: row => row.roleName,
-            sortable: true
+            name: 'Tên chức vụ',
+            selector: row => row.role?.isSystemRole 
+            ? `${row.role?.name} ⭐` 
+            : row.role?.name,
+            sortable: true,
+            maxWidth: "200px"
+
         },
         {
             name: 'Mô tả',
-            selector: row => row.roleDescription,
-            sortable: true
+            selector: row => row.description,
+            sortable: true,
+            maxWidth: "500px"
+
         },
         {
             name: 'Ngày tạo',
-            selector: row => row.createdAt,
+            selector: row => moment(row.createdAt).format('HH:mm || DD/MM/YYYY '),
+            sortable: true,
+            maxWidth: "170px"
         },
         {
             name: 'Người tạo',
-            selector: row => row.createdBy,
+            selector: row => row.createdBy.username,
             sortable: true,
             maxWidth: "170px"
         },
@@ -93,26 +104,26 @@ function RoleManager() {
 
     return (
         <>
-            {hasPermission(5) && (
             <RoleTableResult value={tableValues} selectValue={setModalValue} />
-            )}
+            
             <div className="d-flex flex-row docs-highlight mb-3 mt-3"  >
-            {hasPermission(5) && (
+            {hasPermission('14') && (
                 <CButton className='mx-2 btn btn-warning' style={{ minWidth: 70 }} onClick={() => handleShowModal('Xem')} >Xem</CButton>
                 )}
-            {hasPermission(6) && (
+            {hasPermission('15') && (
                 <CButton className='mx-2 btn btn-warning' style={{ minWidth: 70 }} onClick={() => handleShowModal('Thêm')}>Thêm</CButton>
                 )}
-            {hasPermission(7) && (
-                <CButton className='mx-2 btn btn-warning' style={{ minWidth: 70 }}>Xóa</CButton>
+            {hasPermission('16') && (
+                <CButton className='mx-2 btn btn-warning' style={{ minWidth: 70 }} onClick={() => handleShowModal('Xóa')}>Xóa</CButton>
                 )}
-            {hasPermission(8) && (
+            {hasPermission('17') && (
                 <CButton className='mx-2 btn btn-warning' style={{ minWidth: 70 }} onClick={() => handleShowModal('Sửa')}>Sửa</CButton>
                 )}
-            {hasPermission(9) && (
+            {hasPermission('18') && (
                 <CButton className='mx-2 btn btn-warning' style={{ minWidth: 70 }} onClick={()=>handleShowPermissionModal()}>Phân quyền</CButton>
                 )}
             </div>
+
             <RoleManagerModal type={showModal} setShowModal={setShowModal} data={data} />
             <PermissionModal setShowModal={ setShowPermissionModal} type={showPermissionModal} data={roleSelected} />
         </>

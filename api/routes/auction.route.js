@@ -8,6 +8,8 @@ const {
     updateAuction,
     endAuction,
     kickCustomerOutOfAuction,
+    deleteHistoryManagerAuction,
+    getAuctionDetailsByID,
     getAuctionDetails,
     listAuctions,
     getAuctionOutstanding,
@@ -28,6 +30,9 @@ router.put('/update/:auctionId/:userId', updateAuction);
 router.put('/end/:auctionId/:userId', endAuction);
 router.put('/:auctionId/bank-info', updateBankInfo);
 router.delete('/kickCustomer/:auctionId/:customerId/:userId', kickCustomerOutOfAuction);
+router.delete('/deleteHistory/:auctionId/:managementActionId', deleteHistoryManagerAuction);
+
+router.get('/getDetailAuctionByID/:id_Auction', getAuctionDetailsByID);
 
 //get cho client
 router.get('/outstanding', getAuctionOutstanding); 

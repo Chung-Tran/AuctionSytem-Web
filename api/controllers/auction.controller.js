@@ -179,7 +179,6 @@ const updateAuction = asyncHandler(async (req, res) => {
     if (!auction) {
         return res.status(404).json(formatResponse(false, null, "Không tìm thấy phiên đấu giá"));
     }
-    
     try {
         auction.title = title;
         auction.description = description;
@@ -235,58 +234,142 @@ const endAuction = asyncHandler(async (req, res) => {
 const kickCustomerOutOfAuction = asyncHandler(async (req, res) => {
     const { auctionId, customerId, userId } = req.params;
 
-    const auction = await Auction.findById(auctionId);
-    if (!auction) {
-        return res.status(404).json(formatResponse(false, null, "Không tìm thấy phiên đấu giá"));
+    const auction = await Auction.findById(auctionId)
+    if(!auction){
+        return res.status(400).json(formatResponse(false, null, "Không tìm thấy Auction"));
     }
 
     const userIndex = auction.registeredUsers.findIndex(
         (user) => user.customer && user.customer.toString() === customerId.toString()
     );
+
     if (userIndex === -1) {
         return res.status(404).json(formatResponse(false, null, "Không tìm thấy khách hàng trong phòng đấu giá"));
     }
 
-    // auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'xóa khách hàng'});
-
     try {
         auction.registeredUsers.splice(userIndex, 1);
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'xóa khách hàng khỏi'});
         await auction.save();
 
-        const pipeline = [
-            { 
-                $match: { _id: new mongoose.Types.ObjectId(auctionId) } 
+        const populatedAuction = await Auction.findById(auction._id)
+        .populate('product')
+        .populate({
+            path: 'managementAction.userBy',
+            populate: {
+                path: 'rolePermission',
+                populate: [
+                    { path: 'role', },
+                    { path: 'permissions', },
+                ],
             },
-            {
-                $lookup: {
-                    from: 'customers', 
-                    localField: 'registeredUsers.customer', 
-                    foreignField: '_id', 
-                    as: 'customerDetails'
-                }
-            },
-            {
-                $project: {
-                    _id: 1, 
-                    customerDetails: 1
-                }
-            }
-        ];
-
-        const [result] = await Auction.aggregate(pipeline);
-
-        if (!result || !result.customerDetails) {
-            return res.status(404).json(formatResponse(false, null, "Không tìm thấy thông tin khách hàng"));
+        })
+        .populate({
+            path: 'registeredUsers.customer',
+        });
+        
+        const data = {
+            ...populatedAuction.toObject(),
+            customerRemove: customerId,
         }
-
-        res.status(200).json(formatResponse(true,{ auctionId: auction._id, removedCustomer: customerId, listCustomers: result.customerDetails },"Khách hàng đã được loại khỏi phòng đấu giá"));
+        
+        res.status(200).json(formatResponse(true,data,"Khách hàng đã được loại khỏi phòng đấu giá"));
     } catch (error) {
         console.error("Lỗi khi loại khách hàng khỏi phòng đấu giá:", error);
         res.status(500).json(formatResponse(false, null, "Đã xảy ra lỗi khi loại khách hàng khỏi phòng đấu giá"));
     }
 });
 
+const deleteHistoryManagerAuction = asyncHandler(async (req, res) => {
+    const { auctionId, managementActionId} = req.params;
 
+    const auction = await Auction.findById(auctionId)
+        
+    if(!auction){
+        return res.status(400).json(formatResponse(false, null, "Không tìm thấy Auction"));
+    }
+
+    const managementActionIndex = auction.managementAction.findIndex(
+        (managementAction) => managementAction._id && managementAction._id.toString() === managementActionId.toString()
+    );
+    
+    if (managementActionIndex === -1) {
+        return res.status(404).json(formatResponse(false, null, "Không tìm thấy lịch sử quản lí đấu giá"));
+    }
+
+    try {
+        auction.managementAction.splice(managementActionIndex, 1);
+        await auction.save();
+
+        const populatedAuction = await Auction.findById(auction._id)
+        .populate('product')
+        .populate({
+            path: 'managementAction.userBy',
+            populate: {
+                path: 'rolePermission',
+                populate: [
+                    {
+                        path: 'role',
+                    },
+                    {
+                        path: 'permissions',
+                    },
+                ],
+            },
+        })
+        .populate({
+            path: 'registeredUsers.customer',
+        });
+        
+        const data = {
+            ...populatedAuction.toObject(),
+            managementActionRemove: managementActionId,
+        }
+        
+        res.status(200).json(formatResponse(true,data,"Lịch sử quản lí đấu giá đã được xóa"));
+    } catch (error) {
+        console.error("Lỗi khi xóa lịch sử quản lí đấu giá:", error);
+        res.status(500).json(formatResponse(false, null, "Đã xảy ra lỗi khi xóa lịch sử quản lí đấu giá"));
+    }
+});
+
+const getAuctionDetailsByID = asyncHandler(async (req, res) => {
+    const {id_Auction} = req.params;
+
+    try {
+        const auction = await Auction.findById(id_Auction)
+        .populate('product') 
+        .populate({
+            path: 'managementAction.userBy',
+            populate: {
+            path: 'rolePermission',
+            populate: [
+                {
+                path: 'role', 
+                },
+                {
+                path: 'permissions', 
+                },
+            ],
+            },
+        })
+        .populate({
+            path: 'registeredUsers.customer',
+        });
+
+        if(!auction){
+            return res.status(400).json(formatResponse(false, null, "Không tìm thấy Auction"));
+        }
+        const data = {
+            ...auction.toObject(),
+            
+        }
+        res.status(200).json(formatResponse(true, data, "Lấy chi tiết phiên đấu giá thành công"));
+    } catch (error) {
+        console.log('Lỗi khi lấy chi tiết phiên đấu giá: ', error.messager)
+        res.status(400).json(formatResponse(false, null, "Lấy chi tiết phiên đấu giá thất bại"));
+    }
+})
 
 //Get by slug
 const getAuctionDetails = asyncHandler(async (req, res) => {
@@ -502,6 +585,9 @@ const listAuctions = asyncHandler(async (req, res) => {
             },
             
         );
+
+        
+        
             
         pipeline.push({
             $sort: { createdAt: -1 }
@@ -547,6 +633,7 @@ const listAuctions = asyncHandler(async (req, res) => {
                 createdAt: 1,
                 updatedAt: 1,
                 managementAction: 1,
+            
                 userDetails: 1,
                 status: status,
                 cancellationReason: 1,
@@ -869,6 +956,7 @@ module.exports = {
     approveAuction,
     rejectAuction,
     listAuctions,
+    getAuctionDetailsByID,
     getAuctionDetails,
     getAuctionOutstanding,
     ongoingList,
@@ -876,6 +964,7 @@ module.exports = {
     updateAuction,
     endAuction,
     kickCustomerOutOfAuction,
+    deleteHistoryManagerAuction,
     getMyAuctioned,
     updateBankInfo
 };

@@ -91,7 +91,17 @@ const createUser = asyncHandle(async (req, res) => {
 const getUserById = asyncHandle(async (req, res) => {
   const { id } = req.params;
 
-  const employee = await User.findById(id);
+  const employee = await User.findById(id).populate({
+    path: 'rolePermission',  
+    populate: [
+      {
+        path: 'role',  
+      },
+      {
+        path: 'permissions',  
+      }
+    ]
+  });
   if (!employee) {
     return res
       .status(404)
@@ -113,6 +123,7 @@ const updateUser = asyncHandle(async (req, res) => {
   const { fullName, username, email, gender, address, phoneNumber, rolePermission, password, status } = req.body;
 
   const updates = { fullName, username, email, gender, address, phoneNumber, rolePermission, status };
+  
   if (password) {
     updates.hashedPassword = await bcrypt.hash(password, 10);
   }

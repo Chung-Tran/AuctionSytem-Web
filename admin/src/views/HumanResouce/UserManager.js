@@ -14,13 +14,13 @@ function UserManager() {
 
     {
       name: 'ID',
-      selector: row => row.phoneNumber,
+      selector: row => row?.phoneNumber,
       sortable: true,
       maxWidth: "150px"
     },
     {
       name: 'Tên nhân viên',
-      selector: row => `${row.fullName} (${row.username})`, 
+      selector: row => `${row?.fullName} (${row?.username})`, 
       sortable: true
     },
     
@@ -126,16 +126,16 @@ function UserManager() {
       <UserTableResult value={tableValues} selectValue={setModalValue} />
       <div className="d-flex flex-row docs-highlight mb-3 mt-3"  >
       
-        {hasPermission("66f57f96e62ef5bb68740b71") && (
+        {hasPermission("10") && (
           <CButton className='mx-2 btn btn-warning' style={{ minWidth: 70 }} onClick={() => handleShowModal('Xem')}>Xem</CButton>
         )}
-        {hasPermission("66e094ab2cba24638a4f7f03") && (
+        {hasPermission("11") && (
           <CButton className='mx-2 btn btn-warning' style={{ minWidth: 70 }} onClick={() => handleShowModal('Thêm')}>Thêm</CButton>
         )}
-        {hasPermission("66e0954162c8fba003707c5f") && (
+        {hasPermission("12") && (
           <CButton className='mx-2 btn btn-warning' style={{ minWidth: 70 }} onClick={() => handleShowModal('Sửa')}>Sửa</CButton>
         )}
-        {hasPermission("66e094bbb7f66bcb0f5431d5") && (
+        {hasPermission("13") && (
           <CButton className='mx-2 btn btn-warning' style={{ minWidth: 70 }} onClick={() => handleDeleteClick()}>Xóa</CButton>
         )}
         

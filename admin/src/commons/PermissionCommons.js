@@ -1,148 +1,123 @@
 export const SYSTEM_PERMISSION = [
+
+    {
+        Label: 'Phiên đấu giá',
+        Permission: [
+            {
+                PermissionName: 'Xem phiên đấu giá',
+                PermissionID:1
+            },
+            {
+                PermissionName: 'Duyệt phiên đấu giá',
+                PermissionID:2
+            },
+            {
+                PermissionName: 'Tùy chỉnh phiên đấu giá',
+                PermissionID:3
+            },
+            {
+                PermissionName: 'Hủy phiên đấu giá',
+                PermissionID:4
+            },
+            {
+                PermissionName: 'Khôi phục phiên đấu giá',
+                PermissionID:5
+            },
+            {
+                PermissionName: 'Kết thúc sớm phiên đấu giá',
+                PermissionID:6
+            },
+            {
+                PermissionName: 'Xóa khách hàng khỏi phiên đấu giá',
+                PermissionID:7
+            },
+            {
+                PermissionName: 'Xem lịch sử quản lí phiên đấu giá',
+                PermissionID:8
+            },
+            {
+                PermissionName: 'Xóa lịch sử quản lí phiên đấu giá',
+                PermissionID:9
+            },
+        ]
+    },
+
     {
         Label: "Nhân sự",
         Permission: [
             {
                 PermissionName: 'Xem người dùng',
-                PermissionID:1
+                PermissionID:10
             },
             {
                 PermissionName: 'Thêm người dùng',
-                PermissionID:2
+                PermissionID:11
             },
             {
                 PermissionName: 'Chỉnh sửa người dùng',
-                PermissionID:3
+                PermissionID:12
             },
             {
                 PermissionName: 'Xóa người dùng',
-                PermissionID:4
+                PermissionID:13
             },
             {
                 PermissionName: 'Xem vai trò',
-                PermissionID:5
+                PermissionID:14
             },
             {
                 PermissionName: 'Tạo vai trò',
-                PermissionID:6
+                PermissionID:15
             },
             {
                 PermissionName: 'Xóa vai trò',
-                PermissionID:7
+                PermissionID:16
             },
             {
                 PermissionName: 'Chỉnh sửa vai trò',
-                PermissionID:8
+                PermissionID:17
             },
             {
                 PermissionName: 'Phân quyền',
-                PermissionID:9
+                PermissionID:18
             },
         ]
     },
+
     {
         Label: "Sản phẩm",
         Permission: [
             {
                 PermissionName: 'Xem sản phẩm',
-                PermissionID:10
-            },
-            {
-                PermissionName: 'Thêm sản phẩm',
-                PermissionID:11
-            },
-            {
-                PermissionName: 'Chỉnh sửa sản phẩm',
-                PermissionID:12
-            },
-            {
-                PermissionName: 'Xóa sản phẩm',
-                PermissionID:13
-            }
-        ]
-    },
-    {
-        Label: "Kho",
-        Permission: [
-            {
-                PermissionName: 'Xem phiếu nhập kho',
-                PermissionID:14
-            },
-            {
-                PermissionName: 'Nhập kho',
-                PermissionID:15
-            },
-            {
-                PermissionName: 'Chỉnh sửa phiếu nhập kho',
-                PermissionID:16
-            },
-            {
-                PermissionName: 'Xóa phiếu nhập kho',
-                PermissionID:17
-            }
-        ]
-    },
-    {
-        Label: 'Khuyến mãi',
-        Permission: [
-            {
-                PermissionName: 'Xem khuyến mãi',
-                PermissionID:18
-            },
-            {
-                PermissionName: 'Tạo voucher',
                 PermissionID:19
             },
             {
-                PermissionName: 'Chỉnh sửa voucher',
+                PermissionName: 'Chỉnh sửa sản phẩm',
                 PermissionID:20
             },
             {
-                PermissionName: 'Xóa voucher',
+                PermissionName: 'Xóa sản phẩm',
                 PermissionID:21
-            }
+            },
         ]
     },
+    
+    
     {
-        Label: 'Bán hàng',
+        Label: 'Khách hàng',
         Permission: [
             {
-                PermissionName: 'Xem hóa đơn',
+                PermissionName: 'Xem khách hàng',
                 PermissionID:22
             },
             {
-                PermissionName: 'Phê duyệt hóa đơn',
+                PermissionName: 'Sửa thông tin khách hàng',
                 PermissionID:23
             },
             {
-                PermissionName: 'Sửa hóa đơn',
+                PermissionName: 'Xóa khách hàng',
                 PermissionID:24
             },
-            {
-                PermissionName: 'Xóa hóa đơn',
-                PermissionID:25
-            }
-        ]
-    },
-    {
-        Label: 'CMR',
-        Permission: [
-            {
-                PermissionName: 'Xem đối tác',
-                PermissionID:26
-            },
-            {
-                PermissionName: 'Thêm đối tác',
-                PermissionID:27
-            },
-            {
-                PermissionName: 'Sửa đối tác',
-                PermissionID:28
-            },
-            {
-                PermissionName: 'Xóa đối tác',
-                PermissionID:29
-            }
         ]
     },
     

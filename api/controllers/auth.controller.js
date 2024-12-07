@@ -28,7 +28,7 @@ const employeeLogin = asyncHandle(async (req, res) => {
         path: 'rolePermission',
         populate: {
           path: 'permissions',   
-          select: 'name'         
+          select: 'key name'         
         }
       });
 
@@ -82,7 +82,7 @@ const employeeLogin = asyncHandle(async (req, res) => {
 
     const { _id, username: employeeUsername, email, rolePermission} = employee;
     const rolePermissionId = rolePermission && rolePermission.permissions
-        ? rolePermission.permissions.map(permission => permission._id)
+        ? rolePermission.permissions.map(permission => permission.key)
         : [];
 
     console.log("employeeLogin: ", employee)

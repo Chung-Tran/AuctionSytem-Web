@@ -68,7 +68,7 @@ const RegistrationDialog = ({ isOpen, toggle }) => {
         password:'',
         phoneNumber: '',
         status: '',
-        rolePermission: '66f7729a0fe0c277bc99ca86',
+        rolePermission: '6750149f148318b86e3eb569',
       },
       onSubmit: values => {
         handleCreate(values)

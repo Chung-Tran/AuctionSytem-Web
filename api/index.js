@@ -78,8 +78,6 @@ app.use("/api/auctions", auctionRoute);
 app.use("/api/resource", resourceRoute)
 app.use('/api/role', roleRoute);
 app.use("/api/payment", paymentRoute)
-app.use("/api/auction", auctionRoute)
-
 
 // Error handling middleware
 app.use(errorHandler);

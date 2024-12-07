@@ -6,6 +6,7 @@ import * as Yup from 'yup';
 import auctionAPI from '../../service/AuctionService';
 import customerAPI from '../../service/CustomerService';
 import roleApi from 'service/RoleService';
+import employeeApi from '../../service/EmployeeService';
 import moment from 'moment';
 import TabPane from 'antd/es/tabs/TabPane';
 import { List, Tabs } from 'antd';
@@ -32,15 +33,28 @@ const approvalValidationSchema = Yup.object({
 const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
   const [rejectReason, setRejectReason] = useState('');
   const [dataCustomerDetails, setDataCustomerDetails] = useState(data?.customerDetails || []);
-  const [roleName, setRoleName] = useState('');
+  const [approvalAction, setApprovalAction] = useState();
+
+  const [detailAuction, setDetailAuction] = useState (); 
 
   const userId = JSON.parse(localStorage.getItem('userId')); 
+  const permissionValue = JSON.parse(localStorage.getItem('permission')) || [];
 
   const [hoveredItem, setHoveredItem] = useState(null); // Trạng thái để theo dõi dòng đang hover
 
-  useEffect(() => {
-    setDataCustomerDetails(data?.customerDetails || []);
-  }, [data?.customerDetails]);
+  useEffect(()=>{
+    console.log("dataAuction: ", data);
+    const fetchDataDetailAuction = async () => {
+      const getDetailAuctionByID = await auctionAPI.getDetailAuctionByID(data?._id || '');
+        if(getDetailAuctionByID.success){
+          setDetailAuction(getDetailAuctionByID.data);
+          setApprovalAction(getDetailAuctionByID.data?.managementAction?.find(action => action.action === 'duyệt') || null);
+        }
+    };
+    fetchDataDetailAuction();
+    
+    console.log("dataDetailAuction: ", detailAuction);
+  }, [data])
   
   const isEditable = type === MODAL_TYPES.APPROVE || type === MODAL_TYPES.UPDATE || type === MODAL_TYPES.RECOVER;
 
@@ -50,8 +64,6 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
     return moment(value).format('YYYY-MM-DD HH:mm');
   };
 
-
-  //Chỗ này làm thêm dựa vào data._id gọi API getdetail để láy thông tin chi tiết đấu giá chứ không dùng data được truyền từ chỗ khác
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
@@ -76,8 +88,8 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
       registrationFee: data?.registrationFee || '',
       winner: data?.winner || '',
       winningPrice: data?.winningPrice || '',
-      approvalTime: formatDateTime(data?.approvalTime || ''),
-      approvalBy: data?.approvalBy || '',
+      approvalTime: approvalAction?.timeLine ? formatDateTime(approvalAction.timeLine) : '',
+      approvalBy: approvalAction?.userBy?.username || '',
       updatedAt: formatDateTime(data?.updatedAt || ''),
       updatedBy: data?.updatedBy || '', 
       productName: data?.productName || '',
@@ -102,7 +114,7 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
     validationSchema: (type === MODAL_TYPES.APPROVE || type === MODAL_TYPES.UPDATE || type === MODAL_TYPES.RECOVER) ? approvalValidationSchema : null,
     onSubmit: values => {
       handleSubmit(values)
-      console.log("Auction detail:", values.status);
+      console.log("Auction detail:", );
 
     },
     // onSubmit: handleSubmit,
@@ -110,7 +122,6 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
 
   async function handleSubmit(values) {
     try {
-      // Format datetime fields before submitting
       const formattedValues = {
         ...values,
         startTime: values.startTime && moment(values.startTime, moment.ISO_8601, true).isValid()
@@ -133,13 +144,6 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
         productImages: Array.isArray(values.productImages) ? values.productImages : [],
       };
       
-      // Đảm bảo _id là chuỗi (string)
-      const id = values._id?.toString();
-      if (!id) {
-          return toast.error("Auction ID is invalid or missing.");
-      }
-
-      console.log("Auction ID:", values._id);
       let response;
       
       switch (type) {
@@ -192,12 +196,22 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
   }
 
   const handleKickCustomer = async (auctionId, customerId, userId) => {
-    const kickCustomer = await auctionAPI.kickCustomerOutOfAuction(userId, auctionId, customerId);
+    const kickCustomer = await auctionAPI.kickCustomerOutOfAuction(auctionId, customerId, userId);
     if(kickCustomer.success){
-      setDataCustomerDetails(kickCustomer.data.listCustomers)
+      setDetailAuction(kickCustomer.data);
       toast.success("Xóa khách hàng khỏi phiên đấu giá thành công");
     }else{
-      toast.error(kickCustomer.data.message || 'Xóa khách hàng khỏi phiên đấu giá thất bại!');
+      toast.error(kickCustomer.message || 'Xóa khách hàng khỏi phiên đấu giá thất bại!');
+    } 
+  }
+
+  const handleDeleteHistory = async (auctionId, managementActionId) => {
+    const deleteHistory = await auctionAPI.deleteHistoryManagementAction(auctionId, managementActionId);
+    if(deleteHistory.success){
+      setDetailAuction(deleteHistory.data);
+      toast.success("Xóa lịch sử quản lí đấu giá thành công");
+    }else{
+      toast.error(deleteHistory.message || 'Xóa lịch sử quản lí đấu giá thất bại!');
     } 
   }
 
@@ -240,54 +254,8 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
     </CCol>
   );
   
-  const renderActionButtons = (auctionId, customerId) => {
-    const buttons = [];
-    buttons.push(
-      <CButton key="delete" onClick={() => handleKickCustomer(auctionId, customerId)}>
-        Xóa khỏi phiên
-      </CButton>
-    );
-    return buttons;
-  };
+  const hasPermission = (permission) => permissionValue.includes(permission);
 
-  const mergedData = data?.managementAction?.map((action) => ({
-    type: 'action', // Để phân biệt loại dữ liệu
-    ...action,      // Giữ lại dữ liệu từ managementAction
-  })) || [];
-  
-  const userDetailsData = data?.userDetails?.map((user) => ({
-    type: 'user',   // Để phân biệt loại dữ liệu
-    ...user,        // Giữ lại dữ liệu từ userDetails
-  })) || [];
-  
-  // Hợp nhất hai mảng:
-  const dataSource = [...mergedData, ...userDetailsData];
-  
-  const getRoleName = async (userId) => {
-    try {
-      const roleNameResponse = await roleApi.getRoleName(userId); 
-      if (roleNameResponse.success) {
-        setRoleName(roleNameResponse.data); 
-      }
-    } catch (error) {
-      console.error('Error fetching role name:', error);
-      setRoleName('Error fetching role'); 
-    }
-    console.log("rolename", roleName);
-
-  };
-  useEffect(() => {
-    // getRoleName(data?.userDetails.map(u => u.rolePermission));
-    // if (userDetails?.rolePermission) {
-      // console.log("role", data?.userDetails.map(u => u.rolePermission));
-      console.log("rolename", roleName);
-      console.log("dataSouch", dataSource);
-
-      // if (data?.userDetails._id) {
-      //   getRoleName(data?.userDetails._id); // Gọi API khi `userBy` thay đổi
-      // }
-  }, [data?.userDetails]);
-  
   return (
     <CModal
       visible={visible}
@@ -396,7 +364,7 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
           </TabPane>
 
           <TabPane tab="Danh sách đăng ký" key="3">
-            {dataCustomerDetails?.length ? (
+            {detailAuction?.registeredUsers?.length ? (
               <>
                 {/* <div className="d-flex w-100 header-row">
                   <div className="flex-grow-1 text-center column">Mã khách hàng</div>
@@ -408,13 +376,13 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
                 <List
                   className="demo-loadmore-list"
                   itemLayout="horizontal"
-                  dataSource={dataCustomerDetails}
+                  dataSource={detailAuction?.registeredUsers}
                   renderItem={(customer) => (
                     <List.Item
                       className="d-flex justify-content-start data-row"
                       actions={[
                         <div className="d-flex gap-2">
-                          <CButton key="delete" onClick={() => handleKickCustomer(data._id, customer._id)}>Xóa khỏi phiên</CButton>
+                          {hasPermission("7") && <CButton key="delete" onClick={() => handleKickCustomer(data._id, customer.customer?._id, userId)}>Xóa khỏi phiên</CButton>}
                           {/* {renderActionButtons(data._id, customer._id)} */}
                         </div>,
                       ]}
@@ -424,7 +392,7 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
                         <div style={{ width: '60%' }}>
                           <div className="flex-grow-1 text-center column-vertical fw-semibold">Mã khách hàng</div>
                           <div className="flex-grow-1 text-center column-vertical">
-                            <CFormLabel className="mb-0">{customer.userCode}</CFormLabel>
+                            <CFormLabel className="mb-0">{customer.customer?.userCode}</CFormLabel>
                           </div>
                         </div>
                         
@@ -432,12 +400,12 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
                           <div className="flex-grow-2 column-vertical fw-semibold">Họ tên khách hàng</div>
                           <div className="flex-grow-2 d-flex align-items-center column-vertical">
                             <div>
-                              <div className="mb-0">{customer.fullName}</div>
-                              <div className="text-muted">{customer.username}</div>
+                              <div className="mb-0">{customer.customer?.fullName}</div>
+                              <div className="text-muted">{customer.customer?.username}</div>
                             </div>
                             <div className="me-2">
                               <img
-                                src={customer?.avatar?.[0] ?? noImage}
+                                src={customer?.customer?.avatar?.[0] ?? noImage}
                                 className="rounded"
                                 height={50}
                                 width={50}
@@ -450,17 +418,17 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
                         <div style={{ width: '60%' }}>
                           <div className="flex-grow-3 column-vertical fw-semibold">Thông tin liên hệ</div>
                           <div className="flex-grow-3 text-start column-vertical">
-                            <div>Email: {customer.email}</div>
-                            <div>SĐT: {customer.phoneNumber || 'Bổ sung sau'}</div>
-                            <div>CCCD: {customer.IndentifyCode || 'Bổ sung sau'}</div>
-                            <div>Địa chỉ: {customer.address || 'Bổ sung sau'}</div>
+                            <div>Email: {customer.customer?.email}</div>
+                            <div>SĐT: {customer.customer?.phoneNumber || 'Bổ sung sau'}</div>
+                            <div>CCCD: {customer.customer?.IndentifyCode || 'Bổ sung sau'}</div>
+                            <div>Địa chỉ: {customer.customer?.address || 'Bổ sung sau'}</div>
                           </div>
                         </div>
 
                         <div style={{ width: '60%' }}>
                           <div className="flex-grow-1 text-center column-vertical fw-semibold">Thời gian đăng kí</div>
                           <div className="flex-grow-1 text-center column-vertical">
-                            <CFormLabel className="mb-0">{formatDateTime(customer.createdAt)}</CFormLabel>
+                            <CFormLabel className="mb-0">{formatDateTime(customer.registrationTime)}</CFormLabel>
                           </div>
                         </div>
                       </div>
@@ -473,21 +441,21 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
             )}
           </TabPane>
 
-          <TabPane tab="Lịch sử quản lí" key="4">
-          {dataSource? (
+          {hasPermission("8") && <TabPane tab="Lịch sử quản lí" key="4">
+          {detailAuction?.managementAction?.length ? (
             <div>
               <div className="d-flex w-100 justify-content-between header-row mb-3">
-                {/* <div style={{ width: '20%' }}><strong>Mã nhân viên</strong></div>
-                <div style={{ width: '30%' }}><strong>Tên nhân viên</strong></div>
-                <div style={{ width: '20%' }}><strong>Chức vụ</strong></div> */}
-                <div style={{ width: '20%' }}><strong>Thực hiện hành vi</strong></div>
-                {/* <div style={{ width: '20%' }}><strong>Thời gian</strong></div> */}
+                <div style={{ width: '17%' }}><strong>Mã nhân viên</strong></div>
+                <div style={{ width: '20%' }}><strong>Tên nhân viên</strong></div>
+                <div style={{ width: '20%' }}><strong>Chức vụ</strong></div> 
+                <div style={{ width: '30%' }}><strong>Thực hiện hành vi</strong></div>
+                <div style={{ width: '20%' }}><strong>Thời gian</strong></div>
               </div>
 
               <List
                 className="demo-loadmore-list"
                 itemLayout="horizontal"
-                dataSource={data?.managementAction}
+                dataSource={detailAuction?.managementAction}
                 renderItem={(item, index) => (
                   <List.Item
                   className="d-flex justify-content-start data-row"
@@ -495,42 +463,34 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
                   onMouseLeave={() => setHoveredItem(null)} // Khi bỏ chuột ra khỏi dòng
                   >
                     <div className="d-flex w-100 align-items-start">
-                    
-                    {/* {item.type === 'user' && (
-                      <> */}
-                      {/*<div style={{ width: '20%' }}>
-                        <CFormLabel className="mb-0">{item?.username || 'N/A'}</CFormLabel>
+                      <div style={{ width: '17%' }}>
+                        <CFormLabel className="mb-0">{item.userBy?.phoneNumber || 'N/A'}</CFormLabel>
                       </div>
 
-                      <div style={{ width: '30%' }}>
-                        <CFormLabel className="mb-0">{item.fullName}</CFormLabel>
+                      <div style={{ width: '20%' }}>
+                        <CFormLabel className="mb-0">{item.userBy?.fullName} ({item.userBy?.username})</CFormLabel>
                       </div>
 
                       <div style={{ width: '20%' }}>
                         <CFormLabel className="mb-0">
-                        {item.userBy && getRoleName(item.userBy)}
-                        {roleName || 'Loading...'}
+                        {item.userBy.rolePermission?.role?.name || 'Loading...'}  {/* Render giá trị roleName đã lấy */}
                         </CFormLabel>
-                      </div> */}
-                      {/* </>
-                    )} */}
-                    {/* {item.type === 'action' && (
-                    <> */}
+                      </div> 
+                      
                       <div style={{ width: '30%' }}>
-                        <CFormLabel className="mb-0">Đã {item.action} phiên đấu giá </CFormLabel>
+                        <CFormLabel className="mb-0">Đã {item?.action} phiên đấu giá </CFormLabel>
                       </div>
 
                       <div style={{ width: '20%' }}>
-                        <CFormLabel className="mb-0">{moment(item.timeLine).format('HH:mm || DD-MM-YYYY')}</CFormLabel>
+                        <CFormLabel className="mb-0">{moment(item?.timeLine).format('HH:mm || DD-MM-YYYY')}</CFormLabel>
                       </div>
 
                       {hoveredItem === index && (
                         <div className="d-flex gap-2">
-                          {/* <CButton key="details" size="sm" onClick={() => handleDetails(item)}>Xóa</CButton> */}
+                          {hasPermission("9") && <CButton key="details" size="sm" onClick={() => handleDeleteHistory(data._id, item._id)}>Xóa</CButton>}
                         </div>
                       )}
-                    {/* </>
-                    )} */}
+                    
                     </div>
                   </List.Item>
                 )}
@@ -539,10 +499,7 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
           ) : (
             <div>Không có lịch sử quản lý phiên đấu giá</div>
           )}
-        </TabPane>
-
-
-
+          </TabPane>}
 
         </Tabs>
 

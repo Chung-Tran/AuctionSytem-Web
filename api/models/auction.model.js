@@ -42,7 +42,7 @@ const AuctionSchema = new Schema({
             userBy: { type: Schema.Types.ObjectId, ref: 'User' },
             action: {
                 type: String,
-                enum: [ 'duyệt', 'từ chối', 'điều chỉnh', 'hủy', 'khôi phục', 'kết thúc' ]
+                enum: [ 'duyệt', 'từ chối', 'điều chỉnh', 'hủy', 'khôi phục', 'kết thúc', 'xóa khách hàng khỏi']
             },
         }
     ],  
