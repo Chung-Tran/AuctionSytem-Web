@@ -5,7 +5,6 @@ const { default: mongoose } = require('mongoose');
 const { formatResponse } = require('../common/MethodsCommon');
 const { verifyAccessToken } = require('../middlewares/Authentication');
 const router = express.Router();
-const bcrypt = require('bcrypt');
 
 router.get(
 	'/',
@@ -61,10 +60,5 @@ router.post(
 		return res.json(formatResponse(true));
 	}),
 );
-
-router.get("/test", async (req, res) => {
-    const password = await bcrypt.hash('zaqxsw', 10)
-    return res.json(password)
-})
 
 module.exports = router;
