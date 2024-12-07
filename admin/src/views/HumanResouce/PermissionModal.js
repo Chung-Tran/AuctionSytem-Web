@@ -2,48 +2,67 @@ import { CButton, CCol, CForm, CFormCheck, CModal, CModalBody, CModalFooter, CMo
 import React, { useEffect, useState } from 'react';
 import { SYSTEM_PERMISSION } from '../../commons/PermissionCommons';
 import roleApi from '../../service/RoleService';
+import { toast } from 'react-toastify';
 
 function PermissionModal(props) {
   let { type, setShowModal, data } = props;
-  const roleID = data?.selectedRows[0].roleID;
+  const id_rolePermission = data?.selectedRows[0]._id;
   const [show, setShow] = useState(false);
-  const [listPermissionByRole, setListPermissionByRole] = useState([]);
+  const [listRolePermission, setListRolePermission] = useState([]);
+  const [idPer, setIdPer] = useState();
+
   const [loading, setLoading] = useState(true); 
+
+  const [checkboxes, setCheckboxes] = useState([]);
+
+  const permissionValue = JSON.parse(localStorage.getItem('permission')) || [];
+  const userId = JSON.parse(localStorage.getItem('userId'));
+
+
   useEffect(() => {
     type !== null ? setShow(true) : setShow(false);
   }, [type]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const listData = await roleApi.getPermissionByRole(roleID);
-        setListPermissionByRole(listData);
+  const fetchData = async () => {
+    try {
+      const listData = await roleApi.getRolePermissionByID(id_rolePermission);
+      if(listData.success){
+        console.log("PerAPI:", listData.data.permissions)
+
+        setListRolePermission(listData.data.permissions);
+        setIdPer(listData.data._id)
         setLoading(false); // Kết thúc quá trình tải
-      } catch (error) {
-        console.error('Error fetching permissions:', error);
       }
-    };
-
-    if (roleID) {
-      fetchData();
+      
+    } catch (error) {
+      console.error('Error fetching permissions:', error);
     }
-  }, [roleID]);
+    console.log("Per:", listRolePermission)
 
-  const [checkboxes, setCheckboxes] = useState([]);
+  };
+
+  useEffect(() => {
+      fetchData();
+      console.log("PerUse:", listRolePermission)
+  }, [id_rolePermission]);
 
   useEffect(() => {
     if (!loading) {
-      const dataPermission = listPermissionByRole && SYSTEM_PERMISSION.flatMap(group => (
+      const dataPermission = listRolePermission && SYSTEM_PERMISSION.flatMap(group => (
         group.Permission.map((permission) => ({
           id: permission.PermissionID,
-          isChecked: listPermissionByRole.includes(permission.PermissionID),
+          // isChecked: listRolePermission.map(l => l.key).includes(permission.PermissionID),
+          isChecked: listRolePermission.some((l) => Number(l.key) === permission.PermissionID), 
+
           label: permission.PermissionName,
           groupLabel: group.Label,
         }))
       ));
+      console.log("Data Permission:", dataPermission); 
+
       setCheckboxes(dataPermission);
     }
-  }, [listPermissionByRole, loading]); 
+  }, [listRolePermission, loading]); 
 
   const handleChange = (id) => {
     setCheckboxes((prevCheckboxes) =>
@@ -52,6 +71,7 @@ function PermissionModal(props) {
       )
     );
   };
+
   const handleSave =async () => {
     const listData = [];
     checkboxes.forEach(item => {
@@ -59,17 +79,23 @@ function PermissionModal(props) {
         listData.push(item.id)
       }
     });
-    const modelValue = {
-      RoleID: roleID,
-      PermissionID:listData
-    }
-    const resultUpdate = await roleApi.createRoleToPermission(modelValue);
-    if (resultUpdate) {
-      setShow(false)
-    }
-    console.log('re',resultUpdate)
 
-   
+    const modelValue = {
+      // id_RolePermission: id_rolePermission,
+      key: listData,
+      updateBy: userId,
+    }
+    console.log("listdata:", listData)
+    try {
+      const resultUpdate = await roleApi.updateRolePermission(id_rolePermission, modelValue);
+      if (resultUpdate.success) {
+        setShow(false)
+      }else{
+        toast.error("Không thể thay đổi quyền của vai trò mặc định")
+      }      
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Lỗi khi thay đổi quyền của vai trò");
+    }
   }
 
   return (
@@ -78,7 +104,7 @@ function PermissionModal(props) {
       visible={show}
       className='modal-xl'
     >
-      <CModalHeader closeButton>{type} người dùng</CModalHeader>
+      <CModalHeader closeButton>Phân Quyền Vai Trò</CModalHeader>
       <CModalBody className='p-4'>
         {loading ? (
           <div>Loading...</div>
@@ -96,7 +122,7 @@ function PermissionModal(props) {
                           id={item.id}
                           label={item.label}
                           checked={item.isChecked}
-                          onClick={() => handleChange(item.id)}
+                          onChange={() => handleChange(item.id)}
                         />
                       </CCol>
                     ))}

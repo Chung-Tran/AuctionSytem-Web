@@ -10,7 +10,7 @@ const employeeApi = {
         return userList;
     },
     getByID: async (id) => {
-        const userInfo = await axiosClient.get(`/user/${id}`);
+        const userInfo = await axiosClient.get(`/user/getUserByID/${id}`);
         if (!userInfo) {
             toast.error("Không tìm thấy người dùng");
             return;

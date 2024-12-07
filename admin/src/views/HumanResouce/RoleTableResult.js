@@ -15,13 +15,24 @@ function RoleTableResult(props) {
     }, [tableBodyValue]);
 
     const fetchData = async () => {
-        await userApi.getAllUser().then(result=>setAllUser(result.data))
+        await userApi.getAllEmployee().then(result=>setAllUser(result.data))
     }
 
     const handleFilter = (e) => {
         const { name, value } = e.target;
         const newData = tableBodyValue.filter(row => {
-            const cellValue = String(row[name]);
+            let cellValue = '';
+            if(name === 'rolePermissionID'){
+                cellValue = row._id
+            }else if(name === 'rolePermissonName'){
+                cellValue = row.role?.name
+            }else if(name === 'rolePermissionDescription'){
+                cellValue = row.description
+            }else if(name === 'createdBy'){
+                cellValue = row.createdBy?.username
+            }else {
+                cellValue = String(row[name] || '');
+            }
             return cellValue.toLowerCase().includes(value.toLowerCase());
         });
         setDataTable(newData);
@@ -88,18 +99,18 @@ function RoleTableResult(props) {
                 <CRow md="12">
                     <CRow className='col-md-6 mb-2'>
                         <CCol md="3" className='d-flex align-items-center'>
-                            <CFormLabel className="mt-2">Mã vai trò</CFormLabel>
+                            <CFormLabel className="mt-2">Mã chức vụ</CFormLabel>
                         </CCol>
                         <CCol md="7">
-                            <CFormInput name='roleID' onChange={(e)=>handleFilter(e)}/>
+                            <CFormInput name='rolePermissionID' onChange={(e)=>handleFilter(e)}/>
                         </CCol>
                     </CRow>
                     <CRow className='col-md-6 mb-2'>
                         <CCol md="3" className='d-flex align-items-center'>
-                            <CFormLabel className="mt-2">Tên vai trò</CFormLabel>
+                            <CFormLabel className="mt-2">Tên chức vụ</CFormLabel>
                         </CCol>
                         <CCol md="7">
-                            <CFormInput name='roleName' onChange={(e)=>handleFilter(e)}/>
+                            <CFormInput name='rolePermissonName' onChange={(e)=>handleFilter(e)}/>
                         </CCol>
                     </CRow>
                     <CRow className='col-md-6 mb-2'>
@@ -107,7 +118,7 @@ function RoleTableResult(props) {
                             <CFormLabel className="mt-2">Mô tả</CFormLabel>
                         </CCol>
                         <CCol md="7">
-                             <CFormInput name='roleDescription' onChange={(e)=>handleFilter(e)}/>
+                             <CFormInput name='rolePermissionDescription' onChange={(e)=>handleFilter(e)}/>
                         </CCol>
                     </CRow>
                     <CRow className='col-md-6 mb-2'>
@@ -115,9 +126,10 @@ function RoleTableResult(props) {
                             <CFormLabel className="mt-2">Người tạo</CFormLabel>
                         </CCol>
                         <CCol md="7">
-                            <CFormSelect name='createdBy' onChange={(e)=>handleFilter(e)}>
+                            <CFormSelect name='createdBy' onChange={(e)=>handleFilter(e)} defaultValue="">
+                                <option value="">-- Chọn người tạo --</option>
                                 {allUser && allUser.map(item => (
-                                    <option>{item.displayname}</option>
+                                    <option key={item._id} value={item.username}>{item.username}</option>
                                 ))}
                             </CFormSelect>
                         </CCol>
