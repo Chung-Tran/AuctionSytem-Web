@@ -8,6 +8,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import { BellRing } from 'lucide-react';
 import AuctionEndToast from '../../components/Auctions/AuctionEndToast';
 import productTemplate from '../../assets/productTemplate.jpg'
+import { Helmet } from 'react-helmet';
 //Read only
 const AuctionRoomOnlyView = () => {
   const { roomId } = useParams();
@@ -128,6 +129,11 @@ const AuctionRoomOnlyView = () => {
 
   if (!connected || !roomInfo) return <LoadingSpinner />;
   return <>
+    <Helmet>
+      <title>Ongoing</title>
+      <meta property="og:title" content="Ongoing" />
+      <meta property="og:description" content="Ongoing" />
+    </Helmet>
     <Toaster
       position="top-center"
       toastOptions={{

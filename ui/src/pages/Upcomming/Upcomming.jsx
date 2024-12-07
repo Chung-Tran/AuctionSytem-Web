@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import AuctionService from '../../services/AuctionService';
 import LoadingSpinner from '../LoadingSpinner';
 import { countdown, formatCurrency } from '../../commons/MethodsCommons';
+import { Helmet } from 'react-helmet';
 const Upcomming = () => {
     const buttonSelect = "bg-primary text-white ";
     const [loading, setLoading] = useState(false);
@@ -15,7 +16,7 @@ const Upcomming = () => {
     const [searchOptions, setSearchOptions] = useState({
         limit: 8,
         page: 1,
-        status:'pending'
+        status: 'pending'
     });
     const [totalPages, setTotalPages] = useState(1);
     useEffect(() => {
@@ -50,6 +51,11 @@ const Upcomming = () => {
         return <LoadingSpinner />
     return (
         <div>
+            <Helmet>
+                <title>Upcomming</title>
+                <meta property="og:title" content="Upcomming" />
+                <meta property="og:description" content="Upcomming" />
+            </Helmet>
             <Breadcrumb
                 items={[
                     { label: "Home", href: "/" },
@@ -164,21 +170,21 @@ const Upcomming = () => {
                                 description: "Learn effective bidding tactics to improve your chances of winning auctions.",
                                 date: "October 15, 2024",
                                 href: "/bidding-strategies",
-                                image:"https://propscience.s3.ap-south-1.amazonaws.com/backoffice_blogs/master_stories_auction%201.jpg"
+                                image: "https://propscience.s3.ap-south-1.amazonaws.com/backoffice_blogs/master_stories_auction%201.jpg"
                             },
                             {
                                 title: "Top Auction Categories of 2024",
                                 description: "Discover the most popular auction categories and what’s driving their demand.",
                                 date: "November 5, 2024",
                                 href: "/top-categories-2024",
-                                image:"https://jaro-website.s3.ap-south-1.amazonaws.com/2024/04/Common-Auction-Types.jpg"
+                                image: "https://jaro-website.s3.ap-south-1.amazonaws.com/2024/04/Common-Auction-Types.jpg"
                             },
                             {
                                 title: "How to Spot Rare Collectibles",
                                 description: "Tips and tricks to identify valuable and rare items in auctions.",
                                 date: "December 10, 2024",
                                 href: "/spot-rare-collectibles",
-                                image:"https://fastercapital.com/i/Betting-on-Favorites--How-Tips-Spread-Can-Help-You-Win--Understanding-the-Role-of-Tips-Spread-in-Betting-on-Favorites.webp"
+                                image: "https://fastercapital.com/i/Betting-on-Favorites--How-Tips-Spread-Can-Help-You-Win--Understanding-the-Role-of-Tips-Spread-in-Betting-on-Favorites.webp"
                             },
                         ].map((item, index) => (
                             <div key={index} className="bg-card rounded-lg overflow-hidden shadow-lg">

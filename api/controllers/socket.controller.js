@@ -2,9 +2,22 @@ const asyncHandler = require('express-async-handler');
 const redisClient = require('../config/redis');
 const { verifyAccessToken, verifySocketToken } = require('../middlewares/Authentication');
 const { REDIS_KEYS } = require('../common/constant');
+
 let globalIo = null;
+const setGlobalIo = (io) => {
+    globalIo = io;
+};
+
+const getGlobalIo = () => {
+    if (!globalIo) {
+        throw new Error('Socket.IO chưa được khởi tạo');
+    }
+    return globalIo;
+};
+
 const initializeSocket = (io) => {
     globalIo = io;
+    setGlobalIo(io);
     io.use(verifySocketToken);
     io.on('connection', (socket) => {
         console.log('Connected. ID:', socket.id);
@@ -140,6 +153,25 @@ const endAuction = asyncHandler(async ( roomId,highestBidder) => {
     }
 });
 
+const getListMember = asyncHandler(async ( roomId) => {
+
+    try {
+        const room = globalIo.sockets.adapter.rooms.get(roomId);
+
+        // globalIo.to(roomId).emit('auctionEnd', {
+        //     roomId,
+        //     winner: highestBidder?.userCode|| null,
+        //     winnerId: highestBidder?.userId || null,
+        //     winningBid: parseFloat(highestBidder?.amount),
+        //     time: highestBidder?.time
+        // });
+
+    } catch (error) {
+        console.error('Lỗi khi kết thúc đấu giá:', error);
+        socket.emit('error', { message: 'Không thể kết thúc đấu giá' });
+    }
+});
+
 const handleDisconnect = (socket) => {
     console.log('Người dùng đã ngắt kết nối:', socket.id);
 };
@@ -212,5 +244,7 @@ const handleChatMessage = asyncHandler(async (io, socket, data) => {
 
 module.exports = {
     initializeSocket,
-    endAuction
+    endAuction,
+    // getListMember,
+    getGlobalIo
 };

@@ -196,7 +196,47 @@ const syncFinalAuctionData = async (auctionId) => {
   }
 };
 
+//Func handle các room được duyệt đấu giá trong ngày (không đợi qua ngày để job check)
+const pushAuctionToQueue = async (auctionId) => {
+  try {
+    // Truy vấn auction và populate thông tin sản phẩm
+    const auction = await Auction.findById(auctionId).populate('product');
+    
+    if (!auction) {
+      console.error('Auction not found');
+      return false;
+    }
+
+    const currentTime = new Date();
+    const startTime = new Date(auction.startTime);
+    const endTime = new Date(auction.endTime);
+
+    // Kiểm tra trạng thái auction
+    if (auction.status !== 'pending') {
+      console.error('Auction is not in pending status');
+      return false;
+    }
+
+    if (startTime <= currentTime && endTime > currentTime) {
+      await activateAuction(auction._id);
+    } else if (startTime > currentTime) {
+      await scheduleAuctionStart(auction);
+    }
+
+    if (endTime > currentTime) {
+      await scheduleAuctionEnd(auction);
+    }
+    await redisClient.sAdd(REDIS_KEYS.SCHEDULED_AUCTIONS(auction._id), auction._id.toString());
+
+    return true;
+  } catch (error) {
+    console.error('Error scheduling auction by ID:', error);
+    return false;
+  }
+};
+
 
 module.exports = {
-  initializeAuctionSystem
+  initializeAuctionSystem,
+  pushAuctionToQueue
 };

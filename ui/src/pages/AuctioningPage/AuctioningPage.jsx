@@ -2,17 +2,18 @@ import React, { useEffect, useState } from 'react'
 import Breadcrumb from '../../components/BreadCrumb/BreadCrumb';
 import AuctioningItem from '../../components/Auctions/AuctioningItem';
 import AuctionService from '../../services/AuctionService';
+import { Helmet } from 'react-helmet';
 
 const AuctioningPage = () => {
     const [auctions, setAuctions] = useState([]);
     const [searchOptions, setSearchOptions] = useState({
         limit: 8,
         page: 1,
-        status:'active'
+        status: 'active'
     });
     useEffect(() => {
         const fetchData = async () => {
-            const auctionList = await AuctionService.getList(searchOptions);
+            const auctionList = await AuctionService.getOnGoing(searchOptions);
             if (auctionList) {
                 setAuctions(auctionList.docs);
             }
@@ -22,6 +23,11 @@ const AuctioningPage = () => {
 
     return (
         <div>
+            <Helmet>
+        <title>Auctioning</title>
+        <meta property="og:title" content="Auctioning" />
+        <meta property="og:description" content="Auctioning" />
+      </Helmet>
             <Breadcrumb
                 items={[
                     { label: "Home", href: "/" },
@@ -35,16 +41,16 @@ const AuctioningPage = () => {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
                     {auctions.map((item) => (
-                        <AuctioningItem 
-                        key={item._id}
-                        _id={item._id}
-                        image={item?.productImages[0] ?? null}
-                        name={item.productName}
-                        slug={item.slug}
-                        price={item.startingPrice}
-                        highestBid={item.highestBid || 122222}
-                        participants={item.participants || 1}
-                        endsIn={item.registrationCloseDate || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
+                        <AuctioningItem
+                            key={item._id}
+                            _id={item._id}
+                            image={item?.productImages[0] ?? null}
+                            name={item.productName}
+                            slug={item.slug}
+                            price={item.startingPrice}
+                            highestBid={item.highestBid || 122222}
+                            participants={item.participants?.length}
+                            endsIn={item.endTime || new Date(Date.now() + 24 * 60 * 60 * 1000)}
                         />
                     ))}
                 </div>

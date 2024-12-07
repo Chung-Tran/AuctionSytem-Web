@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { MapPin, Phone, Mail, Clock } from 'lucide-react'
+import { Helmet } from 'react-helmet'
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -26,6 +27,11 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 py-16 px-6">
+      <Helmet>
+        <title>Contact</title>
+        <meta property="og:title" content="Contact" />
+        <meta property="og:description" content="Contact" />
+      </Helmet>
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}

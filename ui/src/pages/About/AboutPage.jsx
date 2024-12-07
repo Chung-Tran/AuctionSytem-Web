@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Gavel, Shield, Book, HeartHandshake, Users, History, Trophy, HelpCircle } from 'lucide-react'
+import { Helmet } from 'react-helmet'
 
 export default function AboutPage() {
   const [activeTab, setActiveTab] = useState('about')
@@ -184,6 +185,12 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 py-12 px-4 sm:px-6 lg:px-8">
+      <Helmet>
+                <title>About</title>
+                <meta name="description" content="Mô tả ngắn về trang chủ" />
+                <meta property="og:title" content="Trang Chủ" />
+                <meta property="og:description" content="Trang Chủ" />
+            </Helmet>
       <div className="max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}

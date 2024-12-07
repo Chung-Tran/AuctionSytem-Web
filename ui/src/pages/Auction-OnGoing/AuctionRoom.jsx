@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import AuctionEndToast from '../../components/Auctions/AuctionEndToast';
 import { useNavigate } from 'react-router-dom';
 import productTemplate from '../../assets/productTemplate.jpg'
+import { Helmet } from 'react-helmet';
 // Constants
 const INITIAL_BID_AMOUNT = 5000000;
 const NOTIFICATION_DURATION = 2000;
@@ -219,6 +220,11 @@ const AuctionRoom = () => {
 
   return (
     <div className={`flex h-screen bg-[#000116] text-white w-full`}>
+      <Helmet>
+        <title>Ongoing</title>
+        <meta property="og:title" content="Ongoing" />
+        <meta property="og:description" content="Ongoing" />
+      </Helmet>
       {disable && (
       <div className="absolute inset-0 bg-black bg-opacity-50 z-10 flex items-center justify-center">
       </div>

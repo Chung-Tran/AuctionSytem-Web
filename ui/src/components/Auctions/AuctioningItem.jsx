@@ -29,7 +29,7 @@ export default function AuctioningItem(item) {
           Time Remaining: {countdown(item.timeRemaining)}
         </div>
         <div className="absolute top-4 left-4 bg-background/80 px-2 py-1 rounded-md text-sm text-muted-foreground">
-          Status: <span className="font-medium">{item.status}</span>
+          Status: <span className="font-medium">Ongoing</span>
         </div>
       </div>
       <div className="p-4">

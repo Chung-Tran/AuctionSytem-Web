@@ -1,94 +1,122 @@
-import React from 'react'
-import { Button, notification } from 'antd'
-import { DownloadOutlined } from '@ant-design/icons'
-import { jsPDF } from 'jspdf'
+import { jsPDF } from 'jspdf';
+import { Button, notification } from 'antd';
+import { DownloadOutlined } from '@ant-design/icons';
+import { openNotify } from '../../commons/MethodsCommons';
 
-const generateTransactionReport = () => {
-  const doc = new jsPDF()
+const generateTransactionReport = (transactionDetails) => {
+  const doc = new jsPDF();
 
-  // Header
-  doc.setFontSize(18)
-  doc.text('BIÊN BẢN GIAO DỊCH ĐẤU GIÁ', 14, 20)
-  doc.setFontSize(12)
-  doc.text('Ngày lập biên bản: ' + new Date().toLocaleDateString(), 14, 30)
-  doc.text('Số biên bản: AUC2023-01', 14, 35)
+  // Tiêu đề
+  doc.setFontSize(18);
+  doc.text('AUCTION TRANSACTION REPORT', 105, 20, { align: 'center' });
 
-  // Bên A (Sàn đấu giá)
-  doc.setFontSize(14)
-  doc.text('Bên A: Sàn đấu giá ABC', 14, 50)
-  doc.text('Địa chỉ: 123 Đường ABC, Thành phố XYZ', 14, 55)
-  doc.text('Email: contact@sandaugiabc.com', 14, 60)
-  doc.text('SĐT: 0909 123 456', 14, 65)
+  // Thông tin chung
+  doc.setFontSize(12);
+  doc.text(`Report Date: ${new Date().toLocaleDateString()}`, 14, 30);
+  doc.text(`Report Number: ${transactionDetails.reportId}`, 14, 35);
 
-  // Bên B (Người gửi tài sản)
-  doc.text('Bên B: Ông/Bà Nguyễn Văn A', 14, 75)
-  doc.text('Địa chỉ: 456 Đường DEF, Thành phố XYZ', 14, 80)
-  doc.text('Email: nguyenvana@gmail.com', 14, 85)
-  doc.text('SĐT: 0987 654 321', 14, 90)
+  // Side A - Auction Platform
+  doc.setFontSize(14);
+  doc.text('Side A: Auction Platform', 14, 50);
+  doc.setFontSize(12);
+  doc.text(`Name: ${transactionDetails.platform.name}`, 14, 60);
+  doc.text(`Address: ${transactionDetails.platform.address}`, 14, 65);
+  doc.text(`Email: ${transactionDetails.platform.email}`, 14, 70);
+  doc.text(`Phone: ${transactionDetails.platform.phone}`, 14, 75);
 
-  // Thông tin sản phẩm
-  doc.setFontSize(14)
-  doc.text('Tên sản phẩm: Rare Painting', 14, 105)
-  doc.text('Mô tả: Original artwork from a renowned artist', 14, 110)
-  doc.text('Mã sản phẩm (AUC ID): AUC12345', 14, 115)
-  doc.text('Giá khởi điểm: $1500', 14, 120)
-  doc.text('Giá trúng đấu giá: $1800', 14, 125)
+  // Side B - Seller
+  doc.setFontSize(14);
+  doc.text('Side B: Seller', 14, 90);
+  doc.setFontSize(12);
+  doc.text(`Name: ${transactionDetails.seller.name}`, 14, 100);
+  doc.text(`Address: ${transactionDetails.seller.address}`, 14, 105);
+  doc.text(`Email: ${transactionDetails.seller.email}`, 14, 110);
+  doc.text(`Phone: ${transactionDetails.seller.phone}`, 14, 115);
 
-  // Điều khoản giao dịch
-  doc.setFontSize(12)
-  doc.text('Phương thức thanh toán: Chuyển khoản ngân hàng', 14, 140)
-  doc.text('Ngày thanh toán: 2023-06-10', 14, 145)
+  // Product Information
+  doc.setFontSize(14);
+  doc.text('Product Information', 14, 130);
+  doc.setFontSize(12);
+  doc.text(`Product Name: ${transactionDetails.product.name}`, 14, 140);
+  doc.text(`Description: ${transactionDetails.product.description}`, 14, 145);
+  doc.text(`Auction ID: ${transactionDetails.product.auctionId}`, 14, 150);
+  doc.text(`Starting Price: ${transactionDetails.product.startingPrice} USD`, 14, 155);
+  doc.text(`Final Price: ${transactionDetails.product.finalPrice} USD`, 14, 160);
 
-  // Thông tin tài khoản ngân hàng (nếu có)
-  doc.text('Thông tin tài khoản ngân hàng: ', 14, 160)
-  doc.text('Ngân hàng: ABC Bank', 14, 165)
-  doc.text('Số tài khoản: 123456789', 14, 170)
-  doc.text('Chủ tài khoản: Nguyễn Văn A', 14, 175)
+  // Bank Information (if available)
+  if (transactionDetails.bankInfo) {
+    doc.setFontSize(14);
+    doc.text('Bank Account Information', 14, 175);
+    doc.setFontSize(12);
+    doc.text(`Bank: ${transactionDetails.bankInfo.bankName}`, 14, 185);
+    doc.text(`Account Holder: ${transactionDetails.bankInfo.accountHolderName}`, 14, 190);
+    doc.text(`Account Number: ${transactionDetails.bankInfo.accountNumber}`, 14, 195);
+  }
 
-  // Cam kết của các bên
-  doc.text('Cam kết của Bên A: Hoàn tất giao dịch đúng thời gian quy định.', 14, 190)
-  doc.text('Cam kết của Bên B: Gửi tài sản đúng chất lượng và đúng thời gian.', 14, 195)
+  // Commitments and Terms
+  doc.setFontSize(14);
+  doc.text('Commitments and Terms', 14, 210);
+  doc.setFontSize(12);
+  doc.text('1. Side A commits to complete the transaction within the stipulated time.', 14, 220);
+  doc.text('2. Side B commits to deliver the product with the correct quality and within the agreed time.', 14, 225);
+  doc.text('3. Product warranty: 12 months from the delivery date.', 14, 230);
+  doc.text('4. If the product does not match the description, Side B may return it within 7 days.', 14, 235);
 
-  // Điều khoản bảo hành
-  doc.text('Bảo hành: Sản phẩm được bảo hành trong 12 tháng kể từ ngày giao hàng.', 14, 210)
-
-  // Điều khoản về việc trả lại hàng (nếu có)
-  doc.text('Trả lại hàng: Nếu sản phẩm không đúng mô tả, Bên B có quyền yêu cầu trả lại trong vòng 7 ngày.', 14, 215)
-
-  // Ký xác nhận
-  doc.text('Ký xác nhận Bên A: _______________________', 14, 230)
-  doc.text('Ký xác nhận Bên B: _______________________', 14, 235)
+  // Signature section
+  doc.text('Signature of Side A: _______________________', 14, 250);
+  doc.text('Signature of Side B: _______________________', 120, 250);
 
   // Save PDF
-  doc.save('auction_transaction_report.pdf')
-}
+  doc.save('auction_transaction_report.pdf');
+};
 
+// Sample transaction data
+const transactionDetails = {
+  reportId: 'AUC2023-01',
+  platform: {
+    name: 'ABC Auction Platform',
+    address: '123 ABC Street, XYZ City',
+    email: 'contact@abcauction.com',
+    phone: '0909 123 456',
+  },
+  seller: {
+    name: 'John Doe',
+    address: '456 DEF Street, XYZ City',
+    email: 'johndoe@gmail.com',
+    phone: '0987 654 321',
+  },
+  product: {
+    name: 'Rare Painting',
+    description: 'Original artwork by a renowned artist',
+    auctionId: 'AUC12345',
+    startingPrice: 1500,
+    finalPrice: 1800,
+  },
+  bankInfo: {
+    bankName: 'Sacombank',
+    accountHolderName: 'John Doe',
+    accountNumber: '123456789',
+  },
+};
+
+// Transaction Report Button
 const TransactionReportButton = () => {
   const handleDownload = () => {
     try {
-      generateTransactionReport()
-      notification.success({
-        message: 'Download Successful',
-        // description: 'Biên bản giao dịch đã được tạo thành công.',
-      })
+      generateTransactionReport(transactionDetails);
+      openNotify('success','Transaction Report downloaded successfully!')
+      // notification.success({ message: 'Transaction Report downloaded successfully!' });
     } catch (error) {
-      notification.error({
-        message: 'Error',
-        description: 'Có lỗi xảy ra trong quá trình tạo biên bản.',
-      })
+      openNotify('error','Failed to download transaction report.!')
+      // notification.error({ message: 'Failed to download transaction report.' });
     }
-  }
+  };
 
   return (
-    <Button 
-      icon={<DownloadOutlined />} 
-      onClick={handleDownload}
-    //   type="primary"
-      style={{ marginTop: 20 }}
-    >
-      Tải biên bản giao dịch
+    <Button icon={<DownloadOutlined />} onClick={handleDownload} style={{ marginTop: 20 }}>
+      Download Transaction Report
     </Button>
-  )
-}
+  );
+};
 
-export default TransactionReportButton
+export default TransactionReportButton;

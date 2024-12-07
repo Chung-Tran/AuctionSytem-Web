@@ -13,6 +13,8 @@ const {
     getAuctionOutstanding,
     ongoingList,
     checkValidAccess,
+    getMyAuctioned,
+    updateBankInfo,
 } = require('../controllers/auction.controller');
 const { verifyAccessToken } = require('../middlewares/Authentication');
 const handleUpload = require('../utils/uploadImages');
@@ -24,10 +26,12 @@ router.put('/approve/:auctionId/:userId', approveAuction);
 router.put('/reject/:auctionId/:userId', rejectAuction);
 router.put('/update/:auctionId/:userId', updateAuction);
 router.put('/end/:auctionId/:userId', endAuction);
+router.put('/:auctionId/bank-info', updateBankInfo);
 router.delete('/kickCustomer/:auctionId/:customerId/:userId', kickCustomerOutOfAuction);
 
 //get cho client
 router.get('/outstanding', getAuctionOutstanding); 
+router.get('/my-auctioned',verifyAccessToken, getMyAuctioned); 
 router.get('/ongoing', ongoingList); 
 router.get('/check-valid-access',verifyAccessToken, checkValidAccess); 
 router.get('/:auctionSlug', getAuctionDetails);

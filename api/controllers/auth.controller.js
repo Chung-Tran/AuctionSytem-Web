@@ -44,7 +44,7 @@ const employeeLogin = asyncHandle(async (req, res) => {
     }
 
     // Create JWT access token & refresh token
-    const { sessionKey } = await generateRefreshToken(employee._id);
+    const { sessionKey } = await generateRefreshToken(employee._id, undefined, true);
     const accessToken = generateAccessToken(employee._id, sessionKey);
     res.setHeader('x-new-access-token', accessToken);
       

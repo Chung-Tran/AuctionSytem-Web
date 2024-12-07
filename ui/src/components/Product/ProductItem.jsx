@@ -91,6 +91,7 @@ const ProductItem = ({
         <RegistrationSteps
           auction={auction}
           onClose={() => setIsRegistrationModalVisible(false)}
+          userId={user.userId}
         />
       )}
     </>

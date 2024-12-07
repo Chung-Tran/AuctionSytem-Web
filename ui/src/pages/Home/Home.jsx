@@ -4,10 +4,12 @@ import { Filter, SortAsc } from 'lucide-react';
 import ProductItem from '../../components/Product/ProductItem';
 import productTemplate from '../../assets/productTemplate.jpg'
 import AuctionService from '../../services/AuctionService';
+import auctionMeta from '../../assets/auctionMeta.png'
 import { countdown, formatCurrency, formatDate } from '../../commons/MethodsCommons';
 import LoadingSpinner from '../LoadingSpinner';
 import { REGISTER_STATUS } from '../../commons/Constant';
 import { AppContext } from '../../AppContext';
+import { Helmet } from 'react-helmet';
 const Home = () => {
     const [auctions, setAuctions] = useState([]);
     const [auctionStanding, setAuctionStanding] = useState(null);
@@ -64,6 +66,13 @@ const Home = () => {
     }
     return (
         <div className=' relative mx-auto'>
+            <Helmet>
+                <title>Auction House</title>
+                <meta name="description" content="Mô tả ngắn về trang chủ" />
+                <meta property="og:title" content="Trang Chủ" />
+                <meta property="og:description" content="Trang Chủ" />
+                <meta property="og:image" content={auctionMeta} />
+            </Helmet>
             <div className='w-full h-auto flex justify-center container mx-auto '>
                 <Banner auctionStanding={auctionStanding} />
             </div>

@@ -4,6 +4,7 @@ import { Search, User, Hammer, Bell, LogOut, Settings, UserCircle, ChevronDown, 
 import LoginModal from './LoginModal';
 import { AppContext } from '../../AppContext';
 import avatarMale from '../../assets/avatarMale.webp'
+
 const Header = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Simulate login state

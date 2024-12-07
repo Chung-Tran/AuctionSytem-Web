@@ -9,7 +9,7 @@ import { PAYMENT_STATUS, POLLING_CONFIG } from '../../commons/Constant';
 import { formatCurrency, formatDateTime } from '../../commons/MethodsCommons';
 import { CheckCircle2 } from 'lucide-react';
 const { Step } = Steps;
-const RegistrationSteps = ({ auction, onClose }) => {
+const RegistrationSteps = ({ auction, onClose,userId }) => {
   const [current, setCurrent] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState('vnpay');
@@ -32,7 +32,7 @@ const RegistrationSteps = ({ auction, onClose }) => {
     }
   );
   const handleStartPayment = () => {
-    handleVnpayPayment(auction);
+    handleVnpayPayment({ ...auction, userId });
     setPaymentLoading(true)
   }
 
@@ -277,7 +277,7 @@ const RegistrationSteps = ({ auction, onClose }) => {
   );
 };
 
-const usePaymentPolling = (onSuccess, onFailure) => {
+export const usePaymentPolling = (onSuccess, onFailure) => {
   const [isPolling, setIsPolling] = useState(false);
   const [currentTransactionId, setCurrentTransactionId] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(PAYMENT_STATUS.DRAFT);
@@ -329,11 +329,12 @@ const usePaymentPolling = (onSuccess, onFailure) => {
     };
   }, [isPolling, currentTransactionId, checkTransactionStatus]);
 
-  const handleVnpayPayment = useCallback((auction) => {
+  const handleVnpayPayment = useCallback((auction,type=null) => {
     const paymentData = {
-      amount:( auction.registrationFee + auction.deposit) || 0,
+      amount: !!type ? auction.amount : (auction.registrationFee + auction.deposit) || 0,
       bankCode: "",
-      auctionId: auction._id
+      auctionId: auction._id,
+      userId:auction.userId
     };
 
     AuctionService.getURlPayment(paymentData)
