@@ -17,6 +17,7 @@ import * as Yup from 'yup';
 import { AppContext } from '../../AppContext';
 import ProfileService from '../../services/ProfileService';
 import { formatCurrency, formatDate, formatDateTime, openNotify } from '../../commons/MethodsCommons';
+import { Helmet } from 'react-helmet';
 
 const SIDEBAR_SECTIONS = [
   {
@@ -104,6 +105,11 @@ const ProfilePage = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
+      <Helmet>
+        <title>Profile</title>
+        <meta property="og:title" content="Profile" />
+        <meta property="og:description" content="Profile" />
+      </Helmet>
       <div className="w-1/4 bg-white shadow-md">
         <div className="p-6 border-b">
           <h1 className="text-2xl font-bold">Hồ Sơ</h1>
@@ -323,7 +329,6 @@ const RegistrationHistory = ({ data }) => {
 
 const AuctionHistory = ({ data }) => {
   const { Title } = Typography;
-console.log(data)
   const columns = [
     {
       title: 'Mã phiên đấu giá',

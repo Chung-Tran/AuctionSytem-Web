@@ -17,7 +17,20 @@ function generateAccessToken(userId, sessionKey, userCode = null, expiresIn = "1
 }
 
 // Tạo refresh token
-async function generateRefreshToken(userId, expiresIn = "7d") {
+async function generateRefreshToken(userId, expiresIn = "7d", isRefresh = false) {
+
+    const existingRefreshToken = await RefreshToken.findOne({ userId });
+    
+    if (existingRefreshToken && !isRefresh) {
+        // Nếu token còn hạn, sử dụng lại
+        if (existingRefreshToken.expiresAt > new Date()) {
+            return { 
+                refreshToken: existingRefreshToken.token, 
+                sessionKey: existingRefreshToken.sessionKey 
+            };
+        }
+    }
+
     const refreshToken = crypto.randomBytes(40).toString('hex');
     const hash = await bcrypt.hash(refreshToken, 10);
 

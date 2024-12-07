@@ -10,10 +10,10 @@ const {
 } = require("../controllers/payment.controller");
 const { verifyAccessToken } = require('../middlewares/Authentication');
 
-router.post("/vnpay/create_payment_url", verifyAccessToken, vnpayCreatePaymentUrl);
+router.post("/vnpay/create_payment_url", vnpayCreatePaymentUrl);
 router.get("/vnpay/return", vnpayReturn);
 router.get("/vnpay/ipn", vnpayIPN);
-router.get("/vnpay/detail/:transactionId",verifyAccessToken, vnpayTransactionDetail);
+router.get("/vnpay/detail/:transactionId", vnpayTransactionDetail);
 router.get("/vnpay/log", verifyAccessToken, vnpayTransactionLog);
 router.get("/vnpay/log", verifyAccessToken, vnpayTransactionLog);
 

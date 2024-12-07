@@ -53,9 +53,9 @@ const AuctionService = {
             handleResponseError(error)
         }
     },
-    getOnGoing: async () => {
+    getOnGoing: async ({ limit, page }) => {
         try {
-            const response = await axiosClient.get(`auctions/ongoing`);
+            const response = await axiosClient.get(`auctions/ongoing`, { params: { limit, page } });
             const data = await handleResponse(response);
             return data;
         } catch (error) {
@@ -83,6 +83,24 @@ const AuctionService = {
     checkPaymentStatus: async (transactionId) => {
         try {
             const response = await axiosClient.get(`payment/vnpay/detail/${transactionId}`);
+            const data = await handleResponse(response);
+            return data;
+        } catch (error) {
+            handleResponseError(error)
+        }
+    },
+    getMyAuctions: async () => {
+        try {
+            const response = await axiosClient.get(`auctions/my-auctioned`);
+            const data = await handleResponse(response);
+            return data;
+        } catch (error) {
+            handleResponseError(error)
+        }
+    },
+    updateBankInfo: async (auctionId,values) => {
+        try {
+            const response = await axiosClient.put(`auctions/${auctionId}/bank-info`,{bankInfo:{...values}});
             const data = await handleResponse(response);
             return data;
         } catch (error) {

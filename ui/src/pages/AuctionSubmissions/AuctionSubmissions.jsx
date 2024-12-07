@@ -1,225 +1,202 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Layout, Typography, Input, Select, Button, Modal, Tag } from 'antd'
-import { SearchOutlined, DownloadOutlined, BankOutlined } from '@ant-design/icons'
+import React, { useEffect, useState } from 'react'
+import { Layout, Typography, Input, Select, Button, Modal, Tag, message } from 'antd'
+import { SearchOutlined, BankOutlined } from '@ant-design/icons'
 import BankInfoForm from './BankInfoForm'
 import TransactionReportButton from './AuctionSubmissionReport'
+import AuctionService from '../../services/AuctionService'
+import { formatCurrency, formatDateTime } from '../../commons/MethodsCommons'
+import { Helmet } from 'react-helmet'
 
-const { Header, Content, Footer } = Layout
-const { Title, Text } = Typography
+const { Header, Content } = Layout
+const { Title } = Typography
 const { Option } = Select
-
-// Mock data for demonstration
-const products = [
-  {
-    id: 1,
-    name: 'Vintage Watch',
-    description: 'A beautiful antique timepiece',
-    auctionId: 'AUC001',
-    submissionDate: '2023-05-01',
-    status: 'Active',
-    startingPrice: 500,
-    finalPrice: null,
-    image: '/placeholder.svg',
-    hasBankInfo: false,
-    rejectionReason: null,  // Không có lý do từ chối
-  },
-  {
-    id: 2,
-    name: 'Rare Painting',
-    description: 'Original artwork from a renowned artist',
-    auctionId: 'AUC002',
-    submissionDate: '2023-04-15',
-    status: 'Successful',
-    startingPrice: 1000,
-    finalPrice: 1500,
-    image: '/placeholder.svg',
-    hasBankInfo: true,
-    rejectionReason: null,
-  },
-  {
-    id: 3,
-    name: 'Antique Vase',
-    description: 'Ming dynasty porcelain vase',
-    auctionId: 'AUC003',
-    submissionDate: '2023-04-20',
-    status: 'Failed',
-    startingPrice: 2000,
-    finalPrice: null,
-    image: '/placeholder.svg',
-    hasBankInfo: false,
-    rejectionReason: null,  // Không có lý do từ chối
-  },
-  {
-    id: 4,
-    name: 'Vintage Car',
-    description: '1960s classic automobile',
-    auctionId: 'AUC004',
-    submissionDate: '2023-05-05',
-    status: 'Pending',
-    startingPrice: 15000,
-    finalPrice: null,
-    image: '/placeholder.svg',
-    hasBankInfo: false,
-    rejectionReason: null,  // Không có lý do từ chối
-  },
-  {
-    id: 5,
-    name: 'Rare Coin Collection',
-    description: 'Set of ancient Roman coins',
-    auctionId: 'AUC005',
-    submissionDate: '2023-04-25',
-    status: 'Rejected',
-    startingPrice: 5000,
-    finalPrice: null,
-    image: '/placeholder.svg',
-    hasBankInfo: false,
-    rejectionReason: 'Product does not meet quality standards.',  // Lý do từ chối
-  },
-]
 
 export default function AuctionSubmissions() {
   const [searchText, setSearchText] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [isBankInfoModalVisible, setIsBankInfoModalVisible] = useState(false)
-  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [selectedAuction, setSelectedAuction] = useState(null)
+  const [auctionsList, setAuctionsList] = useState([])
+  const [loading, setLoading] = useState(false)
 
-  const filteredProducts = products.filter(product => 
-    (statusFilter === 'All' || product.status === statusFilter) &&
-    (product.name.toLowerCase().includes(searchText.toLowerCase()) || 
-     product.auctionId.toLowerCase().includes(searchText.toLowerCase()))
-  )
+  // Fetch auctions from server
+  useEffect(() => {
+    const fetchAuctions = async () => {
+      setLoading(true)
+      try {
+        const { docs } = await AuctionService.getMyAuctions({
+          limit: 10,
+          page: 1,
+        })
+        setAuctionsList(docs)
+      } catch (error) {
+        console.error('Error fetching auctions:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchAuctions()
+  }, [])
 
+  // Handle status color
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'Pending': return 'text-yellow-600 bg-yellow-100'
-      case 'Active': return 'text-blue-600 bg-blue-100'
-      case 'Successful': return 'text-green-600 bg-green-100'
-      case 'Failed': return 'text-red-600 bg-red-100'
-      case 'Rejected': return 'text-gray-600 bg-gray-100'
-      default: return 'text-gray-600 bg-gray-100'
+    const colors = {
+      pending: 'yellow',
+      active: 'blue',
+      successful: 'green',
+      ended: 'red',
+      cancelled: 'gray',
+    }
+    return colors[status] || 'default'
+  }
+
+  // Handle update bank info
+  const handleUpdateBankInfo = async (values) => {
+    try {
+      await AuctionService.updateBankInfo(selectedAuction._id, values)
+      message.success('Bank information updated successfully')
+      setIsBankInfoModalVisible(false)
+
+      // Refresh auction list
+      const updatedAuctions = auctionsList.map(auction =>
+        auction._id === selectedAuction._id
+          ? { ...auction, winnerBankInfo: values }
+          : auction
+      )
+      setAuctionsList(updatedAuctions)
+    } catch (error) {
+      console.error('Error updating bank info:', error)
+      message.error('Failed to update bank information')
     }
   }
 
-  const handleDownloadReport = (product) => {
-    console.log(`Downloading report for ${product.name}`)
-  }
-
-  const handleBankInfoSubmit = (values) => {
-    console.log('Bank info submitted:', values)
-    setIsBankInfoModalVisible(false)
-  }
+  // Filter auctions
+  const filteredAuctions = auctionsList.filter(auction =>
+    (statusFilter === 'All' || auction.status === statusFilter) &&
+    (auction.product.productName?.toLowerCase().includes(searchText.toLowerCase()) ||
+      auction._id?.toLowerCase().includes(searchText.toLowerCase()))
+  )
 
   return (
-    <Layout className="min-h-screen bg-gray-50 container max-w-[80%] mx-auto">
-      <Header className="bg-white">
-        <Title level={2} className="text-center py-4 border-0">My Auctioned Products</Title>
-      </Header>
-      <Content className="p-6">
-        <div className="flex justify-between mb-6">
-          <Input
-            placeholder="Search by product name or auction ID"
-            prefix={<SearchOutlined />}
-            className="w-1/2"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
-          <Select 
-            defaultValue="All" 
-            className="w-1/4"
-            onChange={(value) => setStatusFilter(value)}
-          >
-            <Option value="All">All Status</Option>
-            <Option value="Pending">Pending</Option>
-            <Option value="Active">Active</Option>
-            <Option value="Successful">Successful</Option>
-            <Option value="Failed">Failed</Option>
-            <Option value="Rejected">Rejected</Option>
-          </Select>
-        </div>
-
-        <div className="space-y-4">
-          {filteredProducts.map(product => (
-            <div 
-              key={product.id} 
-              className="bg-white rounded-lg shadow-md p-6 flex items-center space-x-6 hover:shadow-lg transition-shadow"
+    <>
+      <Helmet>
+        <title>Auction Submissions</title>
+        <meta property="og:title" content="Auction Submissions" />
+        <meta property="og:description" content="Auction Submissions" />
+      </Helmet>
+      <Layout className="min-h-screen bg-gray-50 container max-w-[80%] mx-auto">
+        <Header className="bg-white">
+          <Title level={2} className="text-center py-4 border-0">My Auctioned Products</Title>
+        </Header>
+        <Content className="p-6">
+          <div className="flex justify-between mb-6">
+            <Input
+              placeholder="Search by product name or auction ID"
+              prefix={<SearchOutlined />}
+              className="w-1/2"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+            <Select
+              defaultValue="All"
+              className="w-1/4"
+              onChange={(value) => setStatusFilter(value)}
             >
-              <img 
-                src={product.image} 
-                alt={product.name} 
-                className="w-24 h-24 object-cover rounded-md"
-              />
-              <div className="flex-grow">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-semibold">{product.name}</h3>
-                  <Tag 
-                    className={`px-2 py-1 rounded ${getStatusColor(product.status)}`}
-                  >
-                    {product.status}
-                  </Tag>
-                </div>
-                <p className="text-gray-600 mt-2">{product.description}</p>
-                <div className="mt-2 text-sm text-gray-500">
-                  <span>Auction ID: {product.auctionId}</span>
-                  <span className="ml-4">Submitted: {product.submissionDate}</span>
-                </div>
-                {product.status === 'Rejected' && (
-                  <div className="mt-2 text-red-600 font-medium">
-                    <span>Reason for rejection: {product.rejectionReason}</span>
+              <Option value="All">All Status</Option>
+              <Option value="pending">Pending</Option>
+              <Option value="active">Active</Option>
+              <Option value="successful">Successful</Option>
+              <Option value="ended">Ended</Option>
+              <Option value="cancelled">Cancelled</Option>
+            </Select>
+          </div>
+
+          <div className="space-y-4">
+            {loading ? (
+              <div className="text-center">Loading...</div>
+            ) : filteredAuctions.map(auction => (
+              <div
+                key={auction._id}
+                className="bg-white rounded-lg shadow-md p-6 flex items-center space-x-6 hover:shadow-lg transition-shadow"
+              >
+                <img
+                  src={auction.product?.images?.at(-1) || '/placeholder.svg'}
+                  alt={auction.product.productName}
+                  className="w-24 h-24 object-cover rounded-md"
+                />
+                <div className="flex-grow">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-xl font-semibold">{auction.product.productName}</h3>
+                    <Tag color={getStatusColor(auction.status)}>
+                      {auction.status}
+                    </Tag>
                   </div>
-                )}
-                <div className="mt-2 flex justify-between items-center">
-                  <div>
-                    <span className="font-medium">Starting Price: </span>
-                    <span>${product.startingPrice}</span>
-                    {product.finalPrice && (
-                      <>
-                        <span className="ml-4 font-medium">Final Price: </span>
-                        <span>${product.finalPrice}</span>
-                      </>
+                  <p className="text-gray-600 mt-2">{auction.product.description}</p>
+                  <div className="mt-2 text-sm text-gray-500">
+                    <span>Auction ID: {auction._id}</span>
+                    <span className="ml-4">Start: {formatDateTime(auction.startTime)}</span>
+                    <span className="ml-4">End: {formatDateTime(auction.endTime)}</span>
+                  </div>
+                  <div className="mt-2 flex justify-between items-start space-x-8">
+                    <div className="flex flex-col space-y-2 w-auto">
+                      <div className="flex justify-between">
+                        <span className="font-medium w-28 mr-4">Winning Price:</span>
+                        <span className="font-normal text-left w-1/2">{formatCurrency(auction.winningPrice)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium w-28 mr-4">Deposit:</span>
+                        <span className="font-normal text-left w-1/2">- {formatCurrency(auction.deposit)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium w-28 mr-4">Register Fee:</span>
+                        <span className="font-normal text-left w-1/2">- {formatCurrency(auction.registrationFee)}</span>
+                      </div>
+
+                      <div className="flex justify-between">
+                        <span className="font-medium w-28 mr-4">Total Receiving:</span>
+                        <span className=" text-left w-1/2 font-bold"> {formatCurrency(
+                          auction.winningPrice - auction.deposit + auction.registrationFee
+                        )}</span>
+                      </div>
+                    </div>
+                    {auction.status === 'ended' && (
+                      <div className="flex space-x-4">
+                        {!auction.winnerBankInfo && (
+                          <Button
+                            icon={<BankOutlined />}
+                            onClick={() => {
+                              setSelectedAuction(auction)
+                              setIsBankInfoModalVisible(true)
+                            }}
+                          >
+                            Update Bank Info
+                          </Button>
+                        )}
+                        <TransactionReportButton
+                          disabled={!auction.winnerBankInfo}
+                        />
+                      </div>
                     )}
                   </div>
-                  {product.status === 'Successful' && (
-                    <div className="space-x-2">
-                      {!product.hasBankInfo && (
-                        <Button 
-                          icon={<BankOutlined />} 
-                          onClick={() => {
-                            setSelectedProduct(product)
-                            setIsBankInfoModalVisible(true)
-                          }}
-                        >
-                          Update Bank Info
-                        </Button>
-                      )}
-                                  <TransactionReportButton
-                                       disabled={!product.hasBankInfo}
-                                  />
-                      {/* <Button 
-                        icon={<DownloadOutlined />} 
-                        disabled={!product.hasBankInfo}
-                        onClick={() => handleDownloadReport(product)}
-                      >
-                        Download Report
-                      </Button> */}
-                    </div>
-                  )}
+
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </Content>
+            ))}
+          </div>
+        </Content>
 
-      <Modal
-        title="Update Bank Information"
-        visible={isBankInfoModalVisible}
-        onCancel={() => setIsBankInfoModalVisible(false)}
-        footer={null}
-      >
-        <BankInfoForm onSubmit={handleBankInfoSubmit} />
-      </Modal>
-    </Layout>
+        <Modal
+          title="Update Bank Information"
+          visible={isBankInfoModalVisible}
+          onCancel={() => setIsBankInfoModalVisible(false)}
+          footer={null}
+        >
+          <BankInfoForm onSubmit={handleUpdateBankInfo} />
+        </Modal>
+      </Layout>
+    </>
+  
   )
 }

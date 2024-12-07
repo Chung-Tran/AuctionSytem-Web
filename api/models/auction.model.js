@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 // Schema cho đấu giá
 const AuctionSchema = new Schema({
     product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+    registerCustomerId: { type: Schema.Types.ObjectId, ref: 'Customer', required: true },
     title: { type: String},
     slug: { type: String, unique: true },
     description: { type: String },
@@ -28,7 +29,13 @@ const AuctionSchema = new Schema({
     registrationFee: { type: Number }, // Phí đăng ký
     winner: { type: Schema.Types.ObjectId, ref: 'Customer' },
     winningPrice: { type: Number }, // Giá trúng
-    
+    winnerBankInfo: {
+        type: {
+          bankName: { type: String, required: true },
+          accountHolderName: { type: String, required: true },
+          accountNumber: { type: String, required: true },
+        },
+    }, //Thông tin STK người bán
     managementAction: [
         {
             timeLine: { type: Date }, 

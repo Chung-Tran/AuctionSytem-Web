@@ -2,8 +2,13 @@ const cron = require('node-cron');
 const Bull = require('bull');
 const { Auction, BidHistory } = require('../models/auction.model');
 const redisClient = require('../config/redis');
-const { REDIS_KEYS } = require('./constant');
+const { REDIS_KEYS, EmailType } = require('./constant');
 const { endAuction } = require('../controllers/socket.controller');
+const { sendEmail } = require('../utils/email');
+const { default: mongoose } = require("mongoose");
+const jwt = require('jsonwebtoken');
+const { parseDurationToHumanFormat } = require('../utils/time');
+
 
 const auctionQueue = new Bull('auction-management', {
   redis: {
@@ -136,13 +141,18 @@ const handleEndAuction = async (auctionId) => {
     if (auction && auction.status === 'active') {
       auction.status = 'ended';
       await auction.save();
-
+      
       //Delete cache
       await redisClient.del(REDIS_KEYS.AUCTION_ROOM(auctionId));
       await redisClient.del(REDIS_KEYS.BID_HISTORY(auctionId));
       await redisClient.del(REDIS_KEYS.AUCTION_CHAT(auctionId));
       await redisClient.sRem(REDIS_KEYS.SCHEDULED_AUCTIONS(auctionId), auctionId.toString());
     }
+
+    // Send email notification
+    await sendEmailToAuctionWinner(auctionId);
+    await sendEmailToProductOwner(auctionId);
+    
   } catch (error) {
     console.error('Error ending auction:', error);
   }
@@ -196,7 +206,254 @@ const syncFinalAuctionData = async (auctionId) => {
   }
 };
 
+//Func handle các room được duyệt đấu giá trong ngày (không đợi qua ngày để job check)
+const pushAuctionToQueue = async (auctionId) => {
+  try {
+    // Truy vấn auction và populate thông tin sản phẩm
+    const auction = await Auction.findById(auctionId).populate('product');
+    
+    if (!auction) {
+      console.error('Auction not found');
+      return false;
+    }
+
+    const currentTime = new Date();
+    const startTime = new Date(auction.startTime);
+    const endTime = new Date(auction.endTime);
+
+    // Kiểm tra trạng thái auction
+    if (auction.status !== 'pending') {
+      console.error('Auction is not in pending status');
+      return false;
+    }
+
+    if (startTime <= currentTime && endTime > currentTime) {
+      await activateAuction(auction._id);
+    } else if (startTime > currentTime) {
+      await scheduleAuctionStart(auction);
+    }
+
+    if (endTime > currentTime) {
+      await scheduleAuctionEnd(auction);
+    }
+    await redisClient.sAdd(REDIS_KEYS.SCHEDULED_AUCTIONS(auction._id), auction._id.toString());
+
+    return true;
+  } catch (error) {
+    console.error('Error scheduling auction by ID:', error);
+    return false;
+  }
+};
+
+const sendEmailToAuctionWinner = async (auctionId) => {
+  try {
+      
+    const auction = await Auction.aggregate([
+      { 
+        $match: { 
+          $and: [ 
+            { "_id": new mongoose.Types.ObjectId(auctionId) },
+            { "status": "ended" } 
+          ]
+        } 
+      },
+      {
+        $lookup: {
+          from: "customers",
+          localField: "winner",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                fullName: 1,
+                username: 1,
+                email: 1,
+              },
+            },
+          ],
+          as: "winningCustomer",
+        },
+      },
+      {
+        $unwind: {
+          path: "$winningCustomer",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "product",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                name: "$productName",
+                image: {
+                  $arrayElemAt: [{ $ifNull: ["$images", []] }, 0],
+                },
+              },
+            },
+          ],
+          as: "product",
+        },
+      },
+      {
+        $unwind: {
+          path: "$product",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          winningPrice: 1,
+          startTime: 1,
+          endTime: 1,
+          product: 1,
+          winningCustomer: 1,
+        },
+      },
+    ])
+    .then(result => result[0]);
+
+    if(auction == null){
+      console.error('Send email to auction winner fail:', new Error("Not found auction!"));
+      return;
+    }
+
+    // Generate Token
+    const expiresIn = process.env.CUSTOMER_AUCTION_COMFIRM_TOKEN_EXPIRED;
+    
+    const token = jwt.sign(
+      {
+        auctionId: auction._id,
+        customerId: auction.winningCustomer._id,
+        productId: auction.product._id,
+      }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: expiresIn }
+    );
+
+    // Send Email
+    const isSuccessed = await sendEmail(
+      auction.winningCustomer.email,
+      EmailType.NOTIFY_TO_AUCTION_WINNER,
+      {
+        product: auction.product,
+        winningPrice: auction.winningPrice,
+        winningCustomer: auction.winningCustomer,
+        comfirmUrl: `${process.env.REACT_APP_CLIENT_URL}/auction/confirmation/${token}`,
+        expiryTime: parseDurationToHumanFormat (expiresIn)
+      }
+    )
+    if (!isSuccessed){
+      console.error('Send email to auction winner fail:', new Error("Cannot send email!"));
+      return;
+    }
+    
+  } catch(error) {
+    console.error('Send email to auction winner fail:', error);
+  }
+  
+  
+} 
+
+const sendEmailToProductOwner = async (auctionId) => {
+  try {
+
+    const auction = await Auction.aggregate([
+      { 
+        $match: { 
+          $and: [ 
+            { "_id": new mongoose.Types.ObjectId(auctionId) },
+            { "status": "ended" } 
+          ]
+        } 
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "product",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                name: "$productName", 
+                image: {
+                  $arrayElemAt: [{ $ifNull: ["$images", []] }, 0],
+                },
+                owner: "$seller", 
+              },
+            },
+          ],
+          as: "product",
+        },
+      },
+      {
+        $unwind: {
+          path: "$product",
+          preserveNullAndEmptyArrays: true, 
+        },
+      },
+      {
+        $lookup: {
+          from: "customers",
+          localField: "product.owner", 
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                username: 1,
+                fullName: 1,
+                email: 1,
+              },
+            },
+          ],
+          as: "productOwner",
+        },
+      },
+      {
+        $unwind: {
+          path: "$productOwner",
+          preserveNullAndEmptyArrays: true, 
+        },
+      },
+      {
+        $project: {
+          winningPrice: 1, 
+          product: 1, 
+          productOwner: 1, 
+        },
+      },
+    ])
+    .then(result => result[0]);   
+  
+    if(auction == null){
+      console.error('Send email to product owner fail:', new Error("Not found auction!"));
+      return;
+    }
+      
+    // Send Email
+    const isSuccessed = await sendEmail(
+      auction.winningCustomer.email,
+      EmailType.NOTIFY_TO_PRODUCT_OWNER,
+      {
+        product: auction.product,
+        winningPrice: auction.winningPrice,
+        productOwner: auction.productOwner
+      }
+    )
+    if (!isSuccessed){
+      console.error('Send email to product owner fail:', new Error("Cannot send email!"));
+      return;
+    }
+
+  } catch(error) {
+    console.error('Send email to product owner fail:', error);
+  }
+}
 
 module.exports = {
-  initializeAuctionSystem
+  initializeAuctionSystem,
+  pushAuctionToQueue
 };

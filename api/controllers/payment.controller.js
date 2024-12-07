@@ -17,9 +17,9 @@ const { Auction } = require("../models/auction.model");
 const vnpayCreatePaymentUrl = asyncHandle(async (req, res) => {
   process.env.TZ = "Asia/Ho_Chi_Minh";
 
-  const { amount, bankCode, auctionId } = req.body;
+  const { amount, bankCode, auctionId, userId } = req.body;
   const transaction = await Transaction.create({
-    userId: req.user.userId,
+    userId: userId,
     amount: amount,
     auctionId: auctionId
   });
@@ -203,11 +203,11 @@ const vnpayIPN = asyncHandle(async (req, res) => {
 
 // có validate token nha
 const vnpayTransactionDetail = asyncHandle(async (req, res) => {
-  const userId = req.user.userId;
+  // const userId = req.user.userId;
 
   const transaction = await Transaction.findOne({
     _id: req.params.transactionId,
-    userId: userId,
+    // userId: userId,
     paymentGateway: PaymentGateways.VNPAY,
   });
 

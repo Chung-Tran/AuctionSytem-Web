@@ -1,13 +1,17 @@
 const asyncHandler = require('express-async-handler');
 const Product = require('../models/product.model');
 const { Auction } = require('../models/auction.model');
-// const Customer = require('../models/customer.model');
+const { Transaction } = require('../models/transaction.model');
+const { Customer } = require('../models/customer.model');
 const { formatResponse } = require('../common/MethodsCommon');
 const redisClient = require('../config/redis');
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 const moment = require('moment');
 const mongoose = require('mongoose');
+const { globalIo, getGlobalIo } = require('./socket.controller');
+const { REDIS_KEYS } = require('../common/constant');
+const { pushAuctionToQueue } = require('../common/initializeAuctionSync');
 
 const registerAuctionProduct = asyncHandler(async (req, res) => {
     const {
@@ -54,6 +58,7 @@ const registerAuctionProduct = asyncHandler(async (req, res) => {
         });
         const auction = new Auction({
             product: product._id,
+            registerCustomerId: sellerId,
             title: productName,
             description,
             sellerName,
@@ -110,6 +115,9 @@ const approveAuction = asyncHandler(async (req, res) => {
         auction.registrationFee = registrationFee;
         
         auction.status = 'pending';
+        //Nếu như phê duyệt đấu giá trong ngày thì sẽ push nó vào list auto start
+        if (new Date(startTime).getDate() == new Date().getDate() && new Date(endTime).getDate() == new Date().getDate())
+            pushAuctionToQueue(auction._id);
 
         await auction.save();
 
@@ -671,12 +679,10 @@ const ongoingList = asyncHandler(async (req, res) => {
 
         let pipeline = [];
 
-        if (status) {
-            pipeline.push({
-                $match: { status }
-            });
-        }
         pipeline.push(
+            {
+                $match: { status: 'active' }
+            },
             {
                 $lookup: {
                     from: 'products',
@@ -751,8 +757,6 @@ const ongoingList = asyncHandler(async (req, res) => {
             { $limit: limitInt }
         );
 
-        const auction = await Auction.findOne();
-        const registeredUsersCount = auction?.registeredUsers?.length || 0;
         const totalAuctions = await Auction.countDocuments(status ? { status } : {});
         pipeline.push({
             $project: {
@@ -806,12 +810,55 @@ const ongoingList = asyncHandler(async (req, res) => {
             }
         });
         const auctions = await Auction.aggregate(pipeline);
+        const resFormat = await Promise.all(auctions?.map(async (item) => {
+            try {
+                // Lấy dữ liệu room từ Redis
+                const roomCache = await redisClient.hGet(REDIS_KEYS.AUCTION_ROOM(item._id), 'auction');
+                
+                // Nếu không tìm thấy dữ liệu của room, skip room này
+                if (!roomCache) {
+                    return false;
+                }
+                
+                // Lấy danh sách bid từ Redis
+                const bidHistory = await redisClient.lRange(REDIS_KEYS.BID_HISTORY(item._id), 0, -1);
+                const bidList = bidHistory.map(bid => {
+                    try {
+                        return JSON.parse(bid);
+                    } catch (e) {
+                        console.error('Error parsing bid data', e);
+                        return null;
+                    }
+                }).filter(bid => bid !== null);
+        
+                const highestBid = bidList.length ? Math.max(...bidList.map(item => item.bidAmount)) : 0;
+                item.highestBid = highestBid;
+        
+                // Lấy thông tin room từ socket
+                const io = getGlobalIo();
+                const roomCurrent = io && io.sockets.adapter.rooms.get(item._id);
+                if (roomCurrent) {
+                    const clients = Array.from(roomCurrent);
+                    item.participants = clients;
+                } else {
+                    item.participants = [];
+                }
+                return {...item};
+            } catch (error) {
+                console.error('Error processing auction room', error);
+                return false;
+            }
+        }));
+        
+        const validResFormat = resFormat.filter(item => item !== false);
+        
         res.status(200).json(formatResponse(true, {
-            docs: auctions,
+            docs: validResFormat,
             total: totalAuctions,
             page: pageInt,
             limit: limitInt,
         }, ""));
+        
     } catch (error) {
         console.error('Lỗi khi lấy danh sách phiên đấu giá:', error);
         res.status(500).json(formatResponse(false, null, "Đã xảy ra lỗi khi lấy danh sách phiên đấu giá"));
@@ -847,60 +894,120 @@ const checkValidAccess = asyncHandler(async (req, res) => {
     }
 });
 
-const syncAuctionsToMongoDB = async () => {
+// Lấy thông tin phiên đấu giá đã kết thúc
+const getAuctionComfirmInfo = asyncHandler(async (req, res) => {
+    const { auctionId, customerId, productId } = req.user;
+
+	const TransactionSumQuery = await Transaction.aggregate([
+		{
+			$match: {
+				$and: [
+					{ userId: new mongoose.Types.ObjectId(customerId) },
+					{ auctionId: new mongoose.Types.ObjectId(auctionId) },
+				],
+			},
+		},
+		{
+			$group: {
+				_id: {
+					userId: '$userId',
+					auctionId: '$auctionId',
+				},
+				totalAmount: { $sum: '$amount' },
+			},
+		},
+		{
+			$project: {
+				totalAmount: 1,
+				_id: 0,
+			},
+		},
+		{
+			$limit: 1,
+		},
+	]).then((result) => result[0]);
+
+	const result = await Promise.all([
+		Auction.findById(auctionId, { bids: 0, managementAction: 0, __v: 0 }),
+		Customer.findById(customerId, { password: 0, __v: 0 }),
+		Product.findById(productId, { __v: 0 }),
+		TransactionSumQuery,
+	]).then(([auction, customer, product, { totalAmount }]) => {
+		return {
+			auction,
+			customer,
+			product,
+			isPaied: totalAmount === auction.winningPrice,
+			missingAmount: auction.winningPrice - totalAmount,
+		};
+	});
+
+	return res.json(result);
+});
+
+
+const getMyAuctioned = asyncHandler(async (req, res) => {
+    const { page = 1, limit = 10 } = req.query;
+    const sellerId = req.user.userId;
+
     try {
-        // Lấy tất cả các phiên đấu giá từ Redis
-        const auctionKeys = await redisClient.keys('auction:*');
-
-        for (const auctionKey of auctionKeys) {
-            const auctionData = await redisClient.hGetAll(auctionKey);
-
-            // Kiểm tra xem phiên đấu giá đã tồn tại trong MongoDB chưa
-            let auction = await Auction.findOne({ _id: auctionData.id });
-
-            if (!auction) {
-                // Nếu chưa tồn tại, tạo một phiên đấu giá mới trong MongoDB
-                auction = new Auction({
-                    _id: auctionData.id,
-                    product: auctionData.product,
-                    title: auctionData.title,
-                    // Chuyển các trường khác từ Redis sang MongoDB
-                    status: auctionData.status,
-                    startTime: new Date(auctionData.startTime),
-                    endTime: new Date(auctionData.endTime),
-                    // ...
-                });
-                await auction.save();
-            } else {
-                // Nếu đã tồn tại, cập nhật thông tin phiên đấu giá
-                auction.currentPrice = auctionData.currentPrice;
-                auction.currentViews = auctionData.currentViews;
-                // Cập nhật các trường khác từ Redis sang MongoDB
-                await auction.save();
-            }
-
-            // Đồng bộ lịch sử đấu giá từ Redis sang MongoDB
-            const bidKeys = await redisClient.lrange(`${auctionKey}:bids`, 0, -1);
-            for (const bidKey of bidKeys) {
-                const bidData = JSON.parse(await redisClient.lIndex(`${auctionKey}:bids`, bidKey));
-                const bid = new BidHistory({
-                    auction: auction._id,
-                    bidder: bidData.bidderId,
-                    amount: bidData.bidAmount,
-                    time: new Date(bidData.time)
-                });
-                await bid.save();
-            }
-        }
-
-        console.log('Sync completed. Room: ',);
-    } catch (err) {
-        console.error('Error syncing data from Redis to MongoDB:', err);
+        const pageInt = parseInt(page, 10) || 1;
+        const limitInt = parseInt(limit, 10) || 10;
+        const query = {
+            registerCustomerId: sellerId,
+            status: { $in: ['pending', 'active', 'ended', 'cancelled'] }
+        };
+        const auctions = await Auction.find(query)
+            .populate({
+                path: 'product',
+                select: 'productName images'
+            })
+            .populate(
+                {
+                    path: 'registerCustomerId',
+                    select: 'username '
+                })
+            .select('product title winningPrice winnerBankInfo cancellationReason deposit registrationFee startTime endTime status')
+            .skip((pageInt - 1) * limitInt)
+            .limit(limitInt);
+        
+        res.status(200).json(formatResponse(true, {
+            docs: auctions,
+            page: pageInt,
+            limit: limitInt,
+        }, ""));
+    } catch (error) {
+        console.error('Lỗi khi lấy danh sách phiên đấu giá:', error);
+        res.status(500).json(formatResponse(false, null, "Đã xảy ra lỗi khi lấy danh sách phiên đấu giá"));
     }
-};
+});
 
-module.exports = syncAuctionsToMongoDB;
-
+const updateBankInfo = asyncHandler(async (req, res) => {
+    const { auctionId } = req.params;
+    const { bankInfo } = req.body;
+  
+    try {
+      const auction = await Auction.findById(auctionId);
+  
+      if (!auction) {
+        return res.status(404).json(formatResponse(false, null, "Auction not found"));
+      }
+  
+      // Kiểm tra trạng thái chỉ cho phép cập nhật nếu auction thành công
+      if (auction.status !== 'ended') {
+        return res.status(400).json(formatResponse(false, null, "Cannot update bank info for this auction"));
+      }
+  
+      auction.winnerBankInfo = bankInfo;
+      await auction.save();
+  
+      res.status(200).json(formatResponse(true, auction, "Bank info updated successfully"));
+    } catch (error) {
+      console.error('Error updating bank info:', error);
+      res.status(500).json(formatResponse(false, null, "Failed to update bank info"));
+    }
+});
+  
 module.exports = {
     registerAuctionProduct,
     approveAuction,
@@ -914,5 +1021,8 @@ module.exports = {
     updateAuction,
     endAuction,
     kickCustomerOutOfAuction,
+    getAuctionComfirmInfo,
     deleteHistoryManagerAuction,
+    getMyAuctioned,
+    updateBankInfo
 };

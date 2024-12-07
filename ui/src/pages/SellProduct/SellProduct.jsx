@@ -7,6 +7,7 @@ import Breadcrumb from '../../components/BreadCrumb/BreadCrumb';
 import AuctionService from '../../services/AuctionService';
 import { formatCurrency, openNotify } from '../../commons/MethodsCommons';
 import { AppContext } from '../../AppContext';
+import { Helmet } from 'react-helmet';
 
 const getBase64 = (file) =>
   new Promise((resolve, reject) => {
@@ -87,6 +88,11 @@ const SellProduct = () => {
 
   return (
     <div className='w-full h-auto'>
+      <Helmet>
+        <title>Sell Product</title>
+        <meta property="og:title" content="Sell Product" />
+        <meta property="og:description" content="Sell Product" />
+      </Helmet>
       <Breadcrumb
         items={[
           { label: "Home", href: "/" },

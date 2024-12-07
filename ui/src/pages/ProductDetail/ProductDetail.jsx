@@ -5,13 +5,15 @@ import 'react-tabs/style/react-tabs.css'
 import ProductItem from '../../components/Product/ProductItem'
 import ImageGallery from "react-image-gallery"
 import AuctionService from '../../services/AuctionService'
-import { useParams } from 'react-router-dom'
-import { formatCurrency, formatDate } from '../../commons/MethodsCommons'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { formatCurrency, formatDate, openNotify } from '../../commons/MethodsCommons'
 import LoadingSpinner from '../LoadingSpinner'
 import RegistrationSteps from './RegistrationSteps';
 import { AppContext } from '../../AppContext';
 import productTemplate from '../../assets/productTemplate.jpg';
 import { REGISTER_STATUS } from '../../commons/Constant'
+import { message } from 'antd'
+import { Helmet } from 'react-helmet'
 
 const ProductDetail = () => {
     const { slug } = useParams()
@@ -20,7 +22,8 @@ const ProductDetail = () => {
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
     const [auctionRelate, setAuctionRelate] = useState([]);
     const [isRegistrationModalVisible, setIsRegistrationModalVisible] = useState(false);
-    const [registerStatus, setRegisterStatus] = useState(REGISTER_STATUS.ALLOW)
+    const [registerStatus, setRegisterStatus] = useState(REGISTER_STATUS.ALLOW);
+    const navigate = useNavigate();
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -55,7 +58,6 @@ const ProductDetail = () => {
         const now = new Date()
         const targetDate = new Date(startTime)
         const difference = targetDate - now
-        console.log(targetDate,difference)
         if (difference > 0) {
             const days = Math.floor(difference / (1000 * 60 * 60 * 24))
             const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
@@ -63,8 +65,13 @@ const ProductDetail = () => {
             const seconds = Math.floor((difference % (1000 * 60)) / 1000)
 
             setTimeLeft({ days, hours, minutes, seconds })
+        } else if (difference === 0) {
+            setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+            message('Phiên đấu giá đã bắt đầu');
+            navigate('/auctions/ongoing'); // Điều hướng đến trang ongoing
         } else {
-            setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+            openNotify('error', 'Không tìm thấy dữ liệu');
+            navigate('/auctions/upcoming'); // Điều hướng đến trang upcoming
         }
     }, []);
 
@@ -92,6 +99,12 @@ const ProductDetail = () => {
     }
     return !!auction && (
         <div>
+            <Helmet>
+                <title>{ auction ? auction.title : 'Auction detail'}</title>
+                <meta property="og:title" content={ auction ? auction.title : 'Auction detail'} />
+                <meta property="og:description" content={ auction ? auction.title : 'Auction detail'} />
+            </Helmet>
+
             <Breadcrumb
                 items={[
                     { label: "Home", href: "/" },
@@ -269,6 +282,7 @@ const ProductDetail = () => {
                 <RegistrationSteps
                     auction={auction}
                     onClose={() => setIsRegistrationModalVisible(false)}
+                    userId={user.userId}
                 />
             )}
         </div>

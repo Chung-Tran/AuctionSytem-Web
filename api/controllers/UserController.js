@@ -42,7 +42,7 @@ const loginUser = asyncHandle(async (req, res) => {
     }
 
     // Tạo access token và refresh token
-    const { sessionKey } = await generateRefreshToken(user._id)
+    const { sessionKey } = await generateRefreshToken(user._id, undefined, true)
     const accessToken = generateAccessToken(user._id, sessionKey);
     res.setHeader('x-new-access-token', accessToken);
     res.status(200).json(formatResponse(true, user, null));
