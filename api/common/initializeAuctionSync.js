@@ -1,13 +1,14 @@
 const cron = require('node-cron');
 const Bull = require('bull');
 const { Auction, BidHistory } = require('../models/auction.model');
+const { Notification } = require('../models/notification.model');
 const redisClient = require('../config/redis');
-const { REDIS_KEYS, EmailType } = require('./constant');
+const { REDIS_KEYS, EmailType, NotificationType } = require('./constant');
 const { endAuction } = require('../controllers/socket.controller');
 const { sendEmail } = require('../utils/email');
 const { default: mongoose } = require("mongoose");
 const jwt = require('jsonwebtoken');
-const { parseDurationToHumanFormat } = require('../utils/time');
+const { parseDurationToHumanFormat, formatTimeWithAddedSeconds } = require('../utils/time');
 
 
 const auctionQueue = new Bull('auction-management', {
@@ -339,17 +340,31 @@ const sendEmailToAuctionWinner = async (auctionId) => {
       auction.winningCustomer.email,
       EmailType.NOTIFY_TO_AUCTION_WINNER,
       {
-        product: auction.product,
         winningPrice: auction.winningPrice,
+        startTime: auction.startTime,
+        endTime: auction.endTime,
+        product: auction.product,
         winningCustomer: auction.winningCustomer,
-        comfirmUrl: `${process.env.REACT_APP_CLIENT_URL}/auction/confirmation/${token}`,
-        expiryTime: parseDurationToHumanFormat (expiresIn)
+        confirmUrl: `${process.env.REACT_APP_CLIENT_URL}/auction/confirmation/${token}`,
+        expiryTime: parseDurationToHumanFormat(expiresIn)
       }
     )
     if (!isSuccessed){
       console.error('Send email to auction winner fail:', new Error("Cannot send email!"));
       return;
     }
+
+    // Save a Notification
+    await Notification.create(new Notification({
+      ownerId: auction.winningCustomer._id,
+      type: NotificationType.SUCCESS,
+      title: 'Chúc mừng! Bạn đã trúng đấu giá',
+      message: `Bạn đã trúng đấu giá sản phẩm '${auction.product?.name}' với giá ${auction.winningPrice} VND. Vui lòng hoàn tất thanh toán trước ${formatTimeWithAddedSeconds(parseDuration(expiresIn) / 1000)}.`,
+      metadata: {
+        productId: auction.product._id,
+        auctionId: auction._id,
+      }
+    }));
     
   } catch(error) {
     console.error('Send email to auction winner fail:', error);
@@ -435,7 +450,7 @@ const sendEmailToProductOwner = async (auctionId) => {
       
     // Send Email
     const isSuccessed = await sendEmail(
-      auction.winningCustomer.email,
+      auction.productOwner.email,
       EmailType.NOTIFY_TO_PRODUCT_OWNER,
       {
         product: auction.product,
@@ -448,6 +463,18 @@ const sendEmailToProductOwner = async (auctionId) => {
       return;
     }
 
+    // Save a Notification
+    await Notification.create(new Notification({
+      ownerId: auction.productOwner._id,
+      type: NotificationType.INFO,
+      title: 'Sản phẩm của bạn đã được đấu giá thành công',
+      message: `Sản phẩm '${auction.product?.name}' đã được đấu giá thành công với giá ${auction.winningPrice} VND. Vui lòng chuẩn bị giao hàng và xác nhận với hệ thống.`,
+      metadata: {
+        productId: auction.product._id,
+        auctionId: auction._id,
+      }
+    }));
+    
   } catch(error) {
     console.error('Send email to product owner fail:', error);
   }

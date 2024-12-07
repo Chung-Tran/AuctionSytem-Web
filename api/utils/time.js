@@ -60,4 +60,23 @@ const parseDurationToHumanFormat = (durationStr) => {
     }
 }
 
-module.exports = { parseDuration, parseDurationToHumanFormat }
+function formatTimeWithAddedSeconds(secondsToAdd) {
+    // Lấy thời gian hiện tại
+    const now = new Date();
+
+    // Thêm số giây vào thời gian hiện tại
+    now.setSeconds(now.getSeconds() + secondsToAdd);
+
+    // Lấy các thành phần thời gian
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const month = (now.getMonth() + 1).toString().padStart(2, '0'); // Tháng bắt đầu từ 0
+    const year = now.getFullYear();
+
+    // Ghép lại thành chuỗi định dạng
+    return `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`;
+}
+
+module.exports = { parseDuration, parseDurationToHumanFormat, formatTimeWithAddedSeconds }

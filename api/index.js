@@ -48,6 +48,7 @@ const customerRoute = require("./routes/CustomerRoute");
 const paymentRoute = require("./routes/payment.route");
 const auctionRoute = require("./routes/auction.route");
 const resourceRoute = require("./routes/resouce.rote");
+const notificatonRoute = require('./routes/notificaton.route');
 const { verifySocketToken } = require("./middlewares/Authentication");
 
 
@@ -78,6 +79,7 @@ app.use("/api/auctions", auctionRoute);
 app.use("/api/resource", resourceRoute)
 app.use('/api/role', roleRoute);
 app.use("/api/payment", paymentRoute)
+app.use("/api/notifications", notificatonRoute)
 
 // Error handling middleware
 app.use(errorHandler);

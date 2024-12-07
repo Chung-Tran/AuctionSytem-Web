@@ -30,6 +30,13 @@ const ProductStatus = Object.freeze({
     cancelled: 'Đã hủy',
 });
 
+const NotificationType = Object.freeze({
+    INFO: 'info',
+    WARNING: 'warning',
+    SUCCESS: 'success', 
+    ERROR: 'error',
+});
+
 const TransactionStatus = Object.freeze({
     DRAFT: 'draft',
     SUCCESSED: 'successed',
@@ -84,6 +91,7 @@ module.exports = {
     ProductCategory,
     ProductCondition,
     ProductStatus,
+    NotificationType,
     EmailType,
     TransactionStatus,
     PaymentGateways,
