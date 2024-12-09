@@ -11,13 +11,7 @@ const jwt = require('jsonwebtoken');
 const { parseDurationToHumanFormat, formatTimeWithAddedSeconds } = require('../utils/time');
 
 
-const auctionQueue = new Bull('auction-management', {
-  redis: {
-    host: process.env.REDIS_HOSTNAME,
-    port: process.env.REDIS_PORT,
-    password: process.env.REDIS_PASSWORD,
-  }
-});
+const auctionQueue = new Bull('auction-management', process.env.REDIS_URL);
 
 const initializeAuctionSystem = async () => {
   try {
