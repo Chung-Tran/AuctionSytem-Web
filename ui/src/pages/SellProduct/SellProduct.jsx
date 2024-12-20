@@ -8,6 +8,7 @@ import AuctionService from '../../services/AuctionService';
 import { formatCurrency, openNotify } from '../../commons/MethodsCommons';
 import { AppContext } from '../../AppContext';
 import { Helmet } from 'react-helmet';
+import { PRODUCT_CATEGORY_DATASOURCE, PRODUCT_CONDITION_DATASOURCE, PRODUCT_TYPE_DATASOURCE } from '../../commons/Constant';
 
 const getBase64 = (file) =>
   new Promise((resolve, reject) => {
@@ -154,20 +155,24 @@ const SellProduct = () => {
                   <SelectField
                     name="category"
                     label="Danh mục"
-                    options={[
-                      { value: '', label: 'Chọn danh mục' },
-                      { value: 'physical', label: 'Tài sản hiện vật' }
-                    ]}
+                    options={
+                      PRODUCT_CATEGORY_DATASOURCE.map(item => ({ value: item.value, label: item.label }))
+                      }
                   />
 
                   <SelectField
                     name="condition"
                     label="Tình trạng sản phẩm"
-                    options={[
-                      { value: 'new', label: 'Mới' },
-                      { value: 'used', label: 'Đã sử dụng' },
-                      { value: 'refurbished', label: 'Tân trang' }
-                    ]}
+                    options={
+                      PRODUCT_CONDITION_DATASOURCE.map(item => ({ value: item.value, label: item.label }))
+                      }
+                  />
+                  <SelectField
+                    name="type"
+                    label="Loại sản phẩm"
+                    options={
+                      PRODUCT_TYPE_DATASOURCE.map(item => ({ value: item.value, label: item.label }))
+                      }
                   />
 
                   <FormInputNumber
@@ -296,6 +301,8 @@ const SelectField = ({ name, label, options }) => (
         }`}
       disabled={options.length === 1}
     >
+      <option key={""} value={""} className='p-2'>
+        </option>
       {options.map(({ value, label }) => (
         <option key={value} value={value} className='p-2'>
           {label}

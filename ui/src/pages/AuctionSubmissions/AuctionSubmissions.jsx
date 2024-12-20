@@ -6,8 +6,9 @@ import { SearchOutlined, BankOutlined } from '@ant-design/icons'
 import BankInfoForm from './BankInfoForm'
 import TransactionReportButton from './AuctionSubmissionReport'
 import AuctionService from '../../services/AuctionService'
-import { formatCurrency, formatDateTime } from '../../commons/MethodsCommons'
+import { formatCurrency, formatDateTime, openNotify } from '../../commons/MethodsCommons'
 import { Helmet } from 'react-helmet'
+import { AUCTION_STATUS } from '../../commons/Constant'
 
 const { Header, Content } = Layout
 const { Title } = Typography
@@ -56,7 +57,7 @@ export default function AuctionSubmissions() {
   const handleUpdateBankInfo = async (values) => {
     try {
       await AuctionService.updateBankInfo(selectedAuction._id, values)
-      message.success('Bank information updated successfully')
+      openNotify('success','Bank information updated successfully')
       setIsBankInfoModalVisible(false)
 
       // Refresh auction list
@@ -146,23 +147,19 @@ export default function AuctionSubmissions() {
                         <span className="font-normal text-left w-1/2">{formatCurrency(auction.winningPrice)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="font-medium w-28 mr-4">Deposit:</span>
-                        <span className="font-normal text-left w-1/2">- {formatCurrency(auction.deposit)}</span>
-                      </div>
-                      <div className="flex justify-between">
                         <span className="font-medium w-28 mr-4">Register Fee:</span>
-                        <span className="font-normal text-left w-1/2">- {formatCurrency(auction.registrationFee)}</span>
+                        <span className="font-normal text-left w-1/2">{formatCurrency(auction.deposit)} (Paied)</span>
                       </div>
 
                       <div className="flex justify-between">
                         <span className="font-medium w-28 mr-4">Total Receiving:</span>
                         <span className=" text-left w-1/2 font-bold"> {formatCurrency(
-                          auction.winningPrice - auction.deposit + auction.registrationFee
+                          auction.winningPrice
                         )}</span>
                       </div>
                     </div>
-                    {auction.status === 'ended' && (
-                      <div className="flex space-x-4">
+                    {auction.status === AUCTION_STATUS.WINNER_PAYMENTED && (
+                      <div className="flex space-x-4 items-center mt-auto">
                         {!auction.winnerBankInfo && (
                           <Button
                             icon={<BankOutlined />}

@@ -38,18 +38,18 @@ const _nav = [
   },
   {
     component: CNavTitle,
-    name: 'Quản lí đấu giá',
+    name: 'Quản lý đấu giá',
   },
-  {
-    component: CNavItem,
-    name: 'Phê duyệt phiên',
-    to: '/auction/approve',
-    icon: <CIcon icon={cibAppStore} customClassName="nav-icon" />,
+  // {
+  //   component: CNavItem,
+  //   name: 'Phê duyệt phiên',
+  //   to: '/auction/approve',
+  //   icon: <CIcon icon={cibAppStore} customClassName="nav-icon" />,
 
-  },
+  // },
   {
     component: CNavItem,
-    name: 'Quản lí phiên',
+    name: 'Quản lý đấu giá',
     to: '/auction/manager',
     icon: <CIcon icon={cibAppStore} customClassName="nav-icon" />,
 
@@ -61,7 +61,7 @@ const _nav = [
   },
   {
     component: CNavItem,
-    name: 'Quản lí nhân viên',
+    name: 'Quản lý nhân viên',
     to: '/user/manager',
     icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
     disabled: hasPermission([1,2,3,4]),
@@ -80,7 +80,7 @@ const _nav = [
   },
   {
     component: CNavGroup,
-    name: 'Quản lí sản phẩm',
+    name: 'Quản lý sản phẩm',
     to: '/base',
     icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
     items: [
@@ -92,78 +92,6 @@ const _nav = [
     ],
     disabled: hasPermission([10,11,12,13]),
   },
-
-  {
-    component: CNavTitle,
-    name: 'Khách hàng',
-  },
-  {
-    component: CNavGroup,
-    name: 'Quản lí khách hàng',
-    to: '/base',
-    icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
-    items: [
-      {
-        component: CNavItem,
-        name: 'Khách hàng',
-        to: '/user/manager',
-      },
-    ],
-    disabled: hasPermission([10,11,12,13]),
-  },
-
-  // {
-  //   component: CNavTitle,
-  //   name: 'Bán hàng',
-  // },
-  // {
-  //   component: CNavItem,
-  //   name: 'Bán hàng',
-  //   to: '/minimart/sales',
-  //   icon: <CIcon icon={cibAppStore} customClassName="nav-icon" />,
-
-  // },
-  // {
-  //   component: CNavItem,
-  //   name: 'Trả hàng',
-  //   to: '/minimart/sale_return',
-  //   icon: <CIcon icon={cibAppStore} customClassName="nav-icon" />,
-  //   disabled: hasPermission([22,23,24,25]),
-  // },
-
-  // {
-  //   component: CNavItem,
-  //   name: 'Kiểm kho',
-  //   to: '/inventory_check',
-  //   icon: <CIcon icon={cilStorage} customClassName="nav-icon" />,
-  // },
-  // {
-  //   component: CNavGroup,
-  //   name: 'Pages',
-  //   icon: <CIcon icon={cilStar} customClassName="nav-icon" />,
-  //   items: [
-  //     {
-  //       component: CNavItem,
-  //       name: 'Login',
-  //       to: '/login',
-  //     },
-  //     {
-  //       component: CNavItem,
-  //       name: 'Register',
-  //       to: '/register',
-  //     },
-  //     {
-  //       component: CNavItem,
-  //       name: 'Error 404',
-  //       to: '/404',
-  //     },
-  //     {
-  //       component: CNavItem,
-  //       name: 'Error 500',
-  //       to: '/500',
-  //     },
-  //   ],
-  // },
 ]
 
 export default _nav

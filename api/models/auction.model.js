@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { AUCTION_STATUS } = require('../common/constant');
 const Schema = mongoose.Schema;
 
 // Schema cho đấu giá
@@ -19,11 +20,7 @@ const AuctionSchema = new Schema({
     bidIncrement: { type: Number, required: true }, // Bước giá tối thiểu
     registrationOpenDate: { type: Date }, // Thời gian bắt đầu đăng ký
     registrationCloseDate: { type: Date }, // Thời gian kết thúc đăng ký
-    status: {
-        type: String,
-        enum: ['new','pending', 'active', 'ended', 'cancelled'],
-        default: 'new'
-    },
+    status: { type: String, enum: Object.values(AUCTION_STATUS), default: AUCTION_STATUS.PENDING},
     cancellationReason: { type: String},
     deposit: { type: Number }, // Đặt cọc
     registrationFee: { type: Number }, // Phí đăng ký

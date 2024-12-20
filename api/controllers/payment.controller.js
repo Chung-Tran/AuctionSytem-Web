@@ -10,6 +10,7 @@ const {
   VNPayResponse,
   IpnResponse,
   PaymentGateways,
+  AUCTION_STATUS,
 } = require("../common/constant");
 const { Auction } = require("../models/auction.model");
 
@@ -128,7 +129,7 @@ const vnpayReturn = asyncHandle(async (req, res) => {
             registeredUsers: {
               customer: transaction.userId, // ID của khách hàng từ transaction
               registrationTime: new Date(),     // Thời gian đăng ký
-              status: 'active',                 // Trạng thái mặc định
+              status: 'active',     // Trạng thái mặc định
               transaction: transaction._id      // ID của giao dịch
             }
           }

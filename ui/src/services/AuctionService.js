@@ -107,6 +107,24 @@ const AuctionService = {
             handleResponseError(error)
         }
     },
+    confirmAuction: async (values) => {
+        try {
+            const response = await axiosClient.post(`auctions/comfirmation`,values);
+            const data = await handleResponse(response);
+            return data;
+        } catch (error) {
+            handleResponseError(error)
+        }
+    },
+    updateStatus: async (auctionId,value) => {
+        try {
+            const response = await axiosClient.put(`auctions/${auctionId}/status`,{status:value});
+            const data = await handleResponse(response);
+            return data;
+        } catch (error) {
+            handleResponseError(error)
+        }
+    },
 
 
 }

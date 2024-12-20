@@ -1,10 +1,11 @@
+import { AUCTION_STATUS } from "commons/Constant";
 import { toast } from "react-toastify";
 import axiosClient from "utils/axiosConfig";
 
 const auctionAPI = {
 
     getNewAuction: async () => {
-        const newAuctionAPI = await axiosClient.get(`/auctions?status=${'new'}`, { withCredentials: true })
+        const newAuctionAPI = await axiosClient.get(`/auctions?status=${AUCTION_STATUS.PENDING}`, { withCredentials: true })
             if (!newAuctionAPI.success) {
                 return toast.error(newAuctionAPI?.message || "Lấy danh sách phiên đấu giá đang chờ phê duyệt");
             }
@@ -12,7 +13,7 @@ const auctionAPI = {
     },
 
     getPendingAuction: async () => {
-        const pendingAuctionAPI = await axiosClient.get(`/auctions/ongoing?status=${'pending'}`, { withCredentials: true })
+        const pendingAuctionAPI = await axiosClient.get(`/auctions?status=${AUCTION_STATUS.APPROVED}`, { withCredentials: true })
             if (!pendingAuctionAPI.success) {
                 return toast.error(pendingAuctionAPI?.message || "Lấy danh sách phiên đấu giá sắp diễn ra thất bại");
             }
@@ -20,7 +21,7 @@ const auctionAPI = {
     },
 
     getActiveAuction: async () => {
-        const activeAuctionAPI = await axiosClient.get(`/auctions?status=${'active'}`, { withCredentials: true })
+        const activeAuctionAPI = await axiosClient.get(`/auctions?status=${AUCTION_STATUS.ACTIVE}`, { withCredentials: true })
             if (!activeAuctionAPI.success) {
                 return toast.error(activeAuctionAPI?.message || "Lấy danh sách phiên đấu giá đang diễn ra thất bại");
             }
@@ -28,7 +29,7 @@ const auctionAPI = {
     },
 
     getEndedAuction: async () => {
-        const endedAuctionAPI = await axiosClient.get(`/auctions?status=${'ended'}`, { withCredentials: true })
+        const endedAuctionAPI = await axiosClient.get(`/auctions?status=${AUCTION_STATUS.COMPLETED}`, { withCredentials: true })
             if (!endedAuctionAPI.success) {
                 return toast.error(endedAuctionAPI?.message || "Lấy danh sách phiên đấu giá đã kết thúc thất bại");
             }
@@ -36,7 +37,7 @@ const auctionAPI = {
     },
 
     getCancelledAuction: async () => {
-        const cancelAuctionAPI = await axiosClient.get(`/auctions?status=${'cancelled'}`, { withCredentials: true })
+        const cancelAuctionAPI = await axiosClient.get(`/auctions?status=${AUCTION_STATUS.REJECTED}`, { withCredentials: true })
             if (!cancelAuctionAPI.success) {
                 return toast.error(cancelAuctionAPI?.message || "Lấy danh sách phiên đấu giá từ chối thất bại");
             }
@@ -124,7 +125,7 @@ const auctionAPI = {
     deleteHistoryManagementAction: async (auctionId, managementActionId) => {
         const deleteHistoryAuctionAPI = await axiosClient.delete(`/auctions/deleteHistory/${auctionId}/${managementActionId}`, { withCredentials: true })
             if (!deleteHistoryAuctionAPI.success) {
-                return toast.error(deleteHistoryAuctionAPI?.message || "Xóa lịch sử quản lí đấu giá thất bại");
+                return toast.error(deleteHistoryAuctionAPI?.message || "Xóa lịch sử quản lý đấu giá thất bại");
             }
         return deleteHistoryAuctionAPI 
     },

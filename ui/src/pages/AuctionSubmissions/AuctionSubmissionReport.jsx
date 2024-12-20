@@ -113,7 +113,7 @@ const TransactionReportButton = () => {
   };
 
   return (
-    <Button icon={<DownloadOutlined />} onClick={handleDownload} style={{ marginTop: 20 }}>
+    <Button icon={<DownloadOutlined />} onClick={handleDownload} >
       Download Transaction Report
     </Button>
   );

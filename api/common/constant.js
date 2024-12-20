@@ -4,25 +4,34 @@ const UserStatus = Object.freeze({
     SUSPENDED: 'Cấm'
 });
 
-const ProductCategory = Object.freeze({
-    Art_Collectibles: 'Nghệ thuật và Sưu tập',
-    Jewelry_Watches: 'Trang sức và Đồng hồ',
-    Furniture_HomeDecor: 'Đồ nội thất và Trang trí',    
-    Vehicles: 'Xe cộ',
-    Real_Estate: 'Bất động sản',
-    Electronics_Technology: 'Đồ điện tử và Công nghệ',
-    Fashion_Accessories: 'Thời trang và Phụ kiện',
-    Wine_Beverages: 'Rượu và Đồ uống',
-    Books_RareDocuments: 'Sách và Tài liệu quý',
-    EventTickets_Experiences: 'Vé sự kiện và Trải nghiệm',
+const PRODUCT_CATEGORY = {
+    ELECTRONICS: 'Electronics',           // Các sản phẩm điện tử
+    FASHION: 'Fashion',                   // Quần áo, phụ kiện
+    JEWELRY: 'Jewelry',                   // Đồ trang sức, kim hoàn
+    ART: 'Art',                           // Tranh ảnh, điêu khắc
+    REAL_ESTATE: 'Real Estate',           // Đất đai, nhà cửa
+    VEHICLE: 'Vehicle',                   // Xe cộ, phương tiện
+    COLLECTOR_ITEMS: 'Collector Items',   // Đồ sưu tầm
+    FURNITURE: 'Furniture',               // Đồ đạc, nội thất
+    ANTIQUES: 'Antiques',                 // Các vật phẩm cổ
+    SPORTS_EQUIPMENT: 'Sports Equipment', // Dụng cụ thể thao
+    BOOKS: 'Books',                       // Sách, tài liệu
+    OTHER: 'Other'                        // Các loại khác
+};
+const PRODUCT_CONDITION = Object.freeze({
+    NEW: 'New',
+    USED: 'Used',
+    REFURBISHED: 'Refurbished',    
 });
-
-const ProductCondition = Object.freeze({
-    new: 'Mới',
-    used: 'Đã sử dụng',
-    refurbished: 'Tân trang',    
-});
-
+const PRODUCT_TYPE = {
+    PERSONAL_ITEM: 'Personal Item',       // Vật dụng cá nhân
+    COLLECTIBLE: 'Collectible',           // Đồ sưu tầm
+    RARE: 'Rare',                    // Vật phẩm hiếm
+    LIMITED: 'Limited',   // Sản phẩm phát hành giới hạn
+    VINTAGE: 'Vintage',                   // Đồ cổ, thuộc thế hệ cũ
+    STANDARD: 'Standard',                 // Sản phẩm tiêu chuẩn
+    PREMIUM: 'Premium'                    // Sản phẩm cao cấp
+};
 const ProductStatus = Object.freeze({
     pending: 'Đang chờ đấu giá',
     active: 'Đang đấu giá',
@@ -83,13 +92,31 @@ const REDIS_KEYS = {
     BID_HISTORY: (roomId) => `auction:${roomId}:bids`,
     AUCTION_CHAT: (roomId) => `auction:${roomId}:chat`,
     SCHEDULED_AUCTIONS: (roomId) => `auction_schedule:${roomId}`,
-  };
+};
+//Flow: Đăng ký đấu giá=> sản phẩm đang chờ vận chuyển đến => đã nhận(chỉ cho phép duyệt đấu giá với điều kiện đã nhận SP) => Đấu giá trong transfer cho winner
+const PRODUCT_STATUS = {
+    PENDING_DELIVERY: 'Pending_Delivery',
+    RECEIVED: 'Received',
+    TRANSFERRED: 'Transferred',
+};
+//Flow: Đăng ký đấu giá=>pending=>duyệt/từ chối=>đang trong thời gian đấu giá=>kết thúc=>Chờ winner thanh toán => done
+const AUCTION_STATUS = {
+    PENDING: 'Pending',
+    APPROVED: 'Approved',
+    ACTIVE: 'Active',
+    COMPLETED: 'Completed',
+    WINNER_PAYMENTED: 'Winner_Paymented',
+    DONE: 'Done',
+    CANCELED: 'Canceled',
+    REJECTED: 'Rejected',
+};
 
 
 module.exports = {
     UserStatus,
-    ProductCategory,
-    ProductCondition,
+    PRODUCT_CATEGORY,
+    PRODUCT_CONDITION,
+    PRODUCT_TYPE,
     ProductStatus,
     NotificationType,
     EmailType,
@@ -97,5 +124,7 @@ module.exports = {
     PaymentGateways,
     VNPayResponse,
     IpnResponse,
-    REDIS_KEYS
+    REDIS_KEYS,
+    PRODUCT_STATUS,
+    AUCTION_STATUS
 };

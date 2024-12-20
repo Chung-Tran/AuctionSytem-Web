@@ -121,7 +121,7 @@ const verifySocketToken =async (socket, next) => {
                     // Kiểm tra refresh token
                     const refreshTokenRecord = await RefreshToken.findOne({ userId, sessionKey }).exec();
                     if (!refreshTokenRecord || !refreshTokenRecord.token || new Date() > refreshTokenRecord.expiresAt) {
-                        return next(new Error('Token hết hạn'));
+                        return socket.emit('sessionExpire', { Authentication: false });
                     }
 
                     // Tạo token mới
@@ -136,7 +136,7 @@ const verifySocketToken =async (socket, next) => {
                     next();
                 } catch (refreshError) {
                     console.error('Lỗi khi làm mới token:', refreshError);
-                    return next(new Error('Lỗi xác thực'));
+                    return socket.emit('sessionExpire', { Authentication: false });
                 }
             } else {
                 return next(new Error('Token không hợp lệ'));

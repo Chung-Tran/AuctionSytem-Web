@@ -9,7 +9,7 @@ import { PAYMENT_STATUS, POLLING_CONFIG } from '../../commons/Constant';
 import { formatCurrency, formatDateTime } from '../../commons/MethodsCommons';
 import { CheckCircle2 } from 'lucide-react';
 const { Step } = Steps;
-const RegistrationSteps = ({ auction, onClose,userId }) => {
+const RegistrationSteps = ({ auction, onClose, userId, callback }) => {
   const [current, setCurrent] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState('vnpay');
@@ -21,8 +21,9 @@ const RegistrationSteps = ({ auction, onClose,userId }) => {
   const { handleVnpayPayment, paymentStatus, error, isPolling } = usePaymentPolling(
     (response) => {
       setPaymentSuccess(true);
-      setPaymenInfo(response)
-      setPaymentLoading(false)
+      setPaymenInfo(response);
+      setPaymentLoading(false);
+      callback("RegisterSuccess")
     },
     (error) => {
       setPaymentSuccess(false);

@@ -14,7 +14,7 @@ const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
   { path: '/auction/approve', name: 'Duyệt phiên đấu giá', element: AuctionApprove },
-  { path: '/auction/manager', name: 'Quản lí phiên đấu giá', element: AuctionManager },
+  { path: '/auction/manager', name: 'Quản lý phiên đấu giá', element: AuctionManager },
   { path: '/user/manager', name: 'Nhân sự', element: user },
   { path: '/user/role', name: 'Phân quyền', element: role },
   { path: '/minimart/sales', name: 'Bán hàng', element: sales },

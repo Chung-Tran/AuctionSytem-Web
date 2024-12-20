@@ -22,7 +22,7 @@ const ProductDetail = () => {
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
     const [auctionRelate, setAuctionRelate] = useState([]);
     const [isRegistrationModalVisible, setIsRegistrationModalVisible] = useState(false);
-    const [registerStatus, setRegisterStatus] = useState(REGISTER_STATUS.ALLOW);
+    const [registerStatus, setRegisterStatus] = useState(REGISTER_STATUS.NOT_ALLOW);
     const navigate = useNavigate();
     useEffect(() => {
         const fetchData = async () => {
@@ -57,7 +57,16 @@ const ProductDetail = () => {
     const calculateTimeLeft = useCallback((startTime) => {
         const now = new Date()
         const targetDate = new Date(startTime)
-        const difference = targetDate - now
+        const difference = targetDate - now;
+        //reset button
+        if (now < new Date(auction?.registrationOpenDate)) {
+            setRegisterStatus(REGISTER_STATUS.NOT_ALLOW)
+        } else if (now == new Date(auction?.registrationOpenDate)) {
+            setRegisterStatus(REGISTER_STATUS.ALLOW)
+        } else if (now == new Date(auction?.registrationCloseDate)) {
+            setRegisterStatus(REGISTER_STATUS.EXPIRED)
+        }
+
         if (difference > 0) {
             const days = Math.floor(difference / (1000 * 60 * 60 * 24))
             const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
@@ -95,6 +104,20 @@ const ProductDetail = () => {
             toggleLoginModal(true);
         else {
             setIsRegistrationModalVisible(true)
+        }
+    }
+    if (new Date() == new Date())
+    {
+
+    }
+    const handleCallback = (callbackType,value) => {
+        switch (callbackType) {
+            case "RegisterSuccess":
+                setRegisterStatus(REGISTER_STATUS.REGISTERED)
+                break;
+        
+            default:
+                break;
         }
     }
     return !!auction && (
@@ -209,7 +232,9 @@ const ProductDetail = () => {
                                             'bg-primary'} 
                                             h-11 rounded-md px-8 text-white`}
                                 onClick={handleRegister}
-                                disabled={registerStatus === REGISTER_STATUS.EXPIRED || registerStatus === REGISTER_STATUS.REGISTERED}
+                                disabled={registerStatus === REGISTER_STATUS.EXPIRED
+                                    || registerStatus === REGISTER_STATUS.REGISTERED
+                                    || registerStatus == REGISTER_STATUS.NOT_ALLOW}
                             >
                                 {registerStatus === REGISTER_STATUS.REGISTERED ? 'Already Registered':
                                     registerStatus === REGISTER_STATUS.EXPIRED ? 'Registration Expired'  :
@@ -283,6 +308,7 @@ const ProductDetail = () => {
                     auction={auction}
                     onClose={() => setIsRegistrationModalVisible(false)}
                     userId={user.userId}
+                    callback={handleCallback}
                 />
             )}
         </div>

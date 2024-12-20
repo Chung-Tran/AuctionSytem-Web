@@ -7,7 +7,7 @@ import AuctionService from '../../services/AuctionService';
 import auctionMeta from '../../assets/auctionMeta.png'
 import { countdown, formatCurrency, formatDate } from '../../commons/MethodsCommons';
 import LoadingSpinner from '../LoadingSpinner';
-import { REGISTER_STATUS } from '../../commons/Constant';
+import { AUCTION_STATUS, REGISTER_STATUS } from '../../commons/Constant';
 import { AppContext } from '../../AppContext';
 import { Helmet } from 'react-helmet';
 const Home = () => {
@@ -21,9 +21,9 @@ const Home = () => {
         try {
             setIsLoading(true);
             const [auctionList, standingAuction, completedAuctions] = await Promise.all([
-                AuctionService.getList({ limit: 4, page: 1, status: 'pending' }),
-                AuctionService.getOutstanding({ limit: 4, page: 1, status: 'pending' }),
-                AuctionService.getList({ limit: 4, page: 1, status: 'ended' })
+                AuctionService.getList({ limit: 4, page: 1, status: AUCTION_STATUS.APPROVED }),
+                AuctionService.getOutstanding({ limit: 4, page: 1, status: AUCTION_STATUS.APPROVED }),
+                AuctionService.getList({ limit: 4, page: 1, status: AUCTION_STATUS.DONE })
             ]);
 
             setAuctions(auctionList.docs);

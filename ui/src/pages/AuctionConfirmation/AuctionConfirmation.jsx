@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CheckCircleOutlined } from '@ant-design/icons';
 import {
     Layout,
@@ -18,41 +18,63 @@ import productTemplate from '../../assets/productTemplate.jpg';
 import mastercardLogo from '../../assets/mastercardLogo.png';
 import vnpaylogo from '../../assets/vnpaylogo.jpg';
 import { usePaymentPolling } from '../ProductDetail/RegistrationSteps';
-import { formatCurrency, openNotify } from '../../commons/MethodsCommons';
+import { formatCurrency, formatDate, openNotify } from '../../commons/MethodsCommons';
 import { Helmet } from 'react-helmet';
+import { useParams } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
+import AuctionService from '../../services/AuctionService';
+import NotFound from '../NotFound';
+import { AUCTION_STATUS } from '../../commons/Constant';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 
 export default function AuctionConfirmation() {
+    const { token } = useParams()
     const [paymentMethod, setPaymentMethod] = useState('pickup');
     const [paymentType, setPaymentType] = useState('pickup');
     const [isPaid, setIsPaid] = useState(false);
     const [isConfirm, setIsConfirm] = useState(false);
     const [paymentLoading, setPaymentLoading] = useState(false);
     const [termsChecked, setTermsChecked] = useState(false);
+    const [confirmData, setConfirmData] = useState(null);
+    const [auction, setAuction] = useState(null);
+    const [product, setProduct] = useState(null);
+    const [user, setUser] = useState(null);
     const { handleVnpayPayment, paymentStatus, error, isPolling } = usePaymentPolling(
         (response) => {
-            setIsPaid(true);
+            // setIsPaid(true);
+            setPaymentLoading(false);
+            fetchData();
         },
         (error) => {
             openNotify('error', 'Payment failed. Try again!!')
         }
     );
+    const fetchData = async () => {
+        const { auctionId, customerId, productId } = jwtDecode(token);
+        const data = await AuctionService.confirmAuction({ auctionId, customerId, productId });
+        setConfirmData(data)
+        setIsPaid(data.isPaied)
+        setAuction(data.auction)
+        setProduct(data.product);
+        setIsConfirm(data.auction?.status == AUCTION_STATUS.WINNER_PAYMENTED);
+    }
+    
+    useEffect(() => {
+       try {
+           const { auctionId, customerId, productId } = jwtDecode(token);
+           setUser(customerId)
+           fetchData();
+       } catch (error) {
+           return <NotFound/>
+       }
+    },[])
+    
 
     const handleStartPayment = () => {
-        handleVnpayPayment({ _id: '67022c2571559f5b1150a8c6', userId: '66f836c4c2f85b1bc07d369f', amount: 70000 }, 'confirm');
+        handleVnpayPayment({ _id: auction._id, userId: user, amount: (auction.winningPrice - auction.deposit )}, 'confirm');
         setPaymentLoading(true);
-    };
-
-    const auction = {
-        productName: 'Vintage Watch',
-        winningBid: 1500,
-        registrationFee: 100,
-        deposit: 400,
-        transactionId: 'AUC12345',
-        pickupLocation: '123 Auction St, City Center, Ho Chi Minh City',
-        paymentDeadline: '2024-12-10',
     };
 
     // Hàm render card phương thức thanh toán
@@ -71,7 +93,7 @@ export default function AuctionConfirmation() {
             </Card>
         </Radio>
     );
-    const handleConfirm = () => {
+    const handleConfirm =async () => {
         if (!termsChecked) {
             message.error('You must agree to the terms and conditions.');
             return;
@@ -82,10 +104,13 @@ export default function AuctionConfirmation() {
             return;
         }
 
-        setIsConfirm(true);
-        message.success('Confirmation submitted.');
+       try {
+           const confirm = await AuctionService.updateStatus(auction._id, AUCTION_STATUS.WINNER_PAYMENTED)
+       } catch (error) {
+        console.log(error)
+       }
     };
-    return (
+    return auction && product && (
         <>
             <Helmet>
                 <title>Auction Confirm</title>
@@ -106,8 +131,8 @@ export default function AuctionConfirmation() {
                                 <div><CheckCircleOutlined className="mr-3 text-white" />
                                     Auction Confirmation</div>
                             </Title>
-                            <Text className="text-black text-sm">
-                                Please confirm payment by <strong>{auction.paymentDeadline}</strong>
+                            <Text className="text-black text-sm" >
+                                Please confirm payment by <strong>{formatDate(new Date(new Date(auction.endTime).setDate(new Date(auction.endTime).getDate() + 2)))}</strong>
                             </Text>
                         </Header>
 
@@ -116,35 +141,35 @@ export default function AuctionConfirmation() {
                             <Row gutter={16} align="middle" className="bg-gray-50 p-4 rounded-lg">
                                 <Col xs={24} sm={6} className="text-center mb-4 sm:mb-0">
                                     <img
-                                        src={productTemplate}
+                                        src={product?.images[0] || productTemplate}
                                         alt="Product Image"
                                         className="mx-auto rounded-xl border-2 border-blue-100 shadow-md max-w-[120px] max-h-[120px] object-cover"
                                     />
                                 </Col>
                                 <Col xs={24} sm={18}>
                                     <Title level={3} className=" text-center sm:text-left">
-                                        {auction.productName}
+                                        {product.productName}
                                     </Title>
                                     <div className="text-center sm:text-left">
                                         {/* <Text className="text-green-600 text-lg font-bold block">
                                         Winning Bid: ${auction.winningBid}
                                     </Text> */}
                                         <Text type="secondary" className="text-sm block ">
-                                            Transaction ID: {auction.transactionId}
+                                            Transaction ID: {auction._id}
                                         </Text>
                                         <div className="flex justify-between">
                                             <span className="font-medium w-28 mr-4">Winning Bid:</span>
-                                            <span className="font-normal text-left w-1/2">{formatCurrency(7000000)}</span>
+                                            <span className="font-normal text-left w-1/2">{formatCurrency(auction.winningPrice)}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="font-medium w-28 mr-4">Deposit:</span>
-                                            <span className="font-normal text-left w-1/2">- {formatCurrency(7000000)}</span>
+                                            <span className="font-normal text-left w-1/2">- {formatCurrency(auction.deposit)}</span>
                                         </div>
 
                                         <div className="flex justify-between">
                                             <span className="font-medium w-28 mr-4">Total Receiving:</span>
                                             <span className=" text-left w-1/2 font-bold"> {formatCurrency(
-                                                auction.winningPrice - auction.deposit + auction.registrationFee
+                                                auction.winningPrice - auction.deposit
                                             )}</span>
                                         </div>
 
@@ -231,14 +256,14 @@ export default function AuctionConfirmation() {
                                 <Title level={4} className="mb-4">Pickup Location</Title>
                                 <Card className="bg-gray-100 rounded-lg p-4">
                                     <Text strong className="block mb-2">Pickup Address:</Text>
-                                    <Text className="block">{auction.pickupLocation}</Text>
+                                    <Text className="block">Le Van Viet, Thu Duc, TP. Ho Chi Minh</Text>
                                 </Card>
                             </Space>
 
                             {/* Terms and Confirmation */}
                             <Space direction="vertical" className="w-full">
 
-                                <Checkbox checked={termsChecked} onClick={(e) => setTermsChecked(!termsChecked)}>
+                                <Checkbox checked={termsChecked || isConfirm} disabled={isConfirm} onClick={(e) => setTermsChecked(!termsChecked)}>
                                     I agree to the <a href="#" className="text-blue-600 hover:underline">terms and conditions</a>
                                 </Checkbox>
                                 {!isConfirm ? (
