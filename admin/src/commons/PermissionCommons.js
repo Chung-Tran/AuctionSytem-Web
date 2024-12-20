@@ -32,11 +32,11 @@ export const SYSTEM_PERMISSION = [
                 PermissionID:7
             },
             {
-                PermissionName: 'Xem lịch sử quản lí phiên đấu giá',
+                PermissionName: 'Xem lịch sử quản lý phiên đấu giá',
                 PermissionID:8
             },
             {
-                PermissionName: 'Xóa lịch sử quản lí phiên đấu giá',
+                PermissionName: 'Xóa lịch sử quản lý phiên đấu giá',
                 PermissionID:9
             },
         ]

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import io, { connect } from 'socket.io-client';
 import { openNotify } from '../commons/MethodsCommons';
+import { useNavigate } from 'react-router-dom';
 
 const SOCKET_SERVER_URL = process.env.REACT_APP_API_URL;
 
@@ -17,7 +18,7 @@ export const useAuctionSocket = (auctionId,
   const [auctionData, setAuctionData] = useState(null);
   const [currentBid, setCurrentBid] = useState(0);
   const [error, setError] = useState(null);
-
+  const navigate = useNavigate();
   useEffect(() => {
     if (socketRef.current) {
       socketRef.current.disconnect();
@@ -77,6 +78,12 @@ export const useAuctionSocket = (auctionId,
     const socket = socketRef.current;
     if (!socket || !auctionId) return;
 
+    const handleSessionExpire = () => {
+      localStorage.removeItem("token");
+      openNotify('error', 'Session is expire. Login again!');
+      return navigate('/')
+    };
+
     const handleRoomJoined = (data) => {
       if (onRoomJoined) {
         onRoomJoined(data);
@@ -118,6 +125,8 @@ export const useAuctionSocket = (auctionId,
         socket.emit('joinAuctionRoom', auctionId);
       });
     }
+
+    socket.on('sessionExpire', handleSessionExpire);
 
     socket.on('roomJoined', handleRoomJoined);
     socket.on('bidUpdated', handleBidUpdate);

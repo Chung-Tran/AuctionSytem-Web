@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CButton, CCol, CForm, CTable, CFormInput, CFormTextarea, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react';
+import { CButton, CCol, CForm, CTable, CFormInput, CFormTextarea, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader, CRow,CFormSelect } from '@coreui/react';
 import { useFormik } from 'formik';
 import { toast } from 'react-toastify';
 import * as Yup from 'yup';
@@ -9,30 +9,26 @@ import roleApi from 'service/RoleService';
 import employeeApi from '../../service/EmployeeService';
 import moment from 'moment';
 import TabPane from 'antd/es/tabs/TabPane';
-import { List, Tabs } from 'antd';
-import { MODAL_TYPES, AuctionStatus, ProductCategory, ProductCondition, ProductStatus } from '../../commons/Constant'
+import { Image, List, Tabs } from 'antd';
+import { MODAL_TYPES, AuctionStatus, ProductCategory, ProductCondition, ProductStatus, PRODUCT_CATEGORY_DATASOURCE, PRODUCT_CONDITION_DATASOURCE, PRODUCT_STATUS_DATASOURCE, PRODUCT_TYPE_DATASOURCE, AUCTION_STATUS_DATASOURCE, PRODUCT_STATUS, AUCTION_STATUS } from '../../commons/Constant'
 import noImage from '../../assets/images/no-image.jpg'
+import { formatCurrency, parseCurrency } from 'commons/MethodsCommon';
 
 // Validation schema
 const approvalValidationSchema = Yup.object({
   startTime: Yup.date()
-    .required('Vui lòng nhập thời gian bắt đầu')
-    .min(new Date(), 'Thời gian bắt đầu phải lớn hơn thời gian hiện tại'),
+    .required('Vui lòng nhập thời gian bắt đầu'),
   endTime: Yup.date()
-    .required('Vui lòng nhập thời gian kết thúc')
-    .min(Yup.ref('startTime'), 'Thời gian kết thúc phải lớn hơn thời gian bắt đầu'),
+    .required('Vui lòng nhập thời gian kết thúc'),
   registrationFee: Yup.number().required('Vui lòng nhập phí đăng ký'),
   registrationOpenDate: Yup.date()
-    .required('Vui lòng nhập ngày mở đăng ký')
-    .max(Yup.ref('registrationCloseDate'), 'Ngày mở đăng ký phải nhỏ hơn ngày đóng đăng ký'),
+    .required('Vui lòng nhập ngày mở đăng ký'),
   registrationCloseDate: Yup.date()
-    .required('Vui lòng nhập ngày đóng đăng ký')
-    .max(Yup.ref('startTime'), 'Ngày đóng đăng ký phải nhỏ hơn thời gian bắt đầu'),
+    .required('Vui lòng nhập ngày đóng đăng ký'),
 });
 
 const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
   const [rejectReason, setRejectReason] = useState('');
-  const [dataCustomerDetails, setDataCustomerDetails] = useState(data?.customerDetails || []);
   const [approvalAction, setApprovalAction] = useState();
 
   const [detailAuction, setDetailAuction] = useState (); 
@@ -43,7 +39,6 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
   const [hoveredItem, setHoveredItem] = useState(null); // Trạng thái để theo dõi dòng đang hover
 
   useEffect(()=>{
-    console.log("dataAuction: ", data);
     const fetchDataDetailAuction = async () => {
       const getDetailAuctionByID = await auctionAPI.getDetailAuctionByID(data?._id || '');
         if(getDetailAuctionByID.success){
@@ -53,21 +48,19 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
     };
     fetchDataDetailAuction();
     
-    console.log("dataDetailAuction: ", detailAuction);
   }, [data])
   
-  const isEditable = type === MODAL_TYPES.APPROVE || type === MODAL_TYPES.UPDATE || type === MODAL_TYPES.RECOVER;
+  const isEditable = type === MODAL_TYPES.APPROVE || type === MODAL_TYPES.UPDATE;
 
   const formatDateTime = (value) => {
     if (!value || value === 'Đợi duyệt') return '';
-    // return moment(value).format('HH:mm || DD-MM-YYYY ');
     return moment(value).format('YYYY-MM-DD HH:mm');
   };
 
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      // _id: data?._id || '',
+      // AUCTION
       _id: data?._id?.toString() || '',
       title: data?.title || '',
       description: data?.description || '',
@@ -78,11 +71,10 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
       startingPrice: data?.startingPrice || '',
       currentPrice: data?.currentPrice || '',
       currentViews: data?.currentViews || '',
-      viewCount: data?.viewCount || '',
       bidIncrement: data?.bidIncrement || '',
       registrationOpenDate: formatDateTime(data?.registrationOpenDate || ''),
       registrationCloseDate: formatDateTime(data?.registrationCloseDate || ''),
-      status: AuctionStatus[data?.status || ''],
+      status: data?.status || '',
       cancellationReason: data?.cancellationReason || '',
       deposit: data?.deposit || '',
       registrationFee: data?.registrationFee || '',
@@ -92,14 +84,19 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
       approvalBy: approvalAction?.userBy?.username || '',
       updatedAt: formatDateTime(data?.updatedAt || ''),
       updatedBy: data?.updatedBy || '', 
+
+      //PRODUCT
       productName: data?.productName || '',
-      productImages: data?.productImages || '',
+      productImages: data?.productImages || [],
       productDescription: data?.productDescription || '',
       productAddress: data?.productAddress || '',
-      productCategory: ProductCategory[data?.productCategory || ''],
-      productCondition: ProductCondition[data?.productCondition || ''],
-      productStatus: ProductStatus[data?.productStatus || ''],
+      productCategory: data?.productCategory || '',
+      productType: data?.productType || '',
+      productCondition: data?.productCondition || '',
+      productStatus: data?.productStatus || '',
       productCreate: formatDateTime(data?.productCreate || ''),
+
+      //REGISTER LIST
       registeredUsers: data?.registeredUsers || '',
       username: data?.username || '',
       userCode: data?.userCode || '',
@@ -111,17 +108,57 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
       createdCustomerAt: formatDateTime(data?.createdCustomerAt || ''),
 
     },
-    validationSchema: (type === MODAL_TYPES.APPROVE || type === MODAL_TYPES.UPDATE || type === MODAL_TYPES.RECOVER) ? approvalValidationSchema : null,
+    validationSchema: (type === MODAL_TYPES.APPROVE || type === MODAL_TYPES.UPDATE) ? approvalValidationSchema : null,
     onSubmit: values => {
       handleSubmit(values)
-      console.log("Auction detail:", );
-
     },
-    // onSubmit: handleSubmit,
   });
 
   async function handleSubmit(values) {
     try {
+      const now = moment();
+      // Validate date time
+      if (values.registrationOpenDate) {
+        const registrationOpenDate = moment(values.registrationOpenDate);
+        if (registrationOpenDate.isBefore(now)) {
+          toast.error('Thời gian mở đăng ký phải sau thời gian hiện tại');
+          return;
+        }
+
+        if (values.registrationCloseDate) {
+          const registrationCloseDate = moment(values.registrationCloseDate);
+          if (registrationCloseDate.isBefore(registrationOpenDate)) {
+            toast.error('Thời gian đóng đăng ký phải sau thời gian mở đăng ký');
+            return;
+          }
+        }
+      }
+
+      if (values.startTime) {
+        const startTime = moment(values.startTime);
+
+        if (startTime.isBefore(now)) {
+          toast.error('Thời gian bắt đầu phải sau thời gian hiện tại');
+          return;
+        }
+
+        if (values.registrationCloseDate) {
+          const registrationCloseDate = moment(values.registrationCloseDate);
+          if (registrationCloseDate.isSameOrAfter(startTime)) {
+            toast.error('Thời gian đóng đăng ký phải trước thời gian bắt đầu');
+            return;
+          }
+        }
+
+        if (values.endTime) {
+          const endTime = moment(values.endTime);
+          if (endTime.isSameOrBefore(startTime)) {
+            toast.error('Thời gian kết thúc phải sau thời gian bắt đầu');
+            return;
+          }
+        }
+      }
+    
       const formattedValues = {
         ...values,
         startTime: values.startTime && moment(values.startTime, moment.ISO_8601, true).isValid()
@@ -148,7 +185,10 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
       
       switch (type) {
         case MODAL_TYPES.APPROVE:
-          console.log("Auction ID:", values._id);
+          if (values.productStatus != PRODUCT_STATUS.RECEIVED)
+          {
+            return toast.error('Vui lòng cập nhật trạng thái sản phẩm trước khi duyệt')
+          }
           response = await auctionAPI.approve(userId, values._id, formattedValues);
           break;
         case MODAL_TYPES.REJECT:
@@ -168,9 +208,9 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
           }
           response = await auctionAPI.reject(userId, values._id, rejectReason);
           break;
-        case MODAL_TYPES.RECOVER:
-          response = await auctionAPI.approve(userId, values._id, formattedValues);
-          break;
+        // case MODAL_TYPES.RECOVER:
+        //   response = await auctionAPI.approve(userId, values._id, formattedValues);
+        //   break;
         case MODAL_TYPES.END:
           if (!rejectReason) {
             toast.error('Vui lòng nhập lý do đóng phiên đấu giá');
@@ -209,40 +249,62 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
     const deleteHistory = await auctionAPI.deleteHistoryManagementAction(auctionId, managementActionId);
     if(deleteHistory.success){
       setDetailAuction(deleteHistory.data);
-      toast.success("Xóa lịch sử quản lí đấu giá thành công");
+      toast.success("Xóa lịch sử quản lý đấu giá thành công");
     }else{
-      toast.error(deleteHistory.message || 'Xóa lịch sử quản lí đấu giá thất bại!');
+      toast.error(deleteHistory.message || 'Xóa lịch sử quản lý đấu giá thất bại!');
     } 
   }
 
-  const renderFormField = (label, name, inputType = 'text') => (
-    <CCol md="6" className="mb-3">
+  const renderFormField = (label, name, inputType = 'text', dataSource = [], disabled = false) => (
+    <CCol md={name == 'productDescription' ? "12" : "6"} className="mb-3">
       <CRow>
-        <CCol md="4">
+        <CCol md={name == 'productDescription' ? "2" : "4"}>
           <CFormLabel className="mt-1">{label}</CFormLabel>
         </CCol>
-        <CCol md="7">
-          {name === 'productDescription' || name === 'description' ? (
+        <CCol md={name == 'productDescription' ? "10" : "7"}>
+          {inputType === 'textarea' || name === 'productDescription' || name === 'description' ? (
             <CFormTextarea
               name={name}
               value={formik.values[name]}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              disabled={!isEditable}
-              rows={4} 
+              disabled={!isEditable || disabled}
+              rows={6} 
               style={{
                 resize: 'none', // Vô hiệu hóa khả năng thay đổi kích thước thủ công
               }}
               className={!isEditable ? 'textarea-readonly' : ''}
             />
-          ) : (
-            <CFormInput
-              type={inputType}
+          ) : inputType === 'select' ? (
+            <CFormSelect
               name={name}
               value={formik.values[name]}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              disabled={!isEditable}
+              disabled={!isEditable || disabled}
+              className={!isEditable ? 'select-readonly' : ''}
+            >
+              <option value=""></option>
+              {dataSource.map((item, index) => (
+                <option key={index} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </CFormSelect>
+          ) : (
+            <CFormInput
+              type={inputType == 'number' ? null : inputType}
+              name={name}
+              value={inputType == 'number' ? formatCurrency(formik.values[name]) : formik.values[name]}
+              onChange={
+                inputType == 'number' ?
+                  (e) => {
+                    const rawValue = parseCurrency(e.target.value);
+                    formik.setFieldValue(name, rawValue || null);
+                  }
+                  : formik.handleChange}
+              onBlur={formik.handleBlur}
+              disabled={!isEditable || disabled}
               className={!isEditable ? 'input-readonly' : ''}
             />
           )}
@@ -253,6 +315,7 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
       </CRow>
     </CCol>
   );
+  
   
   const hasPermission = (permission) => permissionValue.includes(permission);
 
@@ -268,7 +331,7 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
         {type === MODAL_TYPES.REJECT && 'Từ chối phiên đấu giá'}
         {type === MODAL_TYPES.UPDATE && 'Điều chỉnh phiên đấu giá'}
         {type === MODAL_TYPES.CANCEL && 'Hủy phiên đấu giá'}
-        {type === MODAL_TYPES.RECOVER && 'Khôi phục phiên đấu giá'}
+        {/* {type === MODAL_TYPES.RECOVER && 'Khôi phục phiên đấu giá'} */}
         {type === MODAL_TYPES.END && 'Đóng phiên đấu giá'}
       </CModalHeader>
 
@@ -278,10 +341,10 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
             <CForm onSubmit={formik.handleSubmit}>
               <CRow>
                 {renderFormField('Title', 'title')}
-                {renderFormField('Mô tả', 'description')}
+                {/* {renderFormField('Mô tả', 'description')} */}
                 {renderFormField('Người đăng ký', 'sellerName')}
                 {renderFormField('Tên đấu phẩm', 'productName')}
-                {renderFormField('Email', 'contactEmail', 'email')}
+                {renderFormField('Email liên hệ', 'contactEmail', 'email')}
                 {renderFormField('Giá khởi điểm', 'startingPrice', 'number')}
                 {/* {status === 'active' && (renderFormField('Giá hiện tại', 'currentPrice'))} */}
 
@@ -292,19 +355,19 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
                 {renderFormField('Thời gian kết thúc', 'endTime', 'datetime-local')}
                 {renderFormField('Phí đặt cọc', 'deposit', 'number')}
                 {renderFormField('Phí đăng ký phiên đấu giá', 'registrationFee', 'number')}
-                {renderFormField('Trạng thái phiên đấu giá', 'status')}
+                {renderFormField('Trạng thái phiên đấu giá', 'status','select',AUCTION_STATUS_DATASOURCE, true)}
 
-                {status === 'active' && (renderFormField('Số lượng người xem', 'viewCount'))}
+                {/* {status === 'active' && (renderFormField('Số lượng người xem', 'viewCount'))} */}
 
-                {(status === 'pending' || status === 'active' || status === 'ended') && (renderFormField('Người duyệt', 'approvalBy'))}
-                {(status === 'pending' || status === 'active' || status === 'ended') && (renderFormField('Thời điểm duyệt', 'approvalTime', 'datetime-local'))}
+                {(status === AUCTION_STATUS.PENDING || status === AUCTION_STATUS.APPROVED || status === AUCTION_STATUS.DONE) && (renderFormField('Người duyệt', 'approvalBy', undefined, undefined, true))}
+                {(status === AUCTION_STATUS.PENDING || status === AUCTION_STATUS.APPROVED || status === AUCTION_STATUS.DONE) && (renderFormField('Thời điểm duyệt', 'approvalTime', 'datetime-local', undefined, true))}
                 {/* {(status === 'pending' || status === 'active' || status === 'ended') && (renderFormField('Người điều chỉnh', 'updatedBy'))}
                 {(status === 'pending' || status === 'active' || status === 'ended') && (renderFormField('Thời điểm điều chỉnh', 'updatedAt', 'datetime-local'))} */}
 
-                {status === 'ended' && (renderFormField('Người mua', 'winner'))}
-                {status === 'ended' && (renderFormField('Giá mua', 'winningPrice'))}
+                {status === AUCTION_STATUS.DONE && (renderFormField('Người mua', 'winner', undefined, undefined, true))}
+                {status === AUCTION_STATUS.DONE && (renderFormField('Giá mua', 'winningPrice', undefined, undefined, true))}
 
-                {status === 'cancelled' && (renderFormField('Lí do phiên đấu giá bị hủy', 'cancellationReason'))}
+                {status === AUCTION_STATUS.REJECTED && (renderFormField('Lí do từ chối', 'cancellationReason'))}
 
                 {type === MODAL_TYPES.REJECT && (
                   <CCol md="12" className="mb-3">
@@ -341,23 +404,36 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
           </TabPane>
 
           <TabPane tab="Thông tin sản phẩm"  key="2">
-          <CForm onSubmit={formik.handleSubmit}>
+            <CForm onSubmit={formik.handleSubmit}>
+              <CRow className='mb-3' >
+                <CCol md="2">
+                  <CFormLabel className="mt-1">Hình ảnh</CFormLabel>
+                </CCol>
+                <CCol md="10">
+                  {formik.values.productImages?.map(item => (
+                    <Image src={ item} width={150} preview={false} />
+                 ))}
+                </CCol>
+              </CRow>
               <CRow>
                 {renderFormField('Tên sản phẩm', 'productName')}
-                {renderFormField('Mô tả', 'productDescription')}
-                {renderFormField('Giá khởi điểm', 'startingPrice')}
+                
+                {renderFormField('Giá khởi điểm', 'startingPrice','number')}
 
                 {renderFormField('Địa chỉ sản phẩm', 'productAddress')}
-                {renderFormField('Danh mục sản phẩm', 'productCategory')}
-                {renderFormField('Tình trạng sản phẩm', 'productCondition')}
-                {renderFormField('Trạng thái đấu giá', 'productStatus')}
-                {renderFormField('Thời gian xuất hiện', 'productCreate', 'datetime-local')}
+                {renderFormField('Danh mục ', 'productCategory','select',PRODUCT_CATEGORY_DATASOURCE)}
+                {renderFormField('Tình trạng ', 'productCondition','select',PRODUCT_CONDITION_DATASOURCE)}
+                {renderFormField('Thể loại', 'productType','select',PRODUCT_TYPE_DATASOURCE)}
+                {/* {renderFormField('Thời gian xuất hiện', 'productCreate', 'datetime-local')} */}
 
                 {renderFormField('Người bán', 'sellerName')}
-                {renderFormField('Email', 'contactEmail', 'email')}
+                {renderFormField('Trạng thái sản phẩm', 'productStatus','select',PRODUCT_STATUS_DATASOURCE)}
+                {/* {renderFormField('Email', 'contactEmail', 'email')} */}
 
-                {status === 'ended' && (renderFormField('Người mua', 'winner'))}
-                {status === 'ended' && (renderFormField('Giá mua', 'currentPrice'))}
+                {/* {status === 'ended' && (renderFormField('Người mua', 'winner'))}
+                {status === 'ended' && (renderFormField('Giá mua', 'currentPrice'))} */}
+
+                {renderFormField('Mô tả', 'productDescription')}
               </CRow>
               
             </CForm>
@@ -441,7 +517,7 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
             )}
           </TabPane>
 
-          {hasPermission("8") && <TabPane tab="Lịch sử quản lí" key="4">
+          {hasPermission("8") && <TabPane tab="Lịch sử quản lý" key="4">
           {detailAuction?.managementAction?.length ? (
             <div>
               <div className="d-flex w-100 justify-content-between header-row mb-3">
@@ -508,14 +584,14 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
       <CModalFooter> 
         {type !== MODAL_TYPES.VIEW && (
           <CButton
-            color={(type === MODAL_TYPES.APPROVE || type === MODAL_TYPES.UPDATE || type ===MODAL_TYPES.RECOVER) ? 'success' : 'danger'}
+            color={(type === MODAL_TYPES.APPROVE || type === MODAL_TYPES.UPDATE) ? 'success' : 'danger'}
             onClick={formik.handleSubmit}
           >
             {type === MODAL_TYPES.APPROVE && 'Duyệt'}
             {type === MODAL_TYPES.REJECT && 'Từ chối'}
             {type === MODAL_TYPES.UPDATE && 'Điều chỉnh'}
             {type === MODAL_TYPES.CANCEL && 'Hủy'}
-            {type === MODAL_TYPES.RECOVER && 'Khôi phục'}
+            {/* {type === MODAL_TYPES.RECOVER && 'Khôi phục'} */}
             {type === MODAL_TYPES.END && 'Đóng phiên'}
           </CButton>
         )}

@@ -22,7 +22,7 @@ const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
         // origin: "http://localhost:3033", 
-        origin: process.env.REACT_APP_CLIENT_URL, 
+        origin: ["http://localhost:3033", process.env.REACT_APP_CLIENT_URL], 
         methods: ["GET", "POST"],
         credentials: true
     }

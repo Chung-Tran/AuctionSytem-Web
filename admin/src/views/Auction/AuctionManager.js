@@ -3,18 +3,18 @@ import { CForm, CRow, CCol, CFormLabel, CFormInput, CButton } from '@coreui/reac
 import { List, Tabs } from 'antd';
 import auctionAPI from '../../service/AuctionService';
 import AuctionModal from './AuctionModal';
-import { AUCTION_STATUS, MODAL_TYPES, AuctionStatus} from '../../commons/Constant';
+import { AUCTION_STATUS, MODAL_TYPES, AuctionStatus, AUCTION_STATUS_DATASOURCE} from '../../commons/Constant';
 import '../../scss/AuctionApprove.scss';
 import noImage from '../../assets/images/no-image.jpg'
 import moment from 'moment';
 //
 const AuctionManager = () => {
   const [auctions, setAuctions] = useState({
-    new: [],
-    pending: [],
-    active: [],
-    ended: [],
-    cancelled: [],
+    PENDING: [],
+    APPROVED: [],
+    ACTIVE: [],
+    DONE: [],
+    REJECTED: [],
   });
   const [modalConfig, setModalConfig] = useState({
     visible: false,
@@ -26,7 +26,6 @@ const AuctionManager = () => {
     fullName: '',
     status: '',
   });
-  const [filteredAuctions, setFilteredAuctions] = useState(auctions); 
 
   const [activeTabKey, setActiveTabKey] = useState("1"); 
 
@@ -67,11 +66,11 @@ const AuctionManager = () => {
       ]);
 
       setAuctions({
-        new: newAuctions.data.docs,
-        pending: pendingAuctions.data.docs,
-        active: activeAuctions.data.docs,
-        ended: endedAuctions.data.docs,
-        cancelled: cancelledAuctions.data.docs,
+        PENDING: newAuctions.data.docs,
+        APPROVED: pendingAuctions.data.docs,
+        ACTIVE: activeAuctions.data.docs,
+        DONE: endedAuctions.data.docs,
+        REJECTED: cancelledAuctions.data.docs,
       });
     } catch (error) {
       console.error('Error fetching auctions:', error);
@@ -80,12 +79,10 @@ const AuctionManager = () => {
 
   useEffect(() => {
     fetchAuctions();
-    console.log("Auctionnn: ", auctions.ended)
   }, []);
 
   useEffect(() => {
     fetchAuctions();
-    console.log("Auctionnn: ", auctions.ended)
   }, [activeTabKey]);
 
   const handleFilter = (e) => {
@@ -96,28 +93,6 @@ const AuctionManager = () => {
       [name]: value
     }));
   };
-
-  /*useEffect(() => {
-    if (Array.isArray(auctions)) {
-      const filtered = auctions.filter(item => {
-        const matchProductName = filterParams.fullName
-          ? item.productName.toLowerCase().includes(filterParams.fullName.toLowerCase())
-          : true;
-        
-        const matchStatus = filterParams.status
-          ? item.status.toLowerCase() === filterParams.status.toLowerCase()
-          : true;
-        
-        return matchProductName && matchStatus;
-      });
-  
-      setFilteredAuctions(filtered);  // Cập nhật danh sách đã lọc
-    } else {
-      // Xử lý trường hợp auctions không phải là mảng
-      console.error('auctions is not an array:', auctions);
-      setFilteredAuctions([]);  // Đảm bảo là mảng rỗng khi auctions không phải mảng
-    }
-  }, [filterParams, auctions]); // Cập nhật khi filterParams hoặc auctions thay đổi*/
   
   const hasPermission = (permission) => permissionValue.includes(permission);
 
@@ -131,7 +106,7 @@ const AuctionManager = () => {
         </CButton>
       );
     }
-    if (hasPermission('2') && status === AUCTION_STATUS.NEW) {
+    if (hasPermission('2') && status === AUCTION_STATUS.PENDING) {
       buttons.push(
         <CButton key="approve" className="mx-2 btn-success" onClick={() => handleAction(MODAL_TYPES.APPROVE, item)}>
           Duyệt
@@ -141,14 +116,14 @@ const AuctionManager = () => {
         </CButton>
       );
     } 
-    if (status === AUCTION_STATUS.PENDING) {
-      if(hasPermission('3')){
-        buttons.push(
-          <CButton key="update" className="mx-2 btn-success" onClick={() => handleAction(MODAL_TYPES.UPDATE, item)}>
-            Điều chỉnh
-          </CButton>, 
-        );
-      }
+    if (status === AUCTION_STATUS.APPROVED) {
+      // if(hasPermission('3')){
+      //   buttons.push(
+      //     <CButton key="update" className="mx-2 btn-success" onClick={() => handleAction(MODAL_TYPES.UPDATE, item)}>
+      //       Điều chỉnh
+      //     </CButton>, 
+      //   );
+      // }
       if(hasPermission('4')){
         buttons.push(
           <CButton key="cancel" className="btn-danger" onClick={() => handleAction(MODAL_TYPES.CANCEL, item)}>
@@ -184,11 +159,11 @@ const AuctionManager = () => {
     }
     if (status === AUCTION_STATUS.CANCELLED) {
       if(hasPermission('5')){
-        buttons.push(
-          <CButton key="recover" className="mx-2 btn-success" onClick={() => handleAction(MODAL_TYPES.RECOVER, item)}>
-            Khôi phục
-          </CButton>, 
-        );
+        // buttons.push(
+        //   <CButton key="recover" className="mx-2 btn-success" onClick={() => handleAction(MODAL_TYPES.RECOVER, item)}>
+        //     Khôi phục
+        //   </CButton>, 
+        // );
       }
     }
     return buttons;
@@ -208,7 +183,7 @@ const AuctionManager = () => {
             </div>
           ]}
         >
-          <div style={{ width: '60%' }}>
+          <div style={{ width: '400px' }}>
             <List.Item.Meta
               avatar={
                 <img
@@ -227,7 +202,7 @@ const AuctionManager = () => {
               }
             />
           </div>
-          <div style={{ width: '30%', maxWidth:'320px' }}>
+          <div style={{ width: '170px'}}>
             <CRow className="d-flex align-items-center">
               <CFormLabel className="mb-0">Thời gian đăng kí</CFormLabel>
               <CFormLabel className="fw-semibold mb-0">
@@ -235,11 +210,11 @@ const AuctionManager = () => {
               </CFormLabel>
             </CRow>
           </div>
-          <div style={{ width: '30%', maxWidth:'320px' }}>
+          <div style={{ width: '200px' }}>
             <CRow className="d-flex align-items-center">
-              <CFormLabel className="mb-0">Trạng thái phiên</CFormLabel>
+              <CFormLabel className="mb-0">Trạng thái</CFormLabel>
               <CFormLabel className="fw-semibold mb-0">
-                {AuctionStatus[item.status]}
+                {AUCTION_STATUS_DATASOURCE.find(x=>x.value==item.status)?.label}
               </CFormLabel>
             </CRow>
           </div>
@@ -252,32 +227,32 @@ const AuctionManager = () => {
     {
       key: '1',
       label: 'Tất cả',
-      children: renderAuctionList([...auctions.new, ...auctions.pending, ...auctions.active, ...auctions.ended, ...auctions.cancelled])
+      children: renderAuctionList([...auctions.PENDING, ...auctions.APPROVED, ...auctions.ACTIVE, ...auctions.DONE, ...auctions.REJECTED])
     },
     {
       key: '2',
       label: 'Chờ duyệt',
-      children: renderAuctionList(auctions.new)
+      children: renderAuctionList(auctions.PENDING)
     },
     {
       key: '3',
       label: 'Sắp đấu giá',
-      children: renderAuctionList(auctions.pending)
+      children: renderAuctionList(auctions.APPROVED)
     },
     {
       key: '4',
       label: 'Đang đấu giá',
-      children: renderAuctionList(auctions.active)
+      children: renderAuctionList(auctions.ACTIVE)
     },
     {
       key: '5',
       label: 'Đã đấu giá',
-      children: renderAuctionList(auctions.ended)
+      children: renderAuctionList(auctions.DONE)
     },
     {
       key: '6',
       label: 'Đã hủy',
-      children: renderAuctionList(auctions.cancelled)
+      children: renderAuctionList(auctions.REJECTED)
     }
   ];
 
@@ -291,7 +266,7 @@ const AuctionManager = () => {
           <CRow md="12">
             <CRow className="col-md-6 mb-2">
               <CCol md="3" className="d-flex align-items-center">
-                <CFormLabel className="mt-2">Tên phiên đấu giá</CFormLabel>
+                <CFormLabel className="mt-2">Tên sản phẩm</CFormLabel>
               </CCol>
               <CCol md="7">
                 <CFormInput
@@ -303,7 +278,7 @@ const AuctionManager = () => {
             </CRow>
             <CRow className="col-md-6 mb-2">
               <CCol md="3" className="d-flex align-items-center">
-                <CFormLabel className="mt-2">Trạng thái phiên</CFormLabel>
+                <CFormLabel className="mt-2">Trạng thái</CFormLabel>
               </CCol>
               <CCol md="7">
                 <CFormInput
@@ -313,22 +288,11 @@ const AuctionManager = () => {
                 />
               </CCol>
           </CRow>
-            {/* <CRow className="col-md-6 mb-2">
-              <CCol md="3" className="d-flex align-items-center">
-                <CFormLabel className="mt-2">Tên sản phẩm</CFormLabel>
-              </CCol>
-              <CCol md="7">
-                <CFormInput name="productName" onChange={handleFilter} />
-              </CCol>
-            </CRow>
-            <CRow className="col-md-6 mb-2">
-              <CCol md="3" className="d-flex align-items-center">
-                <CFormLabel className="mt-2">Số điện thoại</CFormLabel>
-              </CCol>
-              <CCol md="7">
-                <CFormInput name="phoneNumber" onChange={handleFilter} />
-              </CCol>
-            </CRow> */}
+          </CRow>
+          <CRow >
+            <CCol md="2">
+            <CButton onClick={fetchAuctions}>Tìm kiếm</CButton>
+            </CCol>
           </CRow>
         </CForm>
       </CRow>

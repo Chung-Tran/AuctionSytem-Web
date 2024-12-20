@@ -3,13 +3,14 @@ import Breadcrumb from '../../components/BreadCrumb/BreadCrumb';
 import AuctioningItem from '../../components/Auctions/AuctioningItem';
 import AuctionService from '../../services/AuctionService';
 import { Helmet } from 'react-helmet';
+import { AUCTION_STATUS } from '../../commons/Constant';
 
 const AuctioningPage = () => {
     const [auctions, setAuctions] = useState([]);
     const [searchOptions, setSearchOptions] = useState({
         limit: 8,
         page: 1,
-        status: 'active'
+        status: AUCTION_STATUS.ACTIVE
     });
     useEffect(() => {
         const fetchData = async () => {

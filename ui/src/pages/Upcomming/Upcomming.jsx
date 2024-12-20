@@ -8,6 +8,7 @@ import AuctionService from '../../services/AuctionService';
 import LoadingSpinner from '../LoadingSpinner';
 import { countdown, formatCurrency } from '../../commons/MethodsCommons';
 import { Helmet } from 'react-helmet';
+import { AUCTION_STATUS } from '../../commons/Constant';
 const Upcomming = () => {
     const buttonSelect = "bg-primary text-white ";
     const [loading, setLoading] = useState(false);
@@ -16,14 +17,14 @@ const Upcomming = () => {
     const [searchOptions, setSearchOptions] = useState({
         limit: 8,
         page: 1,
-        status: 'pending'
+        status: AUCTION_STATUS.APPROVED
     });
     const [totalPages, setTotalPages] = useState(1);
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true)
             const auctionList = await AuctionService.getList(searchOptions);
-            const auctionHighlight = await AuctionService.getOutstanding({ limit: 4, page: 1, status: 'pending' });
+            const auctionHighlight = await AuctionService.getOutstanding({ limit: 4, page: 1, status: AUCTION_STATUS.APPROVED });
             if (auctionList && auctionHighlight) {
                 setAuctions(auctionList.docs);
                 setAuctionHighlight(auctionHighlight[0]);

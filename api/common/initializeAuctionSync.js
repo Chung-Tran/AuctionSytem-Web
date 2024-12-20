@@ -3,7 +3,7 @@ const Bull = require('bull');
 const { Auction, BidHistory } = require('../models/auction.model');
 const { Notification } = require('../models/notification.model');
 const redisClient = require('../config/redis');
-const { REDIS_KEYS, EmailType, NotificationType } = require('./constant');
+const { REDIS_KEYS, EmailType, NotificationType, AUCTION_STATUS } = require('./constant');
 const { endAuction } = require('../controllers/socket.controller');
 const { sendEmail } = require('../utils/email');
 const { default: mongoose } = require("mongoose");
@@ -16,12 +16,12 @@ const auctionQueue = new Bull('auction-management', process.env.REDIS_URL);
 const initializeAuctionSystem = async () => {
   try {
     const pendingAuctions = await Auction.find({
-      status: 'pending',
+      status: AUCTION_STATUS.PENDING,
       startTime: { $gt: new Date() }
     }).populate('product');
 
     const activeAuctions = await Auction.find({
-      status: 'active',
+      status: AUCTION_STATUS.ACTIVE,
       endTime: { $gt: new Date() }
     }).populate('product');
 
@@ -82,7 +82,7 @@ const scheduleAuctionEnd = async (auction) => {
 // check các phiên đấu giá mới
 const checkNewAuctions = async () => {
   const newAuctions = await Auction.find({
-    status: 'pending',
+    status: AUCTION_STATUS.PENDING,
     startTime: {
       $gt: new Date(),
       $lt: new Date(Date.now() + 24 * 60 * 60 * 1000)
@@ -108,9 +108,9 @@ auctionQueue.process('end-auction', async (job) => {
 const activateAuction = async (auctionId) => {
   try {
     const auction = await Auction.findById(auctionId).populate('product');
-    if (auction && auction.status === 'pending') {
+    if (auction && auction.status === AUCTION_STATUS.APPROVED) {
       console.log("start auction ", auctionId);
-      auction.status = 'active';
+      auction.status = AUCTION_STATUS.ACTIVE;
       await auction.save();
       await redisClient.hSet(REDIS_KEYS.AUCTION_ROOM(auctionId), 'status', 'active');
       await redisClient.hSet(REDIS_KEYS.AUCTION_ROOM(auctionId), 'auction', JSON.stringify(auction));
@@ -133,8 +133,8 @@ const handleEndAuction = async (auctionId) => {
     //Emit auction end
     endAuction(auctionId, highestBidder);
     const auction = await Auction.findById(auctionId);
-    if (auction && auction.status === 'active') {
-      auction.status = 'ended';
+    if (auction && auction.status === AUCTION_STATUS.ACTIVE) {
+      auction.status = AUCTION_STATUS.COMPLETED;
       await auction.save();
       
       //Delete cache
@@ -216,15 +216,10 @@ const pushAuctionToQueue = async (auctionId) => {
     const startTime = new Date(auction.startTime);
     const endTime = new Date(auction.endTime);
 
-    // Kiểm tra trạng thái auction
-    if (auction.status !== 'pending') {
-      console.error('Auction is not in pending status');
-      return false;
-    }
-
-    if (startTime <= currentTime && endTime > currentTime) {
-      await activateAuction(auction._id);
-    } else if (startTime > currentTime) {
+    // if (startTime <= currentTime && endTime > currentTime) {
+    //   await activateAuction(auction._id);
+    // }
+     if (startTime > currentTime && endTime >currentTime) {
       await scheduleAuctionStart(auction);
     }
 
@@ -248,7 +243,7 @@ const sendEmailToAuctionWinner = async (auctionId) => {
         $match: { 
           $and: [ 
             { "_id": new mongoose.Types.ObjectId(auctionId) },
-            { "status": "ended" } 
+            { "status": AUCTION_STATUS.COMPLETED } 
           ]
         } 
       },
@@ -375,7 +370,7 @@ const sendEmailToProductOwner = async (auctionId) => {
         $match: { 
           $and: [ 
             { "_id": new mongoose.Types.ObjectId(auctionId) },
-            { "status": "ended" } 
+            { "status": AUCTION_STATUS.COMPLETED } 
           ]
         } 
       },

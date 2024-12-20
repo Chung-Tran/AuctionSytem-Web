@@ -132,9 +132,9 @@ const AuctionRoom = () => {
     const productData = roomData.product;
     setRoomInfo(roomData);
     setProductInfo(productData);
-    setCurrentBid(parseFloat(data.roomInfo.currentBid) || 0);
+    setCurrentBid(parseFloat(data.roomInfo.currentBid) || data.startingPrice);
     setBidHistory(data.bidHistory || []);
-    setBidAmount(data.bidIncrement);
+    setBidAmount(roomData.bidIncrement);
     setConnected(true);
 
     // Calculate initial time left
