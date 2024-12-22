@@ -20,7 +20,8 @@ const approvalValidationSchema = Yup.object({
     .required('Vui lòng nhập thời gian bắt đầu'),
   endTime: Yup.date()
     .required('Vui lòng nhập thời gian kết thúc'),
-  registrationFee: Yup.number().required('Vui lòng nhập phí đăng ký'),
+  registrationFee: Yup.number().required('Vui lòng nhập phí tham gia'),
+  signupFee: Yup.number().required('Vui lòng nhập phí đăng ký'),
   registrationOpenDate: Yup.date()
     .required('Vui lòng nhập ngày mở đăng ký'),
   registrationCloseDate: Yup.date()
@@ -78,6 +79,7 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
       cancellationReason: data?.cancellationReason || '',
       deposit: data?.deposit || '',
       registrationFee: data?.registrationFee || '',
+      signupFee: data?.signupFee || '',
       winner: data?.winner || '',
       winningPrice: data?.winningPrice || '',
       approvalTime: approvalAction?.timeLine ? formatDateTime(approvalAction.timeLine) : '',
@@ -177,6 +179,7 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
         bidIncrement: values.bidIncrement ? parseFloat(values.bidIncrement) : null,
         deposit: values.deposit ? parseFloat(values.deposit) : null,
         registrationFee: values.registrationFee ? parseFloat(values.registrationFee) : null,
+        signupFee: values.signupFee ? parseFloat(values.signupFee) : null,
         contactEmail: values.contactEmail?.trim() || '',
         productImages: Array.isArray(values.productImages) ? values.productImages : [],
       };
@@ -354,7 +357,8 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
                 {renderFormField('Thời gian bắt đầu', 'startTime', 'datetime-local')}
                 {renderFormField('Thời gian kết thúc', 'endTime', 'datetime-local')}
                 {renderFormField('Phí đặt cọc', 'deposit', 'number')}
-                {renderFormField('Phí đăng ký phiên đấu giá', 'registrationFee', 'number')}
+                {renderFormField('Phí tham gia đấu giá', 'registrationFee', 'number')}
+                {renderFormField('Phí đăng ký', 'signupFee', 'number')}
                 {renderFormField('Trạng thái phiên đấu giá', 'status','select',AUCTION_STATUS_DATASOURCE, true)}
 
                 {/* {status === 'active' && (renderFormField('Số lượng người xem', 'viewCount'))} */}

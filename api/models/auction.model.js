@@ -23,7 +23,8 @@ const AuctionSchema = new Schema({
     status: { type: String, enum: Object.values(AUCTION_STATUS), default: AUCTION_STATUS.PENDING},
     cancellationReason: { type: String},
     deposit: { type: Number }, // Đặt cọc
-    registrationFee: { type: Number }, // Phí đăng ký
+    registrationFee: { type: Number }, // Phí tham gia
+    signupFee: { type: Number }, // Phí đăng ký
     winner: { type: Schema.Types.ObjectId, ref: 'Customer' },
     winningPrice: { type: Number }, // Giá trúng
     winnerBankInfo: {

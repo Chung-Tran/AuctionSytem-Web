@@ -67,20 +67,10 @@ const RegistrationSteps = ({ auction, onClose, userId, callback }) => {
 
           {/* Price Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Starting Price */}
-            <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
-              <label className="block text-sm font-medium text-green-700 mb-2">
-                Giá khởi điểm
-              </label>
-              <div className="text-xl font-bold text-green-700">
-                {formatCurrency(auction.startingPrice)}
-              </div>
-            </div>
-
             {/* Registration Fee */}
             <div className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-lg">
               <label className="block text-sm font-medium text-red-700 mb-2">
-                Phí đăng ký
+                Phí tham gia
               </label>
               <div className="text-xl font-bold text-red-700">
                 {formatCurrency(auction.registrationFee)}
@@ -93,10 +83,23 @@ const RegistrationSteps = ({ auction, onClose, userId, callback }) => {
                 Tiền đặt cọc
               </label>
               <div className="text-xl font-bold text-blue-700">
-                {formatCurrency(auction.deposit)}
+                  {formatCurrency(auction.deposit)}
+                </div>
               </div>
+
+              {/* Starting Price */}
+            <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
+              <label className="block text-sm font-medium text-green-700 mb-2">
+                Tổng thanh toán
+              </label>
+              <div className="text-xl font-bold text-green-700">
+                {formatCurrency(auction.deposit + auction.registrationFee)}
+              </div>
+              </div>
+              
             </div>
-          </div>
+
+            
 
           {/* Warning Message */}
           <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg text-sm">
@@ -139,7 +142,7 @@ const RegistrationSteps = ({ auction, onClose, userId, callback }) => {
                   )}
                 </Card>
               </Radio>
-              <Radio value="bank_transfer" className="w-full">
+              <Radio value="bank_transfer" className="w-full " disabled>
                 <Card className="w-full hover:shadow-md transition-all duration-300 rounded-lg p-4">
                   <div className="flex items-center">
                     <img src={mastercardLogo} alt="Chuyển khoản ngân hàng" className="w-12 h-12 mr-4" />
@@ -178,7 +181,7 @@ const RegistrationSteps = ({ auction, onClose, userId, callback }) => {
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm text-gray-600">Phí đăng ký</p>
+                      <p className="text-sm text-gray-600">Phí tham gia</p>
                       <p className="font-medium text-gray-900">{formatCurrency(auction.registrationFee)}</p>
                     </div>
                     <div>

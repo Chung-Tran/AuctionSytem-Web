@@ -14,15 +14,17 @@ import productTemplate from '../../assets/productTemplate.jpg';
 import { REGISTER_STATUS } from '../../commons/Constant'
 import { message } from 'antd'
 import { Helmet } from 'react-helmet'
+import { ProductLanguage } from '../../languages/ProductLanguage'
 
 const ProductDetail = () => {
     const { slug } = useParams()
-    const { user, toggleLoginModal } = useContext(AppContext)
+    const { user, toggleLoginModal,language } = useContext(AppContext)
     const [auction, setAuction] = useState(null)
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
     const [auctionRelate, setAuctionRelate] = useState([]);
     const [isRegistrationModalVisible, setIsRegistrationModalVisible] = useState(false);
     const [registerStatus, setRegisterStatus] = useState(REGISTER_STATUS.NOT_ALLOW);
+    const languageText = useMemo(() => ProductLanguage[language], [language])
     const navigate = useNavigate();
     useEffect(() => {
         const fetchData = async () => {
@@ -63,7 +65,7 @@ const ProductDetail = () => {
             setRegisterStatus(REGISTER_STATUS.NOT_ALLOW)
         } else if (now == new Date(auction?.registrationOpenDate)) {
             setRegisterStatus(REGISTER_STATUS.ALLOW)
-        } else if (now == new Date(auction?.registrationCloseDate)) {
+        } else if (now > new Date(auction?.registrationCloseDate)) {
             setRegisterStatus(REGISTER_STATUS.EXPIRED)
         }
 
@@ -122,197 +124,211 @@ const ProductDetail = () => {
     }
     return !!auction && (
         <div>
-            <Helmet>
-                <title>{ auction ? auction.title : 'Auction detail'}</title>
-                <meta property="og:title" content={ auction ? auction.title : 'Auction detail'} />
-                <meta property="og:description" content={ auction ? auction.title : 'Auction detail'} />
-            </Helmet>
-
-            <Breadcrumb
-                items={[
-                    { label: "Home", href: "/" },
-                    { label: "Upcoming Auctions", href: null },
-                ]}
-                title="Sản phẩm đấu giá"
-            />
-            <section className='px-6'>
-                <div className="grid md:grid-cols-2 gap-6 lg:gap-6 items-start container px-4 mx-auto py-6 flex-1">
-                    <div className="grid gap-4 md:gap-10 items-start h-[90vh] relative image-gallery-wrapper">
-                        <ImageGallery
-                            items={images}
-                            showNav={false}
-                            showPlayButton={false}
-                        />
-                    </div>
-                    <div className="grid gap-4 md:gap-10 items-start">
-                        <div className='grid gap-2'>
-                            <h3 className='text-muted-foreground text-base'>Countdown time starts returning:</h3>
-                            <div className='border border-[#E6E6E6] p-[15px] shadow-md'>
-                                <div className="mb-2.5">
-                                    <div id="timestamp" className="flex justify-around">
-                                        <div id="day-div-count ">
-                                            <p id="days" className="timecount-style mb-0 text-center font-semibold text-xl">{String(timeLeft.days).padStart(2, '0')}</p>
-                                            <p className="time-description mb-0 text-center uppercase text-sm">Ngày</p>
-                                        </div>
-                                        <div>
-                                            <p id="hours" className="timecount-style mb-0 text-center font-semibold text-xl">{String(timeLeft.hours).padStart(2, '0')}</p>
-                                            <p className="time-description mb-0 text-center uppercase text-sm">Giờ</p>
-                                        </div>
-                                        <div>
-                                            <p id="minutes" className="timecount-style mb-0 text-center font-semibold text-xl">{String(timeLeft.minutes).padStart(2, '0')}</p>
-                                            <p className="time-description mb-0 text-center uppercase text-sm">Phút</p>
-                                        </div>
-                                        <div>
-                                            <p id="seconds" className="timecount-style mb-0 text-center font-semibold text-xl">{String(timeLeft.seconds).padStart(2, '0')}</p>
-                                            <p className="time-description mb-0 text-center uppercase text-sm">Giây</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className='border border-[#E6E6E6] p-[15px] grid gap-6 rounded py-8'>
-                            <div className="">
-                                <div className="grid gap-4">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground">Starting Bid:</span>
-                                        <div className="text-primary font-bold text-2xl">{formatCurrency(auction.startingPrice)}</div>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground">Asset ID:</span>
-                                        <div className=' font-semibold'>{auction._id}</div>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground">Registration Open:</span>
-                                        <div className=' font-semibold'>{formatDate(auction.registrationOpenDate)}</div>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground">Registration Close:</span>
-                                        <div className=' font-semibold'>{formatDate(auction.registrationCloseDate)}</div>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground">Auction Start:</span>
-                                        <div className=' font-semibold'>{formatDate(auction.startTime)}</div>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground">Auction End:</span>
-                                        <div className=' font-semibold'>{formatDate(auction.endTime)}</div>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground">Registration Fee:</span>
-                                        <div className=' font-semibold'>{formatCurrency(auction.registrationFee)}</div>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground">Bid Increment:</span>
-                                        <div className=' font-semibold'>{formatCurrency(auction.bidIncrement)}</div>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground">Deposit:</span>
-                                        <div className=' font-semibold'>{formatCurrency(auction.deposit)}</div>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground">Auction Type:</span>
-                                        <div className=' font-semibold'>Online</div>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground">Asset Owner:</span>
-                                        <div className=' font-semibold'>{auction.sellerName}</div>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground">Asset Viewing Location:</span>
-                                        <div className=' font-semibold'>{auction.productAddress}</div>
-                                    </div>
-                                   
-                                </div>
-                            </div>
-                            <button
-                                size="lg"
-                                className={`w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium 
-                                            ${registerStatus === REGISTER_STATUS.EXPIRED ? 'bg-gray-400 cursor-not-allowed' :
-                                            registerStatus === REGISTER_STATUS.REGISTERED ? 'bg-green-500 cursor-not-allowed' :
-                                            'bg-primary'} 
-                                            h-11 rounded-md px-8 text-white`}
-                                onClick={handleRegister}
-                                disabled={registerStatus === REGISTER_STATUS.EXPIRED
-                                    || registerStatus === REGISTER_STATUS.REGISTERED
-                                    || registerStatus == REGISTER_STATUS.NOT_ALLOW}
-                            >
-                                {registerStatus === REGISTER_STATUS.REGISTERED ? 'Already Registered':
-                                    registerStatus === REGISTER_STATUS.EXPIRED ? 'Registration Expired'  :
-                                        'Register for Auction'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section className='px-6 mt-10 mb-4'>
-                <div className=" container w-full mx-auto mt-8">
-                    <Tabs>
-                        <TabList className="flex space-x-4">
-                            <Tab selectedClassName="bg-primary text-white" className="px-4 py-2 border rounded cursor-pointer">Mô tả tài sản</Tab>
-                            <Tab selectedClassName="bg-primary text-white" className="px-4 py-2 border rounded cursor-pointer">Thông tin đấu giá</Tab>
-                            <Tab selectedClassName="bg-primary text-white" className="px-4 py-2 border rounded cursor-pointer">Tài liệu liên quan</Tab>
-                        </TabList>
-
-                        <TabPanel>
-                            <div className="p-4 border mt-4">
-                                <h2>Mô tả tài sản</h2>
-                                <p>Tên sản phẩm: {auction.productName}</p>
-                                <p>Tình trạng sản phẩm: {auction.condition}</p>
-                                <p>Mô tả sản phẩm: {auction.productDescription}</p>
-                            </div>
-                        </TabPanel>
-                        <TabPanel>
-                            <div className="p-4 border mt-4">
-                                <h2 className="text-lg font-bold">Thông tin tổ chức đấu giá</h2>
-                                <p><span className="font-bold">Tổ chức đấu giá tài sản:</span> <span className="text-red-600">Công ty đấu giá hợp danh Lạc Việt</span></p>
-                                <p><span className="font-bold">Đấu giá viên:</span> <span className="text-red-600">Nguyễn Thùy Giang</span></p>
-                                <p><span className="font-bold">Địa chỉ:</span> Số 49 Văn Cao, phường Liễu Giai, quận Ba Đình, TP. Hà Nội.</p>
-                            </div>
-                        </TabPanel>
-                        <TabPanel>
-                            <div className="p-4 border mt-4">
-                                <h2>Tài liệu liên quan</h2>
-                                <p>Đây là nội dung tài liệu liên quan.</p>
-                            </div>
-                        </TabPanel>
-                    </Tabs>
-                </div>
-            </section>
-
-            <section className=" py-12 mt-10 px-6">
-                <div className='container mx-auto'>
-                    <h2 className="text-2xl font-bold mb-4">Latest News</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {auctionRelate?.length > 0 && auctionRelate.map((product, index) =>
-                        (<ProductItem
-                            key={product.id}
-                            image={product.image}
-                            name={product.productName}
-                            slug={product.slug}
-                            productDescription={product.productDescription}
-                            price={product.startingPrice}
-                            currentViews={product.currentViews || 1}
-                            endsIn={product.startTime || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
-                            registeredUsers={product.registeredUsers}
-                            registrationCloseDate={product.registrationCloseDate}
-                        />
-                        )
-                        )}
-                    </div>
-                </div>
-            </section>
-            {/* register form */}
-            {isRegistrationModalVisible && (
-                <RegistrationSteps
-                    auction={auction}
-                    onClose={() => setIsRegistrationModalVisible(false)}
-                    userId={user.userId}
-                    callback={handleCallback}
+          <Helmet>
+            <title>{auction ? auction.title : 'Auction detail'}</title>
+            <meta property="og:title" content={auction ? auction.title : 'Auction detail'} />
+            <meta property="og:description" content={auction ? auction.title : 'Auction detail'} />
+          </Helmet>
+    
+          <Breadcrumb
+            items={[
+              { label: languageText.home, href: "/" },
+              { label: languageText.productDetail, href: null },
+            ]}
+            title={languageText.pageTitle}
+          />
+    
+          <section className="px-6">
+            <div className="grid md:grid-cols-2 gap-6 lg:gap-6 items-start container px-4 mx-auto py-6 flex-1">
+              <div className="grid gap-4 md:gap-10 items-start h-[90vh] relative image-gallery-wrapper">
+                <ImageGallery
+                  items={images}
+                  showNav={false}
+                  showPlayButton={false}
                 />
-            )}
+              </div>
+    
+              <div className="grid gap-4 md:gap-10 items-start">
+                <div className="grid gap-2">
+                  <h3 className="text-muted-foreground text-base">{languageText.countdownTitle}</h3>
+                  <div className="border border-[#E6E6E6] p-[15px] shadow-md">
+                    <div className="mb-2.5">
+                      <div id="timestamp" className="flex justify-around">
+                        <div id="day-div-count ">
+                          <p id="days" className="timecount-style mb-0 text-center font-semibold text-xl">
+                            {String(timeLeft.days).padStart(2, '0')}
+                          </p>
+                          <p className="time-description mb-0 text-center uppercase text-sm">Ngày</p>
+                        </div>
+                        <div>
+                          <p id="hours" className="timecount-style mb-0 text-center font-semibold text-xl">
+                            {String(timeLeft.hours).padStart(2, '0')}
+                          </p>
+                          <p className="time-description mb-0 text-center uppercase text-sm">Giờ</p>
+                        </div>
+                        <div>
+                          <p id="minutes" className="timecount-style mb-0 text-center font-semibold text-xl">
+                            {String(timeLeft.minutes).padStart(2, '0')}
+                          </p>
+                          <p className="time-description mb-0 text-center uppercase text-sm">Phút</p>
+                        </div>
+                        <div>
+                          <p id="seconds" className="timecount-style mb-0 text-center font-semibold text-xl">
+                            {String(timeLeft.seconds).padStart(2, '0')}
+                          </p>
+                          <p className="time-description mb-0 text-center uppercase text-sm">Giây</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+    
+                <div className="border border-[#E6E6E6] p-[15px] grid gap-6 rounded py-8">
+                  <div className="">
+                    <div className="grid gap-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">{languageText.startingBid}</span>
+                        <div className="text-primary font-bold text-2xl">{formatCurrency(auction.startingPrice)}</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">{languageText.assetId}</span>
+                        <div className="font-semibold">{auction._id}</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">{languageText.registrationOpen}</span>
+                        <div className="font-semibold">{formatDate(auction.registrationOpenDate)}</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">{languageText.registrationClose}</span>
+                        <div className="font-semibold">{formatDate(auction.registrationCloseDate)}</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">{languageText.auctionStart}</span>
+                        <div className="font-semibold">{formatDate(auction.startTime)}</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">{languageText.auctionEnd}</span>
+                        <div className="font-semibold">{formatDate(auction.endTime)}</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">{languageText.registrationFee}</span>
+                        <div className="font-semibold">{formatCurrency(auction.registrationFee)}</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">{languageText.bidIncrement}</span>
+                        <div className="font-semibold">{formatCurrency(auction.bidIncrement)}</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">{languageText.deposit}</span>
+                        <div className="font-semibold">{formatCurrency(auction.deposit)}</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">{languageText.auctionType}</span>
+                        <div className="font-semibold">{languageText.online}</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">{languageText.assetOwner}</span>
+                        <div className="font-semibold">{auction.sellerName}</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">{languageText.assetViewingLocation}</span>
+                        <div className="font-semibold">{auction.productAddress}</div>
+                      </div>
+                    </div>
+                  </div>
+    
+                  <button
+                    size="lg"
+                    className={`w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium
+                              ${registerStatus === REGISTER_STATUS.EXPIRED || registerStatus == REGISTER_STATUS.NOT_ALLOW ? 'bg-gray-400 cursor-not-allowed' :
+                              registerStatus === REGISTER_STATUS.REGISTERED ? 'bg-green-500 cursor-not-allowed' :
+                              'bg-primary'}
+                              h-11 rounded-md px-8 text-white`}
+                    onClick={handleRegister}
+                    disabled={registerStatus === REGISTER_STATUS.EXPIRED
+                              || registerStatus === REGISTER_STATUS.REGISTERED
+                              || registerStatus == REGISTER_STATUS.NOT_ALLOW}
+                  >
+                    {registerStatus === REGISTER_STATUS.REGISTERED ? languageText.alreadyRegistered :
+                     registerStatus === REGISTER_STATUS.EXPIRED ? languageText.registrationExpired :
+                     languageText.registerForAuction}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+    
+          <section className="px-6 mt-10 mb-4">
+            <div className="container w-full mx-auto mt-8">
+              <Tabs>
+                <TabList className="flex space-x-4">
+                  <Tab selectedClassName="bg-primary text-white" className="px-4 py-2 border rounded cursor-pointer">{languageText.productDescription}</Tab>
+                  <Tab selectedClassName="bg-primary text-white" className="px-4 py-2 border rounded cursor-pointer">{languageText.auctionOrganization}</Tab>
+                  <Tab selectedClassName="bg-primary text-white" className="px-4 py-2 border rounded cursor-pointer">{languageText.relatedDocuments}</Tab>
+                </TabList>
+    
+                <TabPanel>
+                  <div className="p-4 border mt-4">
+                    <h2>{languageText.assetDescription}</h2>
+                    <p>{languageText.productName}: {auction.productName}</p>
+                    <p>{languageText.productCondition}: {auction.condition}</p>
+                    <p>{languageText.productDescription}: {auction.productDescription}</p>
+                  </div>
+                </TabPanel>
+    
+                <TabPanel>
+                  <div className="p-4 border mt-4">
+                    <h2 className="text-lg font-bold">{languageText.auctionOrganization}</h2>
+                    <p><span className="font-bold">{languageText.auctionCompany}: </span> <span className="text-red-600">Công ty đấu giá hợp danh Lạc Việt</span></p>
+                    <p><span className="font-bold">{languageText.auctioneer}: </span> <span className="text-red-600">Nguyễn Thùy Giang</span></p>
+                    <p><span className="font-bold">{languageText.address}: </span> Số 49 Văn Cao, phường Liễu Giai, quận Ba Đình, TP. Hà Nội.</p>
+                  </div>
+                </TabPanel>
+    
+                <TabPanel>
+                  <div className="p-4 border mt-4">
+                    <h2>{languageText.relatedDocuments}</h2>
+                    <p>{languageText.relatedDocumentsContent}</p>
+                  </div>
+                </TabPanel>
+              </Tabs>
+            </div>
+          </section>
+    
+          <section className="py-12 mt-10 px-6">
+            <div className="container mx-auto">
+              <h2 className="text-2xl font-bold mb-4">{languageText.latestNews}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                {auctionRelate?.length > 0 && auctionRelate.map((product, index) => (
+                  <ProductItem
+                    key={product.id}
+                    image={product.image}
+                    name={product.productName}
+                    slug={product.slug}
+                    productDescription={product.productDescription}
+                    price={product.startingPrice}
+                    currentViews={product.currentViews || 1}
+                    endsIn={product.startTime || new Date(Date.now() + 24 * 60 * 60 * 1000)} // Default time for registration
+                    registeredUsers={product.registeredUsers}
+                    registrationCloseDate={product.registrationCloseDate}
+                    registrationOpenDate={product.registrationOpenDate}
+                  />
+                ))}
+              </div>
+            </div>
+          </section>
+    
+          {/* Registration Form Modal */}
+          {isRegistrationModalVisible && (
+            <RegistrationSteps
+              auction={auction}
+              onClose={() => setIsRegistrationModalVisible(false)}
+              userId={user.userId}
+              callback={handleCallback}
+            />
+          )}
         </div>
-    )
+      );
 }
 
 export default React.memo(ProductDetail)

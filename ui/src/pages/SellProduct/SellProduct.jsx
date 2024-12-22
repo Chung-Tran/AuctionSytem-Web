@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { Image, Upload, Modal, InputNumber } from 'antd';
@@ -9,6 +9,7 @@ import { formatCurrency, openNotify } from '../../commons/MethodsCommons';
 import { AppContext } from '../../AppContext';
 import { Helmet } from 'react-helmet';
 import { PRODUCT_CATEGORY_DATASOURCE, PRODUCT_CONDITION_DATASOURCE, PRODUCT_TYPE_DATASOURCE } from '../../commons/Constant';
+import { SellLanguage } from '../../languages/SellLanguage';
 
 const getBase64 = (file) =>
   new Promise((resolve, reject) => {
@@ -23,7 +24,7 @@ const SellProduct = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
   const [previewTitle, setPreviewTitle] = useState('');
-  const { user, toggleLoginModal } = useContext(AppContext);
+  const { user, toggleLoginModal,language } = useContext(AppContext);
   const validationSchema = Yup.object().shape({
     sellerName: Yup.string().required('Tên người dùng là bắt buộc'),
     productName: Yup.string().required('Tên sản phẩm là bắt buộc'),
@@ -70,7 +71,6 @@ const SellProduct = () => {
           formData.append(key, values[key]);
         }
       });
-      debugger
       if (!user)
           return toggleLoginModal(true)
       const response = await AuctionService.register(formData);
@@ -86,24 +86,24 @@ const SellProduct = () => {
       setSubmitting(false);
     }
   };
+  const languageText = useMemo(() => SellLanguage[language], [language]);
 
   return (
     <div className='w-full h-auto'>
       <Helmet>
-        <title>Sell Product</title>
-        <meta property="og:title" content="Sell Product" />
-        <meta property="og:description" content="Sell Product" />
+        <title>{languageText.title}</title>
+        <meta property="og:title" content={languageText.title} />
+        <meta property="og:description" content={languageText.title} />
       </Helmet>
       <Breadcrumb
         items={[
           { label: "Home", href: "/" },
-          { label: "Upcoming Auctions", href: "/auctions/upcoming" },
-          { label: "Đăng ký đấu giá", href: null },
+          { label: languageText.breadcrumbTitle, href: null },
         ]}
-        title="Gửi tài sản đấu giá"
+        title={languageText.breadcrumbTitle}
       />
       <section className='container max-w-[1320px] mx-auto px-4 py-8'>
-        <h2 className='text-center text-3xl font-bold mb-8'>Đăng ký tài sản đấu giá</h2>
+        <h2 className='text-center text-3xl font-bold mb-8'>{languageText.formTitle}</h2>
         <div className='space-y-8'>
           <Formik
             initialValues={{
@@ -118,7 +118,7 @@ const SellProduct = () => {
               auctionType: 'online',
               deposit: '',
               condition: 'new',
-              images: []
+              images: [],
             }}
             validationSchema={validationSchema}
             validateOnChange={false}
@@ -129,7 +129,7 @@ const SellProduct = () => {
               <Form className="space-y-8">
                 {/* Upload images */}
                 <div>
-                  <h3 className='text-xl font-semibold mb-4'>Hình ảnh sản phẩm</h3>
+                  <h3 className='text-xl font-semibold mb-4'>{languageText.productImages}</h3>
                   <Upload
                     listType="picture-card"
                     fileList={fileList}
@@ -145,94 +145,76 @@ const SellProduct = () => {
                   </Upload>
                   <ErrorMessage name="images" component="div" className="text-red-500 text-sm" />
                 </div>
-
+  
                 <div className="grid md:grid-cols-2 gap-8">
-                  <FormField name="sellerName" label="Tên người dùng" />
-                  <FormField name="contactEmail" label="Email liên hệ" />
-                  <FormField name="productName" label="Tên sản phẩm" />
-                  <FormField name="address" label="Địa chỉ sản phẩm" />
-
+                  <FormField name="sellerName" label={languageText.sellerName} />
+                  <FormField name="contactEmail" label={languageText.contactEmail} />
+                  <FormField name="productName" label={languageText.productName} />
+                  <FormField name="address" label={languageText.address} />
+  
                   <SelectField
                     name="category"
-                    label="Danh mục"
-                    options={
-                      PRODUCT_CATEGORY_DATASOURCE.map(item => ({ value: item.value, label: item.label }))
-                      }
+                    label={languageText.category}
+                    options={PRODUCT_CATEGORY_DATASOURCE.map(item => ({ value: item.value, label: item.label }))}
                   />
-
+  
                   <SelectField
                     name="condition"
-                    label="Tình trạng sản phẩm"
-                    options={
-                      PRODUCT_CONDITION_DATASOURCE.map(item => ({ value: item.value, label: item.label }))
-                      }
+                    label={languageText.condition}
+                    options={PRODUCT_CONDITION_DATASOURCE.map(item => ({ value: item.value, label: item.label }))}
                   />
                   <SelectField
-                    name="type"
-                    label="Loại sản phẩm"
-                    options={
-                      PRODUCT_TYPE_DATASOURCE.map(item => ({ value: item.value, label: item.label }))
-                      }
+                    name="auctionType"
+                    label={languageText.auctionType}
+                    options={[{ value: 'online', label: 'Đấu giá online' }]}
                   />
-
+  
                   <FormInputNumber
                     name="startingPrice"
-                    label="Giá khởi điểm"
+                    label={languageText.startingPrice}
                     formatter={(value) => `${value} ₫`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     parser={(value) => value.replace(/\₫\s?|(,*)/g, '')}
                     onChange={(value, form) => {
-                      form.setFieldValue('deposit', value ? (Math.floor(value * 0.1)) : '');
+                      form.setFieldValue('deposit', value ? Math.floor(value * 0.1) : '');
                     }}
                   />
                   <FormInputNumber
                     name="bidIncrement"
-                    label="Bước giá"
+                    label={languageText.bidIncrement}
                     formatter={(value) => `${value} ₫`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     parser={(value) => value.replace(/\₫\s?|(,*)/g, '')}
-                    onChange={(value, form) => {
-                      form.setFieldValue('deposit', value ? (value * 0.1) : '');
-                    }}
                   />
-
-                  {/* <FormField name="bidIncrement" label="Bước giá" type="number" format={formatCurrency} /> */}
-
-                  <SelectField
-                    name="auctionType"
-                    label="Hình thức đấu giá"
-                    options={[
-                      { value: 'online', label: 'Đấu giá online' }
-                    ]}
-                  />
+  
                   <FormInputNumber
                     name="deposit"
-                    label="Tiền đặt cọc (10% giá khởi điểm)"
+                    label={languageText.deposit}
                     formatter={(value) => `${value} ₫`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     parser={(value) => value.replace(/\₫\s?|(,*)/g, '')}
                     disabled
                   />
-                  {/* <FormField name="deposit" label="Tiền đặt cọc" type="number" disabled={true} format={formatCurrency} /> */}
                 </div>
-
-                <FormField name="description" label="Mô tả sản phẩm" as="textarea" rows={4} />
-
+  
+                <FormField name="description" label={languageText.productDescription} as="textarea" rows={4} />
+  
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="w-full py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'Đang gửi...' : 'Gửi'}
+                  {isSubmitting ? languageText.submittingButton : languageText.submitButton}
                 </button>
               </Form>
             )}
           </Formik>
         </div>
       </section>
-
+  
       <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancel}>
         <img alt="example" style={{ width: '100%' }} src={previewImage} />
       </Modal>
     </div>
   );
+  
 };
 
 const FormField = ({ name, label, format, ...props }) => (

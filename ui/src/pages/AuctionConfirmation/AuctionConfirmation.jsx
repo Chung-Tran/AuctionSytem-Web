@@ -78,8 +78,8 @@ export default function AuctionConfirmation() {
     };
 
     // Hàm render card phương thức thanh toán
-    const renderPaymentMethodCard = (value, title, description, logo = null, event) => (
-        <Radio value={value} className="w-full">
+    const renderPaymentMethodCard = (value, title, description, logo = null, disabled) => (
+        <Radio value={value} className="w-full" disabled ={disabled}>
             <Card
                 className="w-full h-full hover:shadow-md transition-all duration-300 rounded-lg p-4 flex items-center"
                 bodyStyle={{ display: 'flex', alignItems: 'center', width: '100%' }}
@@ -106,6 +106,9 @@ export default function AuctionConfirmation() {
 
        try {
            const confirm = await AuctionService.updateStatus(auction._id, AUCTION_STATUS.WINNER_PAYMENTED)
+           if (!!confirm)
+               openNotify('success', 'Confirm successfully')
+               setIsConfirm(true);
        } catch (error) {
         console.log(error)
        }
@@ -197,13 +200,13 @@ export default function AuctionConfirmation() {
                                                     {renderPaymentMethodCard(
                                                         'pickup',
                                                         'Thanh toán khi nhận hàng',
-                                                        'Thanh toán trực tiếp tại địa điểm nhận hàng'
+                                                        'Thanh toán khi nhận hàng'
                                                     )}
                                                 </Col>
                                                 <Col xs={24} sm={12}>
                                                     {renderPaymentMethodCard(
                                                         'payment_methods',
-                                                        'Chọn phương thức thanh toán',
+                                                        'Thanh toán chuyển khoản',
                                                         'Thanh toán trước khi nhận hàng'
                                                     )}
                                                 </Col>
@@ -222,7 +225,6 @@ export default function AuctionConfirmation() {
                                                             'VNPay',
                                                             'Thanh toán an toàn qua VNPay',
                                                             vnpaylogo,
-                                                            handleStartPayment
                                                         )}
                                                         {paymentType === 'vnpay' && (
                                                             <div className="mt-4 text-center">
@@ -241,7 +243,8 @@ export default function AuctionConfirmation() {
                                                             'bank_transfer',
                                                             'Chuyển khoản ngân hàng',
                                                             'Thanh toán qua liên ngân hàng',
-                                                            mastercardLogo
+                                                            mastercardLogo,
+                                                            true
                                                         )}
                                                     </Col>
                                                 </Row>

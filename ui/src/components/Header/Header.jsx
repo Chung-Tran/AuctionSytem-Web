@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback, useContext } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useContext, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, User, Hammer, Bell, LogOut, Settings, UserCircle, ChevronDown, Trash2, CheckCircle, AlertCircle,History } from 'lucide-react';
 import LoginModal from './LoginModal';
 import { AppContext } from '../../AppContext';
 import avatarMale from '../../assets/avatarMale.webp'
-
+import SelectLanguage from './LanguageSelect';
+import { LayoutLanguage } from '../../languages/LayoutLanguage';
 const Header = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Simulate login state
@@ -15,7 +16,8 @@ const Header = () => {
   const userDropdownRef = useRef(null);
   const notificationsDropdownRef = useRef(null);
   const headerRef = useRef(null);
-  const { user } = useContext(AppContext)
+  const { user, language, changeLanguage } = useContext(AppContext);
+  const languageText = useMemo(() => LayoutLanguage[language], [language]);
   useEffect(() => {
     setIsLoggedIn(user ? true : false)
   },[user])
@@ -114,35 +116,38 @@ const Header = () => {
             <ul className="flex space-x-4">
               <li>
                 <Link to="/auctions/ongoing" className="hover:text-gray-900 font-medium hover:underline text-sm">
-                  Live Auctions
+                  {languageText.liveAuctions}
                 </Link>
               </li>
               <li>
                 <Link to="/auctions/upcoming" className="hover:text-gray-900 font-medium hover:underline text-sm">
-                  Upcoming Auctions
+                {languageText.upcomingAuctions}
                 </Link>
               </li>
               <li>
                 <Link to="/auctions/sell" className="hover:text-gray-900 font-medium hover:underline text-sm">
-                  Sell
+                {languageText.sell}
                 </Link>
               </li>
               <li>
                 <Link to="/about" className="hover:text-gray-900 font-medium hover:underline text-sm">
-                  About
+                {languageText.about}
                 </Link>
               </li>
             </ul>
           </nav>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
           <div className="relative">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
-              placeholder="Search auctions..."
+              placeholder={languageText.searchPlaceholder}
               className="pl-8 pr-2 py-2 border rounded-md outline-none text-sm"
             />
+          </div>
+          <div>
+            <SelectLanguage language={language} changeLanguage={changeLanguage}/>
           </div>
           {isLoggedIn ? (
             <>
@@ -221,22 +226,22 @@ const Header = () => {
                     </div>
                     <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                       <UserCircle className="inline-block mr-2" size={16} />
-                      User Information
+                      {languageText.userInfo}
                     </Link>
                     <Link to="/profile/change-password" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                       <Settings className="inline-block mr-2" size={16} />
-                      Change Password
+                      {languageText.changePassword}
                     </Link>
                     <Link to="/auction-submissions" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                       <History className="inline-block mr-2" size={16} />
-                      Auction Submissions
+                      {languageText.auctionSubmissions}
                     </Link>
                     <button
                       onClick={handleLogout}
                       className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 border-t border-gray-100"
                     >
                       <LogOut className="inline-block mr-2" size={16} />
-                      Logout
+                      {languageText.logout}
                     </button>
                   </div>
                 )}
@@ -258,6 +263,7 @@ const Header = () => {
           setIsLoggedIn(true);
           setIsModalOpen(false);
         }}
+        languageText={languageText}
 
       />
     </header>

@@ -1,5 +1,5 @@
 import { ClockIcon, EyeIcon } from 'lucide-react';
-import React, { useContext, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { countdown, formatCurrency, openNotify } from '../../commons/MethodsCommons';
 import { AppContext } from '../../AppContext';
@@ -7,6 +7,7 @@ import RegistrationSteps from '../../pages/ProductDetail/RegistrationSteps';
 import AuctionService from '../../services/AuctionService';
 import productTemplate from '../../assets/productTemplate.jpg';
 import { REGISTER_STATUS } from '../../commons/Constant';
+import { ProductLanguage } from '../../languages/ProductLanguage';
 
 const ProductItem = ({
   image,
@@ -17,11 +18,13 @@ const ProductItem = ({
   currentViews,
   productDescription,
   registeredUsers,
-  registrationCloseDate
+  registrationCloseDate,
+  registrationOpenDate,
 }) => {
-  const { user, toggleLoginModal } = useContext(AppContext);
+  const { user, toggleLoginModal ,language} = useContext(AppContext);
   const [isRegistrationModalVisible, setIsRegistrationModalVisible] = useState(false);
   const [auction, setAuction] = useState(null);
+   const languageText = useMemo(() => ProductLanguage[language], [language]);
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user)
@@ -35,6 +38,8 @@ const ProductItem = ({
   let registerStatus = null;
   if (registrationCloseDate && new Date() > new Date(registrationCloseDate)) {
     registerStatus = REGISTER_STATUS.EXPIRED;
+  } else if (new Date() < new Date(registrationOpenDate)) {
+    registerStatus = REGISTER_STATUS.NOT_ALLOW;
   } else if (user && registeredUsers?.includes(user.userId)) {
     registerStatus = REGISTER_STATUS.REGISTERED;
   } else {
@@ -62,7 +67,7 @@ const ProductItem = ({
           <div className="flex items-center justify-between mt-auto">
             <div>
               <span className="text-primary font-semibold text-lg">{formatCurrency(price)}</span>
-              <span className="text-muted-foreground text-sm ml-2">Current Bid</span>
+              <span className="text-muted-foreground text-sm ml-2">{ languageText.currentBid }</span>
             </div>
             <div className="flex items-center gap-2">
               <ClockIcon className="w-4 h-4 text-muted-foreground" />
@@ -72,17 +77,21 @@ const ProductItem = ({
           <div className="flex items-center justify-between mt-2">
             <div className="flex items-center gap-2">
               <EyeIcon className="w-4 h-4 text-muted-foreground" />
-              <span className="text-muted-foreground text-sm">{currentViews} watching</span>
+              <span className="text-muted-foreground text-sm">{currentViews} { languageText.watching }</span>
             </div>
             <button
               size="sm"
-              className={`bg-primary text-white p-2 rounded-md font-medium ${registerStatus === REGISTER_STATUS.REGISTERED || registerStatus === REGISTER_STATUS.EXPIRED ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`bg-primary text-white p-2 rounded-md font-medium ${registerStatus === REGISTER_STATUS.REGISTERED || registerStatus === REGISTER_STATUS.EXPIRED || registerStatus === REGISTER_STATUS.NOT_ALLOW ? 'opacity-50 cursor-not-allowed' : ''}`}
               onClick={handleSubmit}
-              disabled={registerStatus === REGISTER_STATUS.REGISTERED || registerStatus === REGISTER_STATUS.EXPIRED}
+              disabled={
+                registerStatus === REGISTER_STATUS.REGISTERED
+                || registerStatus === REGISTER_STATUS.EXPIRED
+                || registerStatus === REGISTER_STATUS.NOT_ALLOW
+              }
             >
-              {registerStatus === REGISTER_STATUS.EXPIRED ? 'Registration Closed' :
-                registerStatus === REGISTER_STATUS.REGISTERED ? 'Already Registered' :
-                  'Place Bid'}
+              {registerStatus === REGISTER_STATUS.EXPIRED ? languageText.registrationClosed :
+                registerStatus === REGISTER_STATUS.REGISTERED ? languageText.alreadyRegistered :
+                languageText.placeBid}
             </button>
           </div>
         </div>

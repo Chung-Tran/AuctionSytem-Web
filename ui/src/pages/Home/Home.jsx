@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import Banner from '../../components/Home/Banner'
 import { Filter, SortAsc } from 'lucide-react';
 import ProductItem from '../../components/Product/ProductItem';
@@ -10,13 +10,16 @@ import LoadingSpinner from '../LoadingSpinner';
 import { AUCTION_STATUS, REGISTER_STATUS } from '../../commons/Constant';
 import { AppContext } from '../../AppContext';
 import { Helmet } from 'react-helmet';
+import { HomeLanguage } from '../../languages/HomeLanguage';
 const Home = () => {
     const [auctions, setAuctions] = useState([]);
     const [auctionStanding, setAuctionStanding] = useState(null);
     const [auctionsDone, setAuctionsDone] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [timeRemaining, setTimeRemaining] = useState('');
-    const { user, toggleLoginModal } = useContext(AppContext);
+    const { user, toggleLoginModal, language } = useContext(AppContext);
+    const languageText = useMemo(() => HomeLanguage[language], [language]);
+
     const fetchData = useCallback(async () => {
         try {
             setIsLoading(true);
@@ -74,20 +77,20 @@ const Home = () => {
                 <meta property="og:image" content={auctionMeta} />
             </Helmet>
             <div className='w-full h-auto flex justify-center container mx-auto '>
-                <Banner auctionStanding={auctionStanding} />
+                <Banner auctionStanding={auctionStanding} languageText={ languageText} />
             </div>
             <section className="py-12 ">
                 <div className=" mx-auto px-4 container">
                     <div className="flex justify-between items-center mb-8">
-                        <h2 className="text-2xl font-bold">Featured Products</h2>
+                        <h2 className="text-2xl font-bold">{languageText.featuredProducts}</h2>
                         <div className="flex space-x-4">
                             <button className="flex items-center space-x-2  hover:text-gray-900 border border-[#E6E6E6] py-1.5 px-2 rounded">
                                 <Filter size={18} />
-                                <span className='text-medium text-sm'>Filters</span>
+                                <span className='text-medium text-sm'>{languageText.filters}</span>
                             </button>
                             <button className="flex items-center space-x-2  hover:text-gray-900 border border-[#E6E6E6] py-1.5 px-2 rounded">
                                 <SortAsc size={20} />
-                                <span className='text-medium text-sm'>Sort</span>
+                                <span className='text-medium text-sm'>{languageText.sort}</span>
                             </button>
                         </div>
                     </div>
@@ -104,6 +107,8 @@ const Home = () => {
                                 endsIn={product.startTime || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
                                 registeredUsers={product.registeredUsers}
                                 registrationCloseDate={product.registrationCloseDate}
+                                registrationOpenDate={product.registrationOpenDate}
+                                language={language}
                             />
                         ))}
                     </div>
@@ -114,7 +119,7 @@ const Home = () => {
                 auctionDetailHightLight && (
                     <section className="bg-muted py-12">
                         <div className="container mx-auto px-4 md:px-6">
-                            <h2 className="text-2xl font-bold mb-6">Product Details</h2>
+                            <h2 className="text-2xl font-bold mb-6">{languageText.productDetails}</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="h-[400px] sm:h-[500px] md:h-[600px] lg:h-[650px]">
                                     <img
@@ -131,11 +136,11 @@ const Home = () => {
                                     </p>
                                     <div className="flex items-center justify-between mb-6">
                                         <div>
-                                            <p className="text-muted-foreground">Time Remaining:</p>
+                                            <p className="text-muted-foreground">{languageText.timeRemaining}:</p>
                                             <p className="text-2xl font-bold">{countdown(timeRemaining)}</p>
                                         </div>
                                         <div>
-                                            <p className="text-muted-foreground">Current Bid:</p>
+                                            <p className="text-muted-foreground">{languageText.currentBid}:</p>
                                             <p className="text-2xl font-bold">{formatCurrency(auctionDetailHightLight.startingPrice)}</p>
                                         </div>
                                     </div>
@@ -146,9 +151,9 @@ const Home = () => {
                                         // onClick={handleSubmit}
                                         disabled={auctionDetailRegisterStatus === REGISTER_STATUS.REGISTERED || auctionDetailRegisterStatus === REGISTER_STATUS.EXPIRED}
                                     >
-                                        {auctionDetailRegisterStatus === REGISTER_STATUS.EXPIRED ? 'Registration Closed' :
-                                            auctionDetailRegisterStatus === REGISTER_STATUS.REGISTERED ? 'Already Registered' :
-                                                'Place Bid'}
+                                        {auctionDetailRegisterStatus === REGISTER_STATUS.EXPIRED ? languageText.registrationClosed :
+                                            auctionDetailRegisterStatus === REGISTER_STATUS.REGISTERED ? languageText.alreadyRegistered :
+                                                languageText.placeBid}
                                     </button>
                                 </div>
                             </div>
@@ -158,7 +163,7 @@ const Home = () => {
             }
             <section className="py-12">
                 <div className="container mx-auto px-4 md:px-6">
-                    <h2 className="text-2xl font-bold mb-6">Sold Items</h2>
+                    <h2 className="text-2xl font-bold mb-6">{languageText.soldFor}</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
                         {
                             auctionsDone?.map(item => (
@@ -173,7 +178,7 @@ const Home = () => {
                                     />
                                     <div className="p-4">
                                         <h3 className="text-xl font-bold mb-2">{item.productName}</h3>
-                                        <p className="text-muted-foreground mb-4">Sold for {formatCurrency(item.winningPrice)} on {formatDate(item.endTime) }</p>
+                                        <p className="text-muted-foreground mb-4">Sold for {formatCurrency(item.winningPrice)} on {formatDate(item.endTime)}</p>
                                     </div>
                                 </div>
                             ))
@@ -183,15 +188,12 @@ const Home = () => {
             </section>
             <section className="bg-muted py-12">
                 <div className="container mx-auto px-4 md:px-6">
-                    <h2 className="text-2xl font-bold mb-6">About Auction House</h2>
+                    <h2 className="text-2xl font-bold mb-6">{languageText.aboutAuctionHouse}</h2>
                     <p className="text-muted-foreground mb-6">
-                        Auction House is a premier destination for collectors and vintage enthusiasts to discover unique and rare
-                        items. Our team of experts carefully curates each item, ensuring authenticity and quality. Whether you're
-                        looking for a one-of-a-kind piece or a timeless classic, Auction House is the place to find your next
-                        treasure.
+                        {languageText.auctionDescription}
                     </p>
                     <div className="flex justify-center">
-                        <button size="lg" className='w-fit inline-flex items-center justify-center whitespace-nowrap text-sm font-medium bg-primary h-11 rounded-md px-8 text-white'>Explore Our Collection</button>
+                        <button size="lg" className='w-fit inline-flex items-center justify-center whitespace-nowrap text-sm font-medium bg-primary h-11 rounded-md px-8 text-white'> {languageText.exploreCollection}</button>
                     </div>
                 </div>
             </section>

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import {jwtDecode} from 'jwt-decode'; 
+import { jwtDecode } from 'jwt-decode';
 import ProfileService from './services/ProfileService';
 
 export const AppContext = createContext();
@@ -7,6 +7,7 @@ export const AppContext = createContext();
 export const AppProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [openLoginModal, setOpenLoginModal] = useState(null);
+    const [language, setLanguage] = useState(localStorage.getItem('language') || 'en');
 
     const setUserData = (user) => {
         const { fullName, email, username, _id } = user;
@@ -54,11 +55,24 @@ export const AppProvider = ({ children }) => {
             }
         };
 
-        fetchUserData(); 
-    }, []); 
+        fetchUserData();
+
+        //get language
+        const storedLanguage = localStorage.getItem('language');
+        if (storedLanguage) setLanguage(storedLanguage);
+
+    }, []);
+    const changeLanguage = (newLanguage) => {
+        setLanguage(newLanguage);
+        localStorage.setItem('language', newLanguage);
+    };
+
+    useEffect(() => {
+
+    }, []);
 
     return (
-        <AppContext.Provider value={{ user, setUserData,openLoginModal,toggleLoginModal }}>
+        <AppContext.Provider value={{ user, setUserData, openLoginModal, toggleLoginModal, language, changeLanguage }}>
             {children}
         </AppContext.Provider>
     );

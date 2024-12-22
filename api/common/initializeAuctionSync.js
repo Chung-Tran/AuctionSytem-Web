@@ -8,7 +8,7 @@ const { endAuction } = require('../controllers/socket.controller');
 const { sendEmail } = require('../utils/email');
 const { default: mongoose } = require("mongoose");
 const jwt = require('jsonwebtoken');
-const { parseDurationToHumanFormat, formatTimeWithAddedSeconds } = require('../utils/time');
+const { parseDurationToHumanFormat, formatTimeWithAddedSeconds, parseDuration } = require('../utils/time');
 
 
 const auctionQueue = new Bull('auction-management', {

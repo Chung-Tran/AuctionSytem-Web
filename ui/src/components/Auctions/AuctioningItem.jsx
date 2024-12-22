@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function AuctioningItem(item) {
   const { user, toggleLoginModal } = useContext(AppContext);
+  const { languageText } = item
   const navigate = useNavigate();
   const handleNavigate = (_id) => {
     if (!user)
@@ -17,7 +18,7 @@ export default function AuctioningItem(item) {
     }
   }
   return (
-    <div className="bg-card rounded-lg overflow-hidden shadow-lg">
+    <div className="bg-card rounded-lg overflow-hidden shadow-lg h-full flex flex-col">
       <div className="relative">
         <img
           src={item.image}
@@ -32,20 +33,20 @@ export default function AuctioningItem(item) {
           Status: <span className="font-medium">Ongoing</span>
         </div>
       </div>
-      <div className="p-4">
+      <div className="p-4 h-full flex flex-col">
         <h3 className="text-lg font-medium mb-2">{item.name}</h3>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap space-x-1">
           <div className="text-primary font-medium">${formatCurrency(item.price)}</div>
-          <div className="text-primary font-medium">Highest Bid: {formatCurrency(item.highestBid)}</div>
+          <div className="text-primary font-medium">{languageText.HighestBid}: {formatCurrency(item.highestBid)}</div>
         </div>
         <div className="flex items-center justify-between mb-4">
-          <div className="text-muted-foreground font-medium">Participants: { item.participants}</div>
+          <div className="text-muted-foreground font-medium">{ languageText.Participants}: { item.participants}</div>
         </div>
         <button
           onClick={()=>handleNavigate(item._id)}
           size="sm"
-          className='w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium bg-primary h-11 rounded-md px-8 text-white'>
-          <span >Join Auction</span>
+          className='w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium bg-primary h-11 rounded-md px-8 text-white mt-auto'>
+          <span >{ languageText.Join}</span>
         </button>
       </div>
     </div>

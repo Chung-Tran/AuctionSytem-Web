@@ -95,7 +95,8 @@ const approveAuction = asyncHandler(async (req, res) => {
         endTime,
         registrationOpenDate,
         registrationCloseDate,
-        registrationFee
+        registrationFee,
+        signupFee,
     } = req.body;
 
     const auction = await Auction.findById(auctionId);
@@ -115,6 +116,7 @@ const approveAuction = asyncHandler(async (req, res) => {
         auction.registrationOpenDate = registrationOpenDate;
         auction.registrationCloseDate = registrationCloseDate;
         auction.registrationFee = registrationFee;
+        auction.signupFee = signupFee;
         
         auction.status = AUCTION_STATUS.APPROVED;
 
@@ -179,7 +181,8 @@ const updateAuction = asyncHandler(async (req, res) => {
         endTime,
         registrationOpenDate,
         registrationCloseDate,
-        registrationFee
+        registrationFee,
+        signupFee,
     } = req.body;
 
     const auction = await Auction.findById(auctionId);
@@ -194,6 +197,7 @@ const updateAuction = asyncHandler(async (req, res) => {
         auction.registrationOpenDate = registrationOpenDate;
         auction.registrationCloseDate = registrationCloseDate;
         auction.registrationFee = registrationFee;
+        auction.signupFee = signupFee;
         auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'điều chỉnh'});
 
         await auction.save();
@@ -437,6 +441,7 @@ const getAuctionDetails = asyncHandler(async (req, res) => {
                     registrationCloseDate: 1,
                     deposit: 1,
                     registrationFee: 1,
+                    signupFee: 1,
                     registeredUsers: {
                         $map: {
                             input: "$registeredUsers",
@@ -509,6 +514,7 @@ const getAuctionOutstanding = asyncHandler(async (req, res) => {
                     registrationCloseDate: 1,
                     deposit: 1,
                     registrationFee: 1,
+                    signupFee: 1,
                 }
             }
         ];
@@ -635,6 +641,7 @@ const listAuctions = asyncHandler(async (req, res) => {
                 registrationCloseDate: 1,
                 deposit: 1,
                 registrationFee: 1,
+                signupFee: 1,
                 winner: "$customerwinner.fullName",
                 winningPrice: 1,
 
@@ -788,6 +795,7 @@ const ongoingList = asyncHandler(async (req, res) => {
                 registrationCloseDate: 1,
                 deposit: 1,
                 registrationFee: 1,
+                signupFee: 1,
                 winner: "$customerwinner.fullName",
                 winningPrice:1,
                 participants: 1,
@@ -974,14 +982,14 @@ const getMyAuctioned = asyncHandler(async (req, res) => {
         const auctions = await Auction.find(query)
             .populate({
                 path: 'product',
-                select: 'productName images'
+                // select: 'productName images'
             })
             .populate(
                 {
                     path: 'registerCustomerId',
-                    select: 'username '
+                    // select: 'username '
                 })
-            .select('product title winningPrice winnerBankInfo cancellationReason deposit registrationFee startTime endTime status')
+            .select('product title winningPrice winnerBankInfo cancellationReason deposit startingPrice signupFee registrationFee startTime endTime status')
             .skip((pageInt - 1) * limitInt)
             .limit(limitInt);
         
@@ -1013,6 +1021,7 @@ const updateBankInfo = asyncHandler(async (req, res) => {
       }
   
       auction.winnerBankInfo = bankInfo;
+      auction.status = AUCTION_STATUS.DONE;
       await auction.save();
   
       res.status(200).json(formatResponse(true, auction, "Bank info updated successfully"));

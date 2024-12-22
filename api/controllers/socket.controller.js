@@ -134,10 +134,10 @@ const endAuction = asyncHandler(async ( roomId,highestBidder) => {
             redisClient.hGetAll(REDIS_KEYS.AUCTION_ROOM(roomId)),
         ]);
 
-        if (!roomInfo || Object.keys(roomInfo).length === 0) {
-            globalIo.emit('error', { message: 'Phòng đấu giá không tồn tại' });
-            return;
-        }
+        // if (!roomInfo || Object.keys(roomInfo).length === 0) {
+        //     globalIo.emit('error', { message: 'Phòng đấu giá không tồn tại' });
+        //     return;
+        // }
 
         globalIo.to(roomId).emit('auctionEnd', {
             roomId,
@@ -146,25 +146,6 @@ const endAuction = asyncHandler(async ( roomId,highestBidder) => {
             winningBid: parseFloat(highestBidder?.amount),
             time: highestBidder?.time
         });
-
-    } catch (error) {
-        console.error('Lỗi khi kết thúc đấu giá:', error);
-        socket.emit('error', { message: 'Không thể kết thúc đấu giá' });
-    }
-});
-
-const getListMember = asyncHandler(async ( roomId) => {
-
-    try {
-        const room = globalIo.sockets.adapter.rooms.get(roomId);
-
-        // globalIo.to(roomId).emit('auctionEnd', {
-        //     roomId,
-        //     winner: highestBidder?.userCode|| null,
-        //     winnerId: highestBidder?.userId || null,
-        //     winningBid: parseFloat(highestBidder?.amount),
-        //     time: highestBidder?.time
-        // });
 
     } catch (error) {
         console.error('Lỗi khi kết thúc đấu giá:', error);

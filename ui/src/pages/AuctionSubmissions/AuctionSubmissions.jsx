@@ -134,7 +134,7 @@ export default function AuctionSubmissions() {
                       {auction.status}
                     </Tag>
                   </div>
-                  <p className="text-gray-600 mt-2">{auction.product.description}</p>
+                  <p className="text-gray-600 mt-2 line-clamp-3">{auction.product.description}</p>
                   <div className="mt-2 text-sm text-gray-500">
                     <span>Auction ID: {auction._id}</span>
                     <span className="ml-4">Start: {formatDateTime(auction.startTime)}</span>
@@ -148,13 +148,13 @@ export default function AuctionSubmissions() {
                       </div>
                       <div className="flex justify-between">
                         <span className="font-medium w-28 mr-4">Register Fee:</span>
-                        <span className="font-normal text-left w-1/2">{formatCurrency(auction.deposit)} (Paied)</span>
+                        <span className="font-normal text-left w-1/2">- {formatCurrency(auction.signupFee)}</span>
                       </div>
 
                       <div className="flex justify-between">
                         <span className="font-medium w-28 mr-4">Total Receiving:</span>
                         <span className=" text-left w-1/2 font-bold"> {formatCurrency(
-                          auction.winningPrice
+                          auction.winningPrice - auction.signupFee
                         )}</span>
                       </div>
                     </div>
@@ -173,6 +173,7 @@ export default function AuctionSubmissions() {
                         )}
                         <TransactionReportButton
                           disabled={!auction.winnerBankInfo}
+                          data={auction}
                         />
                       </div>
                     )}
