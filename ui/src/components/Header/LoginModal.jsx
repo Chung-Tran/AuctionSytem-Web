@@ -48,7 +48,7 @@ const Button = ({ children, ...props }) => (
   </button>
 );
 
-const LoginModal = ({ isOpen, setIsOpen, onLoginSuccess }) => {
+const LoginModal = ({ isOpen, setIsOpen, onLoginSuccess,languageText }) => {
   const {openLoginModal,toggleLoginModal } = useContext(AppContext)
   const [showOtp, setShowOtp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -93,13 +93,13 @@ const LoginModal = ({ isOpen, setIsOpen, onLoginSuccess }) => {
               selectedClassName="border-b-2 border-blue-600 text-blue-600"
               className="px-4 py-2 cursor-pointer font-medium text-gray-600 focus:outline-none"
             >
-              {isForgotPassword ? 'Forgot Password' : 'Login'}
+              {isForgotPassword ? languageText.forgotPassword : languageText.loginButton }
             </Tab>
             <Tab
               selectedClassName="border-b-2 border-blue-600 text-blue-600"
               className="px-4 py-2 cursor-pointer font-medium text-gray-600 focus:outline-none"
             >
-              Sign Up
+              {languageText.signUpTitle}
             </Tab>
           </TabList>
 
@@ -128,10 +128,10 @@ const LoginModal = ({ isOpen, setIsOpen, onLoginSuccess }) => {
               >
                 {({ isSubmitting }) => (
                   <Form className="space-y-4">
-                    <InputField label="Email or Phone" name="username" />
-                    <InputField label="Password" name="password" type="password" />
+                    <InputField label= {languageText.loginUsernameLabel} name="username" />
+                    <InputField label= {languageText.loginPasswordLabel} name="password" type="password" />
                     <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? 'Logging in...' : 'Login'}
+                      {isSubmitting ? languageText.loggingInButton : languageText.loginButton}
                     </Button>
                   </Form>
                 )}
@@ -208,12 +208,12 @@ const LoginModal = ({ isOpen, setIsOpen, onLoginSuccess }) => {
               >
                 {({ isSubmitting }) => (
                   <Form className="space-y-4">
-                    <InputField label="Email" name="email" type="email" disabled={showOtp} />
-                    {showOtp && <InputField label="OTP" name="otp" />}
+                    <InputField label={languageText.signUpEmailLabel} name="email" type="email" disabled={showOtp} />
+                    {showOtp && <InputField label={languageText.signUpOtpLabel} name="otp" />}
                     {showNewPassword && (
                       <>
-                        <InputField label="New Password" name="newPassword" type="password" />
-                        <InputField label="Confirm New Password" name="confirmPassword" type="password" />
+                        <InputField label={languageText.signUpPasswordLabel}  name="newPassword" type="password" />
+                        <InputField label={languageText.signUpConfirmPasswordLabel}  name="confirmPassword" type="password" />
                       </>
                     )}
                     <Button type="submit" disabled={isSubmitting}>
@@ -223,7 +223,7 @@ const LoginModal = ({ isOpen, setIsOpen, onLoginSuccess }) => {
                           {showNewPassword ? 'Resetting...' : showOtp ? 'Verifying...' : 'Sending...'}
                         </div>
                       ) : (
-                        showNewPassword ? 'Reset Password' : showOtp ? 'Verify OTP' : 'Send OTP'
+                        showNewPassword ? languageText.forgotPasswordResetPasswordButton : showOtp ? languageText.forgotPasswordVerifyOtpButton : languageText.forgotPasswordSendOtpButton
                       )}
                     </Button>
                   </Form>
@@ -239,7 +239,7 @@ const LoginModal = ({ isOpen, setIsOpen, onLoginSuccess }) => {
                   setShowNewPassword(false);
                 }}
               >
-                {isForgotPassword ? 'Back to Login' : 'Forgot Password?'}
+                {isForgotPassword ? languageText.loginButton : languageText.forgotPassword}
               </span>
             </div>
           </TabPanel>
@@ -260,18 +260,17 @@ const LoginModal = ({ isOpen, setIsOpen, onLoginSuccess }) => {
               onSubmit={async (values, { resetForm }) => {
                 const register = await HomeService.createAccount(values);
                 if (!!register) {
-                  openNotify('error', register.message);
-                } else {
                   openNotify('success', 'Register successfully!!');
                   resetForm();
+                } else {
                 }
               }}
               className="overflow-auto"
             >
               {({ values, setFieldValue }) => (
                 <Form className="space-y-4">
-                  <InputField label="Full Name" name="fullName" />
-                  <InputField label="Username" name="username" /> {/* Added username input */}
+                  <InputField label={languageText.signUpFullNameLabel} name="fullName" />
+                  <InputField label={languageText.signUpUsernameLabel} name="username" /> {/* Added username input */}
                   <div className="relative">
                     <InputField label="Email" name="email" type="email" />
                     <button
@@ -289,7 +288,7 @@ const LoginModal = ({ isOpen, setIsOpen, onLoginSuccess }) => {
                           if (!!otp) {
                             openNotify('success', 'OTP is sent successfully. Check your email!');
                           } else {
-                            openNotify('error', 'Send OTP failed. Try again!');
+                            // openNotify('error', 'Send OTP failed. Try again!');
                           }
                         } catch (error) {
                           openNotify('error', 'Cannot send OTP');
@@ -305,14 +304,14 @@ const LoginModal = ({ isOpen, setIsOpen, onLoginSuccess }) => {
                           Sending...
                         </div>
                       ) : (
-                        'Send OTP'
+                        languageText.forgotPasswordSendOtpButton
                       )}
                     </button>
                   </div>
-                  <InputField label="Phone Number" name="phone" />
-                  <InputField label="OTP" name="otp" />
-                  <InputField label="Password" name="password" type="password" />
-                  <InputField label="Confirm Password" name="confirmPassword" type="password" />
+                  <InputField label={languageText.signUpPhoneLabel} name="phone" />
+                  <InputField label={languageText.signUpOtpLabel} name="otp" />
+                  <InputField label={languageText.signUpPasswordLabel} name="password" type="password" />
+                  <InputField label={languageText.signUpConfirmPasswordLabel} name="confirmPassword" type="password" />
                   <div className="flex items-center">
                     <input
                       type="checkbox"
@@ -323,11 +322,11 @@ const LoginModal = ({ isOpen, setIsOpen, onLoginSuccess }) => {
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
                     <label htmlFor="agreement" className="ml-2 block text-sm text-gray-900">
-                      I agree to the terms and conditions
+                    {languageText.signUpAgreementLabel}
                     </label>
                   </div>
                   <ErrorMessage name="agreement" component="div" className="mt-1 text-sm text-red-600" />
-                  <Button type="submit">Sign Up</Button>
+                  <Button type="submit">{languageText.signUpTitle}</Button>
                 </Form>
               )}
             </Formik>

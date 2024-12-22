@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
 import Breadcrumb from '../../components/BreadCrumb/BreadCrumb'
 import ProductItem from '../../components/Product/ProductItem';
 import logo from '../../assets/logo192.png';
@@ -9,6 +9,8 @@ import LoadingSpinner from '../LoadingSpinner';
 import { countdown, formatCurrency } from '../../commons/MethodsCommons';
 import { Helmet } from 'react-helmet';
 import { AUCTION_STATUS } from '../../commons/Constant';
+import { UpcommingLanguage } from '../../languages/UpcommingLanguage';
+import { AppContext } from '../../AppContext';
 const Upcomming = () => {
     const buttonSelect = "bg-primary text-white ";
     const [loading, setLoading] = useState(false);
@@ -20,6 +22,8 @@ const Upcomming = () => {
         status: AUCTION_STATUS.APPROVED
     });
     const [totalPages, setTotalPages] = useState(1);
+    const { language } = useContext(AppContext);
+    const languageText = useMemo(() => UpcommingLanguage[language], [language]);
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true)
@@ -53,32 +57,32 @@ const Upcomming = () => {
     return (
         <div>
             <Helmet>
-                <title>Upcomming</title>
-                <meta property="og:title" content="Upcomming" />
-                <meta property="og:description" content="Upcomming" />
+                <title>{languageText.upcoming}</title>
+                <meta property="og:title" content={languageText.upcoming} />
+                <meta property="og:description" content={languageText.upcoming} />
             </Helmet>
             <Breadcrumb
                 items={[
-                    { label: "Home", href: "/" },
-                    { label: "Upcoming Auctions", href: null },
+                    { label: languageText.home, href: "/" },
+                    { label: languageText.upcoming, href: null },
                 ]}
-                title="Upcoming Auctions"
+                title={languageText.upcoming}
             />
             <section className='container mx-auto mt-6 px-6'>
-                <h1 className="text-3xl font-bold mb-6">Upcoming</h1>
+                <h1 className="text-3xl font-bold mb-6">{languageText.upcoming}</h1>
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
                         <button variant="outline" size="sm" className={`${buttonSelect} p-2 rounded-md font-medium`}>
-                            Upcoming
+                            {languageText.upcoming}
                         </button>
                         <button variant="outline" size="sm" className={` p-2 bg-[#F3F4F5] rounded`}>
-                            Completed
+                            {languageText.completed}
                         </button>
                         <button variant="outline" size="sm" className={` p-2 bg-[#F3F4F5] rounded`}>
-                            Featured
+                            {languageText.featured}
                         </button>
                     </div>
-                    <input type="search" placeholder="Search auctions..." className="pl-8 pr-2 py-2 border rounded-md outline-none text-sm" />
+                    <input type="search" placeholder={languageText.searchPlaceholder} className="pl-8 pr-2 py-2 border rounded-md outline-none text-sm" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                     {auctions && auctions?.map((product) => (
@@ -93,10 +97,11 @@ const Upcomming = () => {
                             endsIn={product.startTime || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
                             registeredUsers={product.registeredUsers}
                             registrationCloseDate={product.registrationCloseDate}
+                            registrationOpenDate={product.registrationOpenDate}
                         />
                     ))}
-                    {auctions?.length == 0 && (
-                        <h3>Không có sản phẩm đang chờ đấu giá</h3>
+                    {auctions?.length === 0 && (
+                        <h3>{languageText.noAuctions}</h3>
                     )}
                 </div>
                 <div className="flex justify-center mt-6">
@@ -105,21 +110,21 @@ const Upcomming = () => {
                         onClick={handlePreviousPage}
                         disabled={searchOptions.page === 1}
                     >
-                        <ChevronLeft /> &nbsp;Previous
+                        <ChevronLeft /> &nbsp;{languageText.previous}
                     </button>
                     <button
                         className="ml-1 flex p-2 hover:bg-[#F3F4F5] rounded items-center font-medium"
                         onClick={handleNextPage}
                         disabled={searchOptions.page === totalPages}
                     >
-                        Next &nbsp;<ChevronRight />
+                        {languageText.next} &nbsp;<ChevronRight />
                     </button>
                 </div>
             </section>
 
             {auctionHighlight && <section className="bg-muted py-12 mt-10 px-6">
                 <div className="container mx-auto px-4 md:px-6">
-                    <h2 className="text-2xl font-bold mb-6">Product Details</h2>
+                    <h2 className="text-2xl font-bold mb-6">{languageText.productDetails}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className='h-[600px]'>
                             <img
@@ -147,7 +152,7 @@ const Upcomming = () => {
                                 </div>
                             </div>
                             <button size="lg" className="w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium bg-primary h-11 rounded-md px-8 text-white">
-                                Place Bid
+                                {languageText.placeBid}
                             </button>
                         </div>
                     </div>
@@ -156,38 +161,9 @@ const Upcomming = () => {
 
             <section className="py-12 mt-10 px-6">
                 <div className="container mx-auto">
-                    <h2 className="text-2xl font-bold">Related Assets</h2>
+                    <h2 className="text-2xl font-bold">{languageText.relatedAssets}</h2>
                     <div className="grid sm:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
-                        {[
-                            {
-                                title: "Auction Industry Trends",
-                                description: "Exploring the latest developments and insights in the world of auctions.",
-                                date: "September 1, 2024",
-                                href: "/auction-trends",
-                                image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT5mPgF1lStvLtPNxk1PGC5wZ9QT4SkOiGwTw&s",
-                            },
-                            {
-                                title: "Bidding Strategies for Success",
-                                description: "Learn effective bidding tactics to improve your chances of winning auctions.",
-                                date: "October 15, 2024",
-                                href: "/bidding-strategies",
-                                image: "https://propscience.s3.ap-south-1.amazonaws.com/backoffice_blogs/master_stories_auction%201.jpg"
-                            },
-                            {
-                                title: "Top Auction Categories of 2024",
-                                description: "Discover the most popular auction categories and what’s driving their demand.",
-                                date: "November 5, 2024",
-                                href: "/top-categories-2024",
-                                image: "https://jaro-website.s3.ap-south-1.amazonaws.com/2024/04/Common-Auction-Types.jpg"
-                            },
-                            {
-                                title: "How to Spot Rare Collectibles",
-                                description: "Tips and tricks to identify valuable and rare items in auctions.",
-                                date: "December 10, 2024",
-                                href: "/spot-rare-collectibles",
-                                image: "https://fastercapital.com/i/Betting-on-Favorites--How-Tips-Spread-Can-Help-You-Win--Understanding-the-Role-of-Tips-Spread-in-Betting-on-Favorites.webp"
-                            },
-                        ].map((item, index) => (
+                        {[/* Các bài viết liên quan */].map((item, index) => (
                             <div key={index} className="bg-card rounded-lg overflow-hidden shadow-lg">
                                 <img
                                     src={item.image}
@@ -216,7 +192,7 @@ const Upcomming = () => {
             </section>
 
         </div>
-    )
+    );
 }
 
 export default Upcomming

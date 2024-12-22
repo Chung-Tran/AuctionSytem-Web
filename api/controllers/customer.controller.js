@@ -36,7 +36,7 @@ const createCustomer = asyncHandle(async (req, res) => {
         return res.status(400).json(formatResponse(false, { message: "Account already exists!" }, "Account already exists!"));
     }
     // Lấy userCode mới nhất trong hệ thống để tạo userCode mới
-    const latestUser = await User.findOne({ userCode: { $regex: /^ACM-N\d{4}$/ } }).sort({ createdAt: -1 });
+    const latestUser = await Customer.findOne({ userCode: { $regex: /^ACM-N\d{4}$/ } }).sort({ createdAt: -1 });
 
     // Xử lý tăng mã tự động cho userCode. Quy tắc mã KH: ACM-N + 4 số tự động tăng
     let newUserCode = "ACM-N0001";
@@ -65,6 +65,11 @@ const sendOTPCreateAccount = asyncHandle(async (req, res) => {
     const { email } = req.body;
     if (!email)
         res.status(400).json(formatResponse(false, { message: "Email invalid!" }, "Email invalid!"));
+    const existingCustomer = await Customer.findOne({ email: email.toLowerCase() });
+    if (existingCustomer)
+    {
+        res.status(400).json(formatResponse(false, { message: "Email already exists!" }, "Email already exists!"));
+    }
     const { otp, success } = await sendAccountCreationOTP(email);
     if (!success)
         res.status(400).json(formatResponse(false, { message: "Send otp failed!" }, "Send otp failed!"));

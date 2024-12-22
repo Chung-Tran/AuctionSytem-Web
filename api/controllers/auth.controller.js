@@ -85,7 +85,6 @@ const employeeLogin = asyncHandle(async (req, res) => {
         ? rolePermission.permissions.map(permission => permission.key)
         : [];
 
-    console.log("employeeLogin: ", employee)
     res.status(200).json(formatResponse(true, { _id, employeeUsername, email,permissions: rolePermissionId, accessToken}, null));
 });
 

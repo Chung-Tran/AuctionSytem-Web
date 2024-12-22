@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Hammer, Play, Bell } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuctionSocket } from '../../config/socket';
@@ -9,6 +9,9 @@ import { BellRing } from 'lucide-react';
 import AuctionEndToast from '../../components/Auctions/AuctionEndToast';
 import productTemplate from '../../assets/productTemplate.jpg'
 import { Helmet } from 'react-helmet';
+import { useContext } from 'react';
+import { AppContext } from '../../AppContext';
+import { AuctionRoomLanguage } from '../../languages/AuctionRoomLanguage';
 //Read only
 const AuctionRoomOnlyView = () => {
   const { roomId } = useParams();
@@ -21,6 +24,8 @@ const AuctionRoomOnlyView = () => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [bidHistory, setBidHistory] = useState([]);
   const [disable, setDisable] = useState(false);
+  const {language } = useContext(AppContext)
+  const languageText = useMemo(() => AuctionRoomLanguage[language], [language])
   // Socket Connection
   const { isConnected, auctionData, error } = useAuctionSocket(roomId, {
     onBidUpdate: (data) => {
@@ -39,7 +44,7 @@ const AuctionRoomOnlyView = () => {
       const productData = roomData.product;
       setRoomInfo(roomData);
       setProductInfo(productData);
-      setCurrentBid(parseFloat(data.roomInfo.currentBid) || 0);
+      setCurrentBid(data.bidHistory?.length > 0 ? parseFloat(data.roomInfo.currentBid) : roomData.startingPrice);
       setBidHistory(data.bidHistory || []);
       setConnected(true);
 
@@ -66,7 +71,7 @@ const AuctionRoomOnlyView = () => {
           position: 'top-center',
           className: 'relative z-50',
           id: 'auction-end-toast',
-          duration: 5000
+          duration: 3000
         }
       );
     },
@@ -92,10 +97,10 @@ const AuctionRoomOnlyView = () => {
     const seconds = totalSeconds % 60;
 
     const timeUnits = [
-      { value: days, label: 'Ngày' },
-      { value: hours, label: 'Giờ' },
-      { value: minutes, label: 'Phút' },
-      { value: seconds, label: 'Giây' }
+      { value: days, label: languageText.day },
+      { value: hours, label: languageText.hour },
+      { value: minutes, label: languageText.minute },
+      { value: seconds, label: languageText.day }
     ];
 
     // Lọc ra các đơn vị thời gian > 0, bắt đầu từ đơn vị lớn nhất
@@ -112,7 +117,7 @@ const AuctionRoomOnlyView = () => {
     return significantUnits;
   };
   const openNotify = (data) => {
-    toast(`${maskCustomerCode(data.userCode || "****")} vừa trả giá ${formatCurrency(data.currentBid)}`,
+    toast(`${maskCustomerCode(data.userCode || "****")} ${languageText.justBid} ${formatCurrency(data.currentBid)}`,
       {
         icon: <BellRing size={22} color='yellow' fontWeight={800} />,
         style: {
@@ -181,7 +186,7 @@ const AuctionRoomOnlyView = () => {
           <div className="space-y-6">
             <div className="glass-effect rounded-2xl p-8 flex flex-col items-center neon-border">
               <div className="glass-effect rounded-2xl p-6 text-center mb-4 bg-[#170B5E]">
-                <h2 className="text-white text-base font-semibold mb-2 text-center tracking-[0.5rem] ">THỜI GIAN CÒN LẠI</h2>
+                <h2 className="text-white text-base font-semibold mb-2 text-center tracking-[0.5rem] ">{ languageText.countdownTitle}</h2>
                 <div className="text-4xl font-bold text-white tracking-[0.3rem] flex items-center justify-center ">
                   {formatTime(timeLeft).map((unit, index) => (
                     <React.Fragment key={unit.label}>
@@ -195,7 +200,7 @@ const AuctionRoomOnlyView = () => {
               </div>
               <img
                  src={productInfo?.images[0] || productTemplate}
-                className='w-48 h-40 hover:scale-105 transform  transition-transform duration-300  shadow-2xl'
+                className='w-48 h-48 hover:scale-105 transform  transition-transform duration-300  shadow-2xl object-cover  rounded'
               />
             </div>
           </div>
@@ -204,7 +209,7 @@ const AuctionRoomOnlyView = () => {
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center">
                 <Bell className="w-8 h-8 mr-3 text-yellow-400" />
-                <span className="text-2xl font-bold text-pink-300">Lịch sử đấu giá</span>
+                <span className="text-2xl font-bold text-pink-300">{ languageText.bidHistory}</span>
               </div>
               <div className="text-2xl font-bold text-green-400">+{formatCurrency(currentBid)}</div>
             </div>
@@ -218,7 +223,7 @@ const AuctionRoomOnlyView = () => {
               ))}
             </div>
             <div className="text-3xl mt-4 text-center">
-              Giá hiện tại: <br />
+              { languageText.currentBid}: <br />
               <span className="text-5xl font-bold bg-gradient-to-r from-green-400 to-blue-500 text-transparent bg-clip-text">
                 {formatCurrency(currentBid)}
               </span>

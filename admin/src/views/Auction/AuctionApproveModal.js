@@ -198,7 +198,7 @@ function AuctionApproveModal(props) {
                         <CCol md="6" className='mb-3'>
                             <CRow>
                                 <CCol md="4" >
-                                    <CFormLabel className='mt-1'>Phí đăng kí phiên đấu giá</CFormLabel>
+                                    <CFormLabel className='mt-1'>Phí tham gia</CFormLabel>
                                 </CCol>
                                 <CCol md="7" >
                                     <CFormInput className={type === 'Xem' ? 'input-readonly' : ''} name='registrationFee' onChange={formik.handleChange} defaultValue={formik.values.registrationFee} />
