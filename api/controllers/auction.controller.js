@@ -122,7 +122,7 @@ const approveAuction = asyncHandler(async (req, res) => {
 
         await auction.save();
         //Nếu như phê duyệt đấu giá trong ngày thì sẽ push nó vào list auto start
-        if (new Date(startTime).getDate() == new Date().getDate() && new Date(endTime).getDate() == new Date().getDate())
+        if (new Date(startTime).getDate() == new Date().getDate())
             await pushAuctionToQueue(auction._id);
 
         await Product.findByIdAndUpdate(auction.product, { status: PRODUCT_STATUS.RECEIVED });
