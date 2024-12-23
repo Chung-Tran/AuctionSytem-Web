@@ -57,6 +57,7 @@ const initializeAuctionSystem = async () => {
 const scheduleAuctionStart = async (auction) => {
   const timeUntilStart = auction.startTime - new Date();
   if (timeUntilStart > 0) {
+    console.log("Add to queue start, auction:",auction._id)
     auctionQueue.add(
       'start-auction',
       { auctionId: auction._id },
@@ -68,8 +69,8 @@ const scheduleAuctionStart = async (auction) => {
 
 const scheduleAuctionEnd = async (auction) => {
   const timeUntilEnd = auction.endTime - new Date();
-  console.log('time end auction: ', auction._id, 'time remain', timeUntilEnd)
   if (timeUntilEnd > 0) {
+    console.log('Add to queue end, auction: ', auction._id, 'time remain', timeUntilEnd)
     auctionQueue.add(
       'end-auction',
       { auctionId: auction._id },
@@ -219,7 +220,8 @@ const pushAuctionToQueue = async (auctionId) => {
     // if (startTime <= currentTime && endTime > currentTime) {
     //   await activateAuction(auction._id);
     // }
-     if (startTime > currentTime && endTime >currentTime) {
+    console.log('Push to queue, result: ', (startTime > currentTime && endTime > currentTime), (endTime > currentTime))
+    if (startTime > currentTime && endTime > currentTime) {
       await scheduleAuctionStart(auction);
     }
 
