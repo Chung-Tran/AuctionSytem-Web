@@ -55,12 +55,12 @@ export const PRODUCT_CATEGORY_DATASOURCE = [
     { value: 'Fashion', label: 'Quần áo, phụ kiện' },
     { value: 'Jewelry', label: 'Đồ trang sức, kim hoàn' },
     { value: 'Art', label: 'Tranh ảnh, điêu khắc' },
-    { value: 'Real Estate', label: 'Đất đai, nhà cửa' },
+    { value: 'RealEstate', label: 'Đất đai, nhà cửa' },
     { value: 'Vehicle', label: 'Xe cộ, phương tiện' },
-    { value: 'Collector Items', label: 'Đồ sưu tầm' },
+    { value: 'CollectorItems', label: 'Đồ sưu tầm' },
     { value: 'Furniture', label: 'Đồ đạc, nội thất' },
     { value: 'Antiques', label: 'Các vật phẩm cổ' },
-    { value: 'Sports Equipment', label: 'Dụng cụ thể thao' },
+    { value: 'SportsEquipment', label: 'Dụng cụ thể thao' },
     { value: 'Books', label: 'Sách, tài liệu' },
     { value: 'Other', label: 'Các loại khác' }
 ];

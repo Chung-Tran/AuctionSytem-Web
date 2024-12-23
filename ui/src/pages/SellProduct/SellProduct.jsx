@@ -155,13 +155,13 @@ const SellProduct = () => {
                   <SelectField
                     name="category"
                     label={languageText.category}
-                    options={PRODUCT_CATEGORY_DATASOURCE.map(item => ({ value: item.value, label: item.label }))}
+                    options={PRODUCT_CATEGORY_DATASOURCE[language].map(item => ({ value: item.value, label: item.label }))}
                   />
   
                   <SelectField
                     name="condition"
                     label={languageText.condition}
-                    options={PRODUCT_CONDITION_DATASOURCE.map(item => ({ value: item.value, label: item.label }))}
+                    options={PRODUCT_CONDITION_DATASOURCE[language].map(item => ({ value: item.value, label: item.label }))}
                   />
                   <SelectField
                     name="auctionType"

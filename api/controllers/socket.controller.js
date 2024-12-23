@@ -76,7 +76,11 @@ const placeBid = asyncHandler(async (io, socket, data) => {
     const { userId, userCode } = socket.user;
     const roomKey = REDIS_KEYS.AUCTION_ROOM(roomId);
     const bidHistoryKey = REDIS_KEYS.BID_HISTORY(roomId);
-
+    if (!userId || !userCode) {
+        socket.emit('sessionExpire', { message: 'Session expire' });
+        console.log('sessionExpire, token: ',socket.handshake.auth.token)
+        return;
+    }
     try {
         const room = await redisClient.hGetAll(roomKey);
 
