@@ -9,12 +9,12 @@ const PRODUCT_CATEGORY = {
     FASHION: 'Fashion',                   // Quần áo, phụ kiện
     JEWELRY: 'Jewelry',                   // Đồ trang sức, kim hoàn
     ART: 'Art',                           // Tranh ảnh, điêu khắc
-    REAL_ESTATE: 'Real Estate',           // Đất đai, nhà cửa
+    REAL_ESTATE: 'RealEstate',           // Đất đai, nhà cửa
     VEHICLE: 'Vehicle',                   // Xe cộ, phương tiện
-    COLLECTOR_ITEMS: 'Collector Items',   // Đồ sưu tầm
+    COLLECTOR_ITEMS: 'CollectorItems',   // Đồ sưu tầm
     FURNITURE: 'Furniture',               // Đồ đạc, nội thất
     ANTIQUES: 'Antiques',                 // Các vật phẩm cổ
-    SPORTS_EQUIPMENT: 'Sports Equipment', // Dụng cụ thể thao
+    SPORTS_EQUIPMENT: 'SportsEquipment', // Dụng cụ thể thao
     BOOKS: 'Books',                       // Sách, tài liệu
     OTHER: 'Other'                        // Các loại khác
 };

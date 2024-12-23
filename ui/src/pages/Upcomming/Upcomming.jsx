@@ -163,7 +163,36 @@ const Upcomming = () => {
                 <div className="container mx-auto">
                     <h2 className="text-2xl font-bold">{languageText.relatedAssets}</h2>
                     <div className="grid sm:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
-                        {[/* Các bài viết liên quan */].map((item, index) => (
+                        {[
+                            {
+                                title: "Auction Industry Trends",
+                                description: "Exploring the latest developments and insights in the world of auctions.",
+                                date: "September 1, 2024",
+                                href: "/auction-trends",
+                                image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT5mPgF1lStvLtPNxk1PGC5wZ9QT4SkOiGwTw&s",
+                            },
+                            {
+                                title: "Bidding Strategies for Success",
+                                description: "Learn effective bidding tactics to improve your chances of winning auctions.",
+                                date: "October 15, 2024",
+                                href: "/bidding-strategies",
+                                image: "https://propscience.s3.ap-south-1.amazonaws.com/backoffice_blogs/master_stories_auction%201.jpg"
+                            },
+                            {
+                                title: "Top Auction Categories of 2024",
+                                description: "Discover the most popular auction categories and what’s driving their demand.",
+                                date: "November 5, 2024",
+                                href: "/top-categories-2024",
+                                image: "https://jaro-website.s3.ap-south-1.amazonaws.com/2024/04/Common-Auction-Types.jpg"
+                            },
+                            {
+                                title: "How to Spot Rare Collectibles",
+                                description: "Tips and tricks to identify valuable and rare items in auctions.",
+                                date: "December 10, 2024",
+                                href: "/spot-rare-collectibles",
+                                image: "https://fastercapital.com/i/Betting-on-Favorites--How-Tips-Spread-Can-Help-You-Win--Understanding-the-Role-of-Tips-Spread-in-Betting-on-Favorites.webp"
+                            },
+                        ].map((item, index) => (
                             <div key={index} className="bg-card rounded-lg overflow-hidden shadow-lg">
                                 <img
                                     src={item.image}
