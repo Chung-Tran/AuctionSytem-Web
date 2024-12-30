@@ -53,7 +53,7 @@ const AuctioningPage = () => {
                             name={item.productName}
                             slug={item.slug}
                             price={item.startingPrice}
-                            highestBid={item.highestBid || 122222}
+                            highestBid={item.highestBid || item.startingPrice}
                             participants={item.participants?.length}
                             endsIn={item.endTime || new Date(Date.now() + 24 * 60 * 60 * 1000)}
                             languageText={languageText}

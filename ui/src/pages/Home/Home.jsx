@@ -105,7 +105,7 @@ const Home = () => {
                                 price={product.startingPrice}
                                 currentViews={product.viewCount || 0}
                                 endsIn={product.startTime || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
-                                registeredUsers={product.registeredUsers}
+                                registeredUsers={product?.registeredUsers?.map(item=>item?.customer).filter(Boolean) || []}
                                 registrationCloseDate={product.registrationCloseDate}
                                 registrationOpenDate={product.registrationOpenDate}
                                 language={language}

@@ -6,6 +6,7 @@ export const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [notifyInfo, setNotifyInfo] = useState(null);
     const [openLoginModal, setOpenLoginModal] = useState(null);
     const [language, setLanguage] = useState(localStorage.getItem('language') || 'en');
 
@@ -33,7 +34,7 @@ export const AppProvider = ({ children }) => {
                     // Decode token để lấy thông tin và thời gian tạo token
                     const decodedToken = jwtDecode(token);
                     const createdAt = new Date(decodedToken.createdAt);
-                    const now = new Date();
+                    const now = new Date(Date.now());
 
                     if (
                         createdAt.getDate() !== now.getDate() ||
@@ -45,7 +46,9 @@ export const AppProvider = ({ children }) => {
                     } else {
                         // Gọi API để lấy thông tin người dùng
                         const userInfo = await ProfileService.getById(decodedToken.userId);
+                        const notifyData = await ProfileService.getNotifyCount();
                         setUserData(userInfo);
+                        setNotifyInfo(notifyData);
                     }
                 } catch (error) {
                     console.error("Session expired", error);
@@ -66,13 +69,16 @@ export const AppProvider = ({ children }) => {
         setLanguage(newLanguage);
         localStorage.setItem('language', newLanguage);
     };
+    const readAllNotify = () => {
+        setNotifyInfo({ count: 0 });
+    };
 
     useEffect(() => {
 
     }, []);
 
     return (
-        <AppContext.Provider value={{ user, setUserData, openLoginModal, toggleLoginModal, language, changeLanguage }}>
+        <AppContext.Provider value={{ user, setUserData, openLoginModal, toggleLoginModal, language, changeLanguage ,notifyInfo,readAllNotify}}>
             {children}
         </AppContext.Provider>
     );

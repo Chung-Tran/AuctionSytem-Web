@@ -64,7 +64,7 @@ const AuctionService = {
     },
     checkUserRegistration: async (roomId) => {
         try {
-            const response = await axiosClient.get(`auctions/check-valid-access`);
+            const response = await axiosClient.get(`auctions/${roomId}/check-valid-access`);
             const data = await handleResponse(response);
             return data;
         } catch (error) {

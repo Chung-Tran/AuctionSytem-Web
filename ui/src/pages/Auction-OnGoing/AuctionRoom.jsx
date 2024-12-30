@@ -22,7 +22,7 @@ const formatTime = (totalSeconds, languageText) => {
     { value: days, label: languageText.day },
     { value: hours, label: languageText.hour },
     { value: minutes, label: languageText.minute },
-    { value: seconds, label: languageText.seconds }
+    { value: seconds, label: languageText.second }
   ];
 
   // Lọc ra các đơn vị thời gian > 0, bắt đầu từ đơn vị lớn nhất
@@ -248,10 +248,10 @@ const languageText = useMemo(() => AuctionRoomLanguage[language], [language])
             </div>
           </div>
 
-          <div className='border border-white h-48 w-48 justify-center m-auto'>
+          <div className=' h-48 w-48 justify-center m-auto'>
             <img
               src={productInfo?.images[0] || productTemplate}
-              className='w-full h-full object-cover'
+              className='w-full h-full object-cover rounded-md'
             />
           </div>
         </div>
@@ -260,9 +260,9 @@ const languageText = useMemo(() => AuctionRoomLanguage[language], [language])
       </div>
 
       <div className="w-[45%] flex flex-col p-2 items-end ml-auto items-center justify-center">
-        <h2 className='text-center my-4 flex mx-auto text-xl'>
+        {/* <h2 className='text-center my-4 flex mx-auto text-xl'>
           {languageText.auctioneer}: &nbsp;<b>{roomInfo?.auctioneer || languageText.noAuctioneer}</b>
-        </h2>
+        </h2> */}
 
         {/* Bid History */}
         <div className="bg-[#00082C] py-6 px-6 mb-4 rounded-md w-full overflow-y-auto max-h-[350px] no-scrollbar">
