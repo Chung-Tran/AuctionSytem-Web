@@ -40,7 +40,9 @@ const ProductDetail = () => {
                 setAuction(auctionData);
                 if (auctionData.registrationCloseDate && new Date() > new Date(auctionData.registrationCloseDate)) {
                     setRegisterStatus(REGISTER_STATUS.EXPIRED);
-                } else if (user && auctionData.registeredUsers?.includes(user.userId)) {
+                }  else if (new Date() < new Date(auctionData?.registrationOpenDate)) {
+                  setRegisterStatus(REGISTER_STATUS.NOT_ALLOW);
+              }else if (user && auctionData.registeredUsers?.includes(user.userId)) {
                     setRegisterStatus(REGISTER_STATUS.REGISTERED);
                 } else {
                     setRegisterStatus(REGISTER_STATUS.NOT_REGISTERED);
@@ -60,7 +62,7 @@ const ProductDetail = () => {
         const now = new Date()
         const targetDate = new Date(startTime)
         const difference = targetDate - now;
-        //reset button
+      //reset button
         if (now < new Date(auction?.registrationOpenDate)) {
             setRegisterStatus(REGISTER_STATUS.NOT_ALLOW)
         } else if (now == new Date(auction?.registrationOpenDate)) {
@@ -121,7 +123,8 @@ const ProductDetail = () => {
             default:
                 break;
         }
-    }
+  }
+  console.log(registerStatus)
     return !!auction && (
         <div>
           <Helmet>
@@ -224,7 +227,7 @@ const ProductDetail = () => {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">{languageText.auctionType}</span>
-                        <div className="font-semibold">{languageText.online}</div>
+                        <div className="font-semibold">Online</div>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">{languageText.assetOwner}</span>

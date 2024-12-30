@@ -7,12 +7,12 @@ const { RefreshToken } = require('../models/user.model');
 const { formatResponse } = require('../common/MethodsCommon');
 
 // Tạo access token
-function generateAccessToken(userId, sessionKey, userCode = null, expiresIn = "15m") {
+function generateAccessToken(userId, sessionKey, userCode = null, expiresIn = "1h") {
     return jwt.sign({
         userId,
         sessionKey,
         userCode,
-        createdAt: new Date(Date.now()),
+        createdAt: new Date(),
     }, process.env.JWT_SECRET, { expiresIn: expiresIn });
 }
 
@@ -104,9 +104,9 @@ const verifySocketToken =async (socket, next) => {
         const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
         
         if (!token) {
-            return next(new Error('Token không được cung cấp'));
+            return socket.emit('sessionExpire', { Authentication: false });
         }
-
+console.log('token',token)
         try {
             // Verify token
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -139,7 +139,7 @@ const verifySocketToken =async (socket, next) => {
                     return socket.emit('sessionExpire', { Authentication: false });
                 }
             } else {
-                return next(new Error('Token không hợp lệ'));
+                return socket.emit('sessionExpire', { Authentication: false });
             }
         }
     } catch (error) {

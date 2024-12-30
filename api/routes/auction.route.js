@@ -42,7 +42,7 @@ router.get('/getDetailAuctionByID/:id_Auction', getAuctionDetailsByID);
 router.get('/outstanding', getAuctionOutstanding); 
 router.get('/my-auctioned',verifyAccessToken, getMyAuctioned); 
 router.get('/ongoing', ongoingList); 
-router.get('/check-valid-access',verifyAccessToken, checkValidAccess); 
+router.get('/:auctionId/check-valid-access',verifyAccessToken, checkValidAccess); 
 router.get('/:auctionSlug', getAuctionDetails);
 router.get('/', listAuctions);
 module.exports = router;

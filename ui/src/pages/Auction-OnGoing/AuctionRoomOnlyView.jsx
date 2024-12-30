@@ -100,7 +100,7 @@ const AuctionRoomOnlyView = () => {
       { value: days, label: languageText.day },
       { value: hours, label: languageText.hour },
       { value: minutes, label: languageText.minute },
-      { value: seconds, label: languageText.day }
+      { value: seconds, label: languageText.second }
     ];
 
     // Lọc ra các đơn vị thời gian > 0, bắt đầu từ đơn vị lớn nhất

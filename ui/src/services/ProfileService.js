@@ -14,6 +14,33 @@ const ProfileService = {
             handleResponseError(error)
         }
     },
+    getNotify: async () => {
+        try {
+            const response = await axiosClient.get(`notifications`);
+            const data = await handleResponse(response);
+            return data;
+        } catch (error) {
+            handleResponseError(error)
+        }
+    },
+    makeReadNotify: async () => {
+        try {
+            const response = await axiosClient.post(`notifications/makeRead/all`);
+            const data = await handleResponse(response);
+            return data;
+        } catch (error) {
+            handleResponseError(error)
+        }
+    },
+    getNotifyCount: async () => {
+        try {
+            const response = await axiosClient.get(`notifications/count`);
+            const data = await handleResponse(response);
+            return data;
+        } catch (error) {
+            handleResponseError(error)
+        }
+    },
     updateProfile: async (values) => {
         if (!values) {
             return;

@@ -7,6 +7,34 @@ const { verifyAccessToken } = require('../middlewares/Authentication');
 const router = express.Router();
 
 router.get(
+	'/count',
+	verifyAccessToken,
+	expressAsyncHandler(async (req, res) => {
+		try {
+			const { userId } = req.user;
+			const { type } = req.query;
+
+			// Lọc thông báo chưa đọc (isRead: false)
+			const matchConditions = {
+				$and: [
+					{ ownerId: new mongoose.Types.ObjectId(userId) },
+					{ isRead: false }, // Điều kiện lọc thông báo chưa đọc
+					type ? { type } : {} // Kiểm tra nếu có query 'type'
+				],
+			};
+
+			// Đếm tổng số thông báo chưa đọc
+			const count = await Notification.countDocuments(matchConditions);
+
+			// Trả về số lượng thông báo chưa đọc
+			return res.json(formatResponse(true, { count }, 'Tổng số thông báo chưa đọc'));
+		} catch (error) {
+			console.error('Lỗi khi đếm số lượng thông báo:', error);
+			res.status(500).json(formatResponse(false, null, 'Đã xảy ra lỗi khi đếm số lượng thông báo.'));
+		}
+	}),
+);
+router.get(
 	'/',
 	verifyAccessToken,
 	expressAsyncHandler(async (req, res) => {

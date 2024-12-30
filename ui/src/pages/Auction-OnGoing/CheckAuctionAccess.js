@@ -20,6 +20,7 @@ const CheckAuctionAccess = ({children}) => {
         } catch (error) {
           console.error('Error checking user registration:', error);
           setHasRegistered(false);
+          return navigate('/');
         } finally {
           setIsLoading(false);
         }

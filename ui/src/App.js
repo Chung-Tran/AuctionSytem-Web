@@ -17,6 +17,7 @@ import AuctionRoom from './pages/Auction-OnGoing/AuctionRoom';
 import CheckAuctionAccess from './pages/Auction-OnGoing/CheckAuctionAccess';
 import AuctionConfirmation from './pages/AuctionConfirmation/AuctionConfirmation';
 import AuctionSubmissions from './pages/AuctionSubmissions/AuctionSubmissions';
+import NotificationsPage from './pages/Notifications/NotificationsPage';
 function App() {
   return (
     <Router>
@@ -37,6 +38,7 @@ function App() {
 
           <Route element={<PrivateRoute />}>
             <Route path="/profile" element={<ProfilePage />} /> {/* Thông tin cá nhân */}
+            <Route path="/notifications" element={<NotificationsPage />} /> {/* Notify */}
             <Route path="/profile/change-password" element={<ChangePassword />} /> {/* Đổi mật khẩu */}
             <Route path="/auction-submissions" element={<AuctionSubmissions />} /> {/* Lịch sử gửi tài sản đấu giá */}
           </Route>
