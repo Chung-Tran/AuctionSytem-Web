@@ -23,7 +23,7 @@ export default function AuctioningItem(item) {
         <img
           src={item.image}
           alt={item.name}
-          className="w-full h-48 object-cover"
+          className="w-full h-full  object-cover"
           style={{ aspectRatio: "400/300", objectFit: "cover" }}
         />
         <div className="absolute bottom-4 right-4 bg-background/80 px-2 py-1 rounded-md text-sm text-muted-foreground">

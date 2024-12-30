@@ -31,6 +31,7 @@ const Header = () => {
   const handleLogout = () => {
     setIsLoggedIn(false);
     setShowUserDropdown(false);
+    localStorage.removeItem("token")
   };
 
   const handleScroll = useCallback(() => {
