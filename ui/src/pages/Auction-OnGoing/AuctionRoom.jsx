@@ -251,7 +251,7 @@ const languageText = useMemo(() => AuctionRoomLanguage[language], [language])
           <div className=' h-48 w-48 justify-center m-auto'>
             <img
               src={productInfo?.images[0] || productTemplate}
-              className='w-full h-full object-cover rounded-md'
+              className='w-full h-full object-contain rounded-md'
             />
           </div>
         </div>

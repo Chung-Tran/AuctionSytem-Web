@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CButton, CCol, CForm, CTable, CFormInput, CFormTextarea, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader, CRow,CFormSelect } from '@coreui/react';
+import { CButton, CCol, CForm, CTable, CFormInput, CFormTextarea, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader, CRow,CFormSelect,CSpinner } from '@coreui/react';
 import { useFormik } from 'formik';
 import { toast } from 'react-toastify';
 import * as Yup from 'yup';
@@ -648,18 +648,26 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
       <CModalFooter> 
         {type !== MODAL_TYPES.VIEW && (
           <CButton
-            color={(type === MODAL_TYPES.APPROVE || type === MODAL_TYPES.UPDATE) ? 'success' : 'danger'}
-            onClick={formik.handleSubmit}
-            onLoad={loading}
-            disabled={loading}
-          >
-            {type === MODAL_TYPES.APPROVE && 'Duyệt'}
-            {type === MODAL_TYPES.REJECT && 'Từ chối'}
-            {type === MODAL_TYPES.UPDATE && 'Điều chỉnh'}
-            {type === MODAL_TYPES.CANCEL && 'Hủy'}
-            {/* {type === MODAL_TYPES.RECOVER && 'Khôi phục'} */}
-            {type === MODAL_TYPES.END && 'Đóng phiên'}
-          </CButton>
+          color={(type === MODAL_TYPES.APPROVE || type === MODAL_TYPES.UPDATE) ? 'success' : 'danger'}
+          onClick={formik.handleSubmit}
+          disabled={loading} // Disable button khi đang loading
+        >
+          {loading ? (
+            <span>
+              <CSpinner size="sm" className="me-2" /> {/* Spinner hiển thị trạng thái loading */}
+              Đang xử lý...
+            </span>
+          ) : (
+            <>
+              {type === MODAL_TYPES.APPROVE && 'Duyệt'}
+              {type === MODAL_TYPES.REJECT && 'Từ chối'}
+              {type === MODAL_TYPES.UPDATE && 'Điều chỉnh'}
+              {type === MODAL_TYPES.CANCEL && 'Hủy'}
+              {type === MODAL_TYPES.END && 'Đóng phiên'}
+            </>
+          )}
+        </CButton>
+        
         )}
         <CButton color="secondary" onClick={onClose}>
           Đóng

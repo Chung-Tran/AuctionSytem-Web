@@ -106,7 +106,6 @@ const verifySocketToken =async (socket, next) => {
         if (!token) {
             return socket.emit('sessionExpire', { Authentication: false });
         }
-console.log('token',token)
         try {
             // Verify token
             const decoded = jwt.verify(token, process.env.JWT_SECRET);

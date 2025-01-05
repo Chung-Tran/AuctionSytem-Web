@@ -30,9 +30,9 @@ const AppSidebar = () => {
       }}
     >
       <CSidebarBrand className="d-none d-md-flex" to="/">
-        <CRow>
+        <CRow className='w-100 text-center align-items-center'>
           {/* <img src={ Projectlogo} alt='Not found logo' /> */}
-          <h2 className='p-1 fs-2 fw-semibold mx-auto'>AUCTION HOUSE</h2>
+          <h2 className='p-1 fs-4 fw-semibold mx-auto text-center align-items-center'>AUCTION HOUSE</h2>
         </CRow>
         <CIcon className="sidebar-brand-narrow" icon={sygnet} height={35} />
       </CSidebarBrand>

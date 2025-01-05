@@ -1,6 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Product = require('../models/product.model');
-const { Auction,BidHistory } = require('../models/auction.model');
+const { Auction, BidHistory } = require('../models/auction.model');
 const { Transaction } = require('../models/transaction.model');
 const { Customer } = require('../models/customer.model');
 const { formatResponse } = require('../common/MethodsCommon');
@@ -106,7 +106,7 @@ const approveAuction = asyncHandler(async (req, res) => {
         deposit,
         sellerName,
         contactEmail,
-        
+
         // Product details
         productName,
         productDescription,
@@ -144,26 +144,26 @@ const approveAuction = asyncHandler(async (req, res) => {
         auction.status = AUCTION_STATUS.APPROVED;
 
         // Cập nhật các trường tùy chọn của auction
-        if (!!title ) auction.title = title;
-        if (!!sellerName ) auction.sellerName = sellerName;
-        if (!!contactEmail ) auction.contactEmail = contactEmail;
-        if (!!startingPrice ) auction.startingPrice = startingPrice;
-        if (!!bidIncrement ) auction.bidIncrement = bidIncrement;
-        if (!!deposit ) auction.deposit = deposit;
-        if (!!description ) auction.description = description;
+        if (!!title) auction.title = title;
+        if (!!sellerName) auction.sellerName = sellerName;
+        if (!!contactEmail) auction.contactEmail = contactEmail;
+        if (!!startingPrice) auction.startingPrice = startingPrice;
+        if (!!bidIncrement) auction.bidIncrement = bidIncrement;
+        if (!!deposit) auction.deposit = deposit;
+        if (!!description) auction.description = description;
 
         await auction.save();
 
         // Cập nhật thông tin sản phẩm
         const productUpdate = {};
-        
-        if (!!productName ) productUpdate.productName = productName;
-        if (!!productDescription ) productUpdate.description = productDescription;
-        if (!!productAddress ) productUpdate.address = productAddress;
-        if (!!productCategory ) productUpdate.category = productCategory;
-        if (!!productType ) productUpdate.type = productType;
-        if (!!productCondition ) productUpdate.condition = productCondition;
-        if (!!productStatus ) productUpdate.status = productStatus;
+
+        if (!!productName) productUpdate.productName = productName;
+        if (!!productDescription) productUpdate.description = productDescription;
+        if (!!productAddress) productUpdate.address = productAddress;
+        if (!!productCategory) productUpdate.category = productCategory;
+        if (!!productType) productUpdate.type = productType;
+        if (!!productCondition) productUpdate.condition = productCondition;
+        if (!!productStatus) productUpdate.status = productStatus;
 
         // Chỉ cập nhật product nếu có thay đổi
         if (Object.keys(productUpdate).length > 0) {
@@ -192,18 +192,18 @@ const approveAuction = asyncHandler(async (req, res) => {
             console.error('Send email to customer:');
         }
         // Save a Notification
-    await Notification.create(new Notification({
-        ownerId: auction.registerCustomerId,
-        type: NotificationType.SUCCESS,
-        title: 'Chúc mừng! Sản phẩm của bạn đã được phê duyệt',
-        message: `Sản phẩm '${auction.product?.name}' của bạn đã phê duyệt thành công. Vui lòng kiểm tra email!`,
-        metadata: {
-          productId: auction.product,
-          auctionId: auction._id,
-        }
-      }));
-        res.status(200).json(formatResponse(true, 
-            { auctionId: auction._id }, 
+        await Notification.create(new Notification({
+            ownerId: auction.registerCustomerId,
+            type: NotificationType.SUCCESS,
+            title: 'Chúc mừng! Sản phẩm của bạn đã được phê duyệt',
+            message: `Sản phẩm '${auction.product?.name}' của bạn đã phê duyệt thành công. Vui lòng kiểm tra email!`,
+            metadata: {
+                productId: auction.product,
+                auctionId: auction._id,
+            }
+        }));
+        res.status(200).json(formatResponse(true,
+            { auctionId: auction._id },
             "Phiên đấu giá đã được duyệt và kích hoạt thành công"
         ));
 
@@ -214,10 +214,10 @@ const approveAuction = asyncHandler(async (req, res) => {
 });
 
 const rejectAuction = asyncHandler(async (req, res) => {
-    const { auctionId, userId} = req.params;
+    const { auctionId, userId } = req.params;
     const { reason } = req.body;
     // const userId = req.user.userId;
-   
+
 
     if (!reason) {
         return res.status(400).json(formatResponse(false, null, "Vui lòng cung cấp lý do từ chối"));
@@ -229,9 +229,9 @@ const rejectAuction = asyncHandler(async (req, res) => {
     }
 
     if (auction.managementAction.length === 0) {
-        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'từ chối'});
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'từ chối' });
     } else {
-        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'hủy'});
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'hủy' });
     }
 
     try {
@@ -247,10 +247,10 @@ const rejectAuction = asyncHandler(async (req, res) => {
             title: 'Sản phẩm của bạn đã bị từ chối đấu giá',
             message: `Sản phẩm '${auction.product?.name}' của bạn đã bị từ chối đấu giá. Vui lòng kiểm tra email!`,
             metadata: {
-              productId: auction.product,
-              auctionId: auctionId,
+                productId: auction.product,
+                auctionId: auctionId,
             }
-          }));
+        }));
         res.status(200).json(formatResponse(true, { auctionId: auction._id }, "Phiên đấu giá đã bị từ chối"));
     } catch (error) {
         console.error('Lỗi khi từ chối phiên đấu giá:', error);
@@ -286,7 +286,7 @@ const updateAuction = asyncHandler(async (req, res) => {
         auction.registrationCloseDate = registrationCloseDate;
         auction.registrationFee = registrationFee;
         auction.signupFee = signupFee;
-        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'điều chỉnh'});
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'điều chỉnh' });
 
         await auction.save();
 
@@ -317,7 +317,7 @@ const endAuction = asyncHandler(async (req, res) => {
         auction.status = AUCTION_STATUS.COMPLETED;
         auction.cancellationReason = reason;
         auction.endTime = moment().toDate();
-        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'kết thúc'});
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'kết thúc' });
 
         await auction.save();
 
@@ -334,7 +334,7 @@ const kickCustomerOutOfAuction = asyncHandler(async (req, res) => {
     const { auctionId, customerId, userId } = req.params;
 
     const auction = await Auction.findById(auctionId)
-    if(!auction){
+    if (!auction) {
         return res.status(400).json(formatResponse(false, null, "Không tìm thấy Auction"));
     }
 
@@ -348,31 +348,31 @@ const kickCustomerOutOfAuction = asyncHandler(async (req, res) => {
 
     try {
         auction.registeredUsers.splice(userIndex, 1);
-        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'xóa khách hàng khỏi'});
+        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'xóa khách hàng khỏi' });
         await auction.save();
 
         const populatedAuction = await Auction.findById(auction._id)
-        .populate('product')
-        .populate({
-            path: 'managementAction.userBy',
-            populate: {
-                path: 'rolePermission',
-                populate: [
-                    { path: 'role', },
-                    { path: 'permissions', },
-                ],
-            },
-        })
-        .populate({
-            path: 'registeredUsers.customer',
-        });
-        
+            .populate('product')
+            .populate({
+                path: 'managementAction.userBy',
+                populate: {
+                    path: 'rolePermission',
+                    populate: [
+                        { path: 'role', },
+                        { path: 'permissions', },
+                    ],
+                },
+            })
+            .populate({
+                path: 'registeredUsers.customer',
+            });
+
         const data = {
             ...populatedAuction.toObject(),
             customerRemove: customerId,
         }
-        
-        res.status(200).json(formatResponse(true,data,"Khách hàng đã được loại khỏi phòng đấu giá"));
+
+        res.status(200).json(formatResponse(true, data, "Khách hàng đã được loại khỏi phòng đấu giá"));
     } catch (error) {
         console.error("Lỗi khi loại khách hàng khỏi phòng đấu giá:", error);
         res.status(500).json(formatResponse(false, null, "Đã xảy ra lỗi khi loại khách hàng khỏi phòng đấu giá"));
@@ -380,18 +380,18 @@ const kickCustomerOutOfAuction = asyncHandler(async (req, res) => {
 });
 
 const deleteHistoryManagerAuction = asyncHandler(async (req, res) => {
-    const { auctionId, managementActionId} = req.params;
+    const { auctionId, managementActionId } = req.params;
 
     const auction = await Auction.findById(auctionId)
-        
-    if(!auction){
+
+    if (!auction) {
         return res.status(400).json(formatResponse(false, null, "Không tìm thấy Auction"));
     }
 
     const managementActionIndex = auction.managementAction.findIndex(
         (managementAction) => managementAction._id && managementAction._id.toString() === managementActionId.toString()
     );
-    
+
     if (managementActionIndex === -1) {
         return res.status(404).json(formatResponse(false, null, "Không tìm thấy lịch sử quản lí đấu giá"));
     }
@@ -401,31 +401,31 @@ const deleteHistoryManagerAuction = asyncHandler(async (req, res) => {
         await auction.save();
 
         const populatedAuction = await Auction.findById(auction._id)
-        .populate('product')
-        .populate({
-            path: 'managementAction.userBy',
-            populate: {
-                path: 'rolePermission',
-                populate: [
-                    {
-                        path: 'role',
-                    },
-                    {
-                        path: 'permissions',
-                    },
-                ],
-            },
-        })
-        .populate({
-            path: 'registeredUsers.customer',
-        });
-        
+            .populate('product')
+            .populate({
+                path: 'managementAction.userBy',
+                populate: {
+                    path: 'rolePermission',
+                    populate: [
+                        {
+                            path: 'role',
+                        },
+                        {
+                            path: 'permissions',
+                        },
+                    ],
+                },
+            })
+            .populate({
+                path: 'registeredUsers.customer',
+            });
+
         const data = {
             ...populatedAuction.toObject(),
             managementActionRemove: managementActionId,
         }
-        
-        res.status(200).json(formatResponse(true,data,"Lịch sử quản lí đấu giá đã được xóa"));
+
+        res.status(200).json(formatResponse(true, data, "Lịch sử quản lí đấu giá đã được xóa"));
     } catch (error) {
         console.error("Lỗi khi xóa lịch sử quản lí đấu giá:", error);
         res.status(500).json(formatResponse(false, null, "Đã xảy ra lỗi khi xóa lịch sử quản lí đấu giá"));
@@ -433,36 +433,36 @@ const deleteHistoryManagerAuction = asyncHandler(async (req, res) => {
 });
 
 const getAuctionDetailsByID = asyncHandler(async (req, res) => {
-    const {id_Auction} = req.params;
+    const { id_Auction } = req.params;
 
     try {
         const auction = await Auction.findById(id_Auction)
-        .populate('product') 
-        .populate({
-            path: 'managementAction.userBy',
-            populate: {
-            path: 'rolePermission',
-            populate: [
-                {
-                path: 'role', 
+            .populate('product')
+            .populate({
+                path: 'managementAction.userBy',
+                populate: {
+                    path: 'rolePermission',
+                    populate: [
+                        {
+                            path: 'role',
+                        },
+                        {
+                            path: 'permissions',
+                        },
+                    ],
                 },
-                {
-                path: 'permissions', 
-                },
-            ],
-            },
-        })
-        .populate({
-            path: 'registeredUsers.customer',
-        });
-        const bidHistory =await BidHistory.find({ auction: id_Auction }).populate('bidder').sort({_id:-1,amount:-1}).lean();
+            })
+            .populate({
+                path: 'registeredUsers.customer',
+            });
+        const bidHistory = await BidHistory.find({ auction: id_Auction }).populate('bidder').sort({ _id: -1, amount: -1 }).lean();
 
-        if(!auction){
+        if (!auction) {
             return res.status(400).json(formatResponse(false, null, "Không tìm thấy Auction"));
         }
         const data = {
             ...auction.toObject(),
-            bidHistory:[...bidHistory]
+            bidHistory: [...bidHistory]
         }
         res.status(200).json(formatResponse(true, data, "Lấy chi tiết phiên đấu giá thành công"));
     } catch (error) {
@@ -475,12 +475,12 @@ const getAuctionDetailsByID = asyncHandler(async (req, res) => {
 const getAuctionDetails = asyncHandler(async (req, res) => {
     const { auctionSlug } = req.params;
     const { viewed } = req.query;
-    
+
     try {
         let pipeline = [];
         if (!JSON.parse(viewed || 'false')) {//Check số lượng người xem sản phẩm
             await Auction.updateOne(
-                { slug: auctionSlug }, 
+                { slug: auctionSlug },
                 { $inc: { viewCount: 1 } } // Tăng currentViews lên 1
             );
         }
@@ -520,7 +520,7 @@ const getAuctionDetails = asyncHandler(async (req, res) => {
                     title: 1,
                     description: 1,
                     contactEmail: 1,
-                    
+
                     currentViews: 1,
                     viewCount: 1,
                     sellerName: 1,
@@ -564,14 +564,14 @@ const getAuctionOutstanding = asyncHandler(async (req, res) => {
     try {
         const { limit = 10, page = 1, status } = req.query;
         const parsedLimit = parseInt(limit, 10);
-        const parsedPage = parseInt(page, 10); 
-        const skip = (parsedPage - 1) * parsedLimit; 
+        const parsedPage = parseInt(page, 10);
+        const skip = (parsedPage - 1) * parsedLimit;
         let pipeline = [
             {
-                $match: { status: status}
+                $match: { status: status }
             },
             {
-                $lookup: { 
+                $lookup: {
                     from: 'products',
                     localField: 'product',
                     foreignField: '_id',
@@ -582,17 +582,17 @@ const getAuctionOutstanding = asyncHandler(async (req, res) => {
                 $unwind: '$product'
             },
             {
-                $sort: { viewCount: -1 } 
+                $sort: { viewCount: -1 }
             },
             {
-                $skip: skip 
+                $skip: skip
             },
             {
-                $limit: parsedLimit 
+                $limit: parsedLimit
             },
-          
+
             {
-                $project: { 
+                $project: {
                     // Product
                     productName: "$product.productName",
                     productImages: "$product.images",
@@ -614,7 +614,7 @@ const getAuctionOutstanding = asyncHandler(async (req, res) => {
                 }
             }
         ];
-        const auctions = await Auction.aggregate(pipeline); 
+        const auctions = await Auction.aggregate(pipeline);
         res.status(200).json(formatResponse(true, auctions, ""));
     } catch (error) {
         console.error('Lỗi khi lấy thông tin phiên đấu giá:', error);
@@ -623,7 +623,7 @@ const getAuctionOutstanding = asyncHandler(async (req, res) => {
 });
 const listAuctions = asyncHandler(async (req, res) => {
     const { status, page = 1, limit = 10 } = req.query;
-    
+
     try {
         const pageInt = parseInt(page, 10);
         const limitInt = parseInt(limit, 10);
@@ -647,16 +647,16 @@ const listAuctions = asyncHandler(async (req, res) => {
             {
                 $unwind: '$product'
             }
-        ); 
+        );
 
         pipeline.push(
             {
-              $lookup: {
-                from: 'customers', 
-                localField: 'registeredUsers.customer', 
-                foreignField: '_id', 
-                as: 'customerDetails',
-              },
+                $lookup: {
+                    from: 'customers',
+                    localField: 'registeredUsers.customer',
+                    foreignField: '_id',
+                    as: 'customerDetails',
+                },
             },
         );
 
@@ -675,23 +675,23 @@ const listAuctions = asyncHandler(async (req, res) => {
                     preserveNullAndEmptyArrays: true // Giữ lại tài liệu nếu không có dữ liệu customer
                 }
             }
-        ); 
+        );
 
         pipeline.push(
             {
-              $lookup: {
-                from: 'users', 
-                localField: 'managementAction.userBy', 
-                foreignField: '_id', 
-                as: 'userDetails',
-              },
+                $lookup: {
+                    from: 'users',
+                    localField: 'managementAction.userBy',
+                    foreignField: '_id',
+                    as: 'userDetails',
+                },
             },
-            
+
         );
 
-        
-        
-            
+
+
+
         pipeline.push({
             $sort: { createdAt: -1 }
         });
@@ -719,9 +719,9 @@ const listAuctions = asyncHandler(async (req, res) => {
                 title: 1,
                 description: 1,
                 contactEmail: 1,
-                sellerName: 1,   
+                sellerName: 1,
                 startTime: 1,
-                endTime: 1,            
+                endTime: 1,
                 startingPrice: 1,
                 currentPrice: 1,
                 currentViews: 1,
@@ -738,7 +738,7 @@ const listAuctions = asyncHandler(async (req, res) => {
                 createdAt: 1,
                 updatedAt: 1,
                 managementAction: 1,
-            
+
                 userDetails: 1,
                 status: status,
                 cancellationReason: 1,
@@ -806,12 +806,12 @@ const ongoingList = asyncHandler(async (req, res) => {
 
         pipeline.push(
             {
-              $lookup: {
-                from: 'customers', 
-                localField: 'registeredUsers.customer', 
-                foreignField: '_id', 
-                as: 'customerDetails', 
-              },
+                $lookup: {
+                    from: 'customers',
+                    localField: 'registeredUsers.customer',
+                    foreignField: '_id',
+                    as: 'customerDetails',
+                },
             },
             // {
             //   $unwind: {
@@ -819,9 +819,9 @@ const ongoingList = asyncHandler(async (req, res) => {
             //     preserveNullAndEmptyArrays: true, // Đảm bảo giữ tài liệu gốc nếu không tìm thấy match
             //   },
             // },
-            
+
         );
-        
+
         pipeline.push(
             {
                 $lookup: {
@@ -837,8 +837,8 @@ const ongoingList = asyncHandler(async (req, res) => {
                     preserveNullAndEmptyArrays: true // Giữ lại tài liệu nếu không có dữ liệu customer
                 }
             }
-        ); 
-            
+        );
+
         pipeline.push(
             {
                 $addFields: {
@@ -873,9 +873,9 @@ const ongoingList = asyncHandler(async (req, res) => {
                 title: 1,
                 description: 1,
                 contactEmail: 1,
-                sellerName: 1,     
+                sellerName: 1,
                 startTime: 1,
-                endTime: 1,          
+                endTime: 1,
                 startingPrice: 1,
                 currentPrice: 1,
                 currentViews: 1,
@@ -887,7 +887,7 @@ const ongoingList = asyncHandler(async (req, res) => {
                 registrationFee: 1,
                 signupFee: 1,
                 winner: "$customerwinner.fullName",
-                winningPrice:1,
+                winningPrice: 1,
                 participants: 1,
 
                 createdAt: 1,
@@ -915,12 +915,12 @@ const ongoingList = asyncHandler(async (req, res) => {
             try {
                 // Lấy dữ liệu room từ Redis
                 const roomCache = await redisClient.hGet(REDIS_KEYS.AUCTION_ROOM(item._id), 'auction');
-                
+
                 // Nếu không tìm thấy dữ liệu của room, skip room này
                 if (!roomCache) {
                     return false;
                 }
-                
+
                 // Lấy danh sách bid từ Redis
                 const bidHistory = await redisClient.lRange(REDIS_KEYS.BID_HISTORY(item._id), 0, -1);
                 const bidList = bidHistory.map(bid => {
@@ -931,10 +931,10 @@ const ongoingList = asyncHandler(async (req, res) => {
                         return null;
                     }
                 }).filter(bid => bid !== null);
-        
+
                 const highestBid = bidList.length ? Math.max(...bidList.map(item => item.bidAmount)) : 0;
                 item.highestBid = highestBid;
-        
+
                 // Lấy thông tin room từ socket
                 const io = getGlobalIo();
                 const roomCurrent = io && io.sockets.adapter.rooms.get(item._id?.toString());
@@ -944,22 +944,22 @@ const ongoingList = asyncHandler(async (req, res) => {
                 } else {
                     item.participants = [];
                 }
-                return {...item};
+                return { ...item };
             } catch (error) {
                 console.error('Error processing auction room', error);
                 return false;
             }
         }));
-        
+
         const validResFormat = resFormat.filter(item => item !== false);
-        
+
         res.status(200).json(formatResponse(true, {
             docs: validResFormat,
             total: totalAuctions,
             page: pageInt,
             limit: limitInt,
         }, ""));
-        
+
     } catch (error) {
         console.error('Lỗi khi lấy danh sách phiên đấu giá:', error);
         res.status(500).json(formatResponse(false, null, "Đã xảy ra lỗi khi lấy danh sách phiên đấu giá"));
@@ -969,11 +969,11 @@ const ongoingList = asyncHandler(async (req, res) => {
 //Check customer có trong danh sách đăng ký đấu giá hay không
 const checkValidAccess = asyncHandler(async (req, res) => {
     const customerId = req.user.userId;
-    const {auctionId}=req.params
+    const { auctionId } = req.params
     console.log(customerId)
     try {
         const auction = await Auction.findOne({
-            _id:auctionId,
+            _id: auctionId,
             status: AUCTION_STATUS.ACTIVE,
             startTime: { $lte: new Date() },
             endTime: { $gte: new Date() },
@@ -1001,51 +1001,51 @@ const checkValidAccess = asyncHandler(async (req, res) => {
 const getAuctionComfirmInfo = asyncHandler(async (req, res) => {
     const { auctionId, customerId, productId } = req.body;
 
-	const TransactionSumQuery = await Transaction.aggregate([
-		{
-			$match: {
-				$and: [
-					{ userId: new mongoose.Types.ObjectId(customerId) },
-					{ auctionId: new mongoose.Types.ObjectId(auctionId) },
-				],
-			},
-		},
-		{
-			$group: {
-				_id: {
-					userId: '$userId',
-					auctionId: '$auctionId',
-				},
-				totalAmount: { $sum: '$amount' },
-			},
-		},
-		{
-			$project: {
-				totalAmount: 1,
-				_id: 0,
-			},
-		},
-		{
-			$limit: 1,
-		},
-	]).then((result) => result[0]);
+    const TransactionSumQuery = await Transaction.aggregate([
+        {
+            $match: {
+                $and: [
+                    { userId: new mongoose.Types.ObjectId(customerId) },
+                    { auctionId: new mongoose.Types.ObjectId(auctionId) },
+                ],
+            },
+        },
+        {
+            $group: {
+                _id: {
+                    userId: '$userId',
+                    auctionId: '$auctionId',
+                },
+                totalAmount: { $sum: '$amount' },
+            },
+        },
+        {
+            $project: {
+                totalAmount: 1,
+                _id: 0,
+            },
+        },
+        {
+            $limit: 1,
+        },
+    ]).then((result) => result[0]);
 
-	const result = await Promise.all([
-		Auction.findById(auctionId, { bids: 0, managementAction: 0, __v: 0 }),
-		Customer.findById(customerId, { password: 0, __v: 0 }),
-		Product.findById(productId, { __v: 0 }),
-		TransactionSumQuery,
-	]).then(([auction, customer, product, { totalAmount }]) => {
-		return {
-			auction,
-			customer,
-			product,
-			isPaied: totalAmount === (auction.winningPrice + auction.registrationFee),
-			missingAmount: (auction.winningPrice + auction.registrationFee) - totalAmount,
-		};
-	});
+    const result = await Promise.all([
+        Auction.findById(auctionId, { bids: 0, managementAction: 0, __v: 0 }),
+        Customer.findById(customerId, { password: 0, __v: 0 }),
+        Product.findById(productId, { __v: 0 }),
+        TransactionSumQuery,
+    ]).then(([auction, customer, product, { totalAmount }]) => {
+        return {
+            auction,
+            customer,
+            product,
+            isPaied: totalAmount === (auction.winningPrice + auction.registrationFee),
+            missingAmount: (auction.winningPrice + auction.registrationFee) - totalAmount,
+        };
+    });
 
-	return res.json(formatResponse(true,result,'Successfully'));
+    return res.json(formatResponse(true, result, 'Successfully'));
 });
 
 //Update status
@@ -1084,7 +1084,7 @@ const getMyAuctioned = asyncHandler(async (req, res) => {
             .select('product title winningPrice winnerBankInfo cancellationReason deposit startingPrice signupFee registrationFee startTime endTime status')
             .skip((pageInt - 1) * limitInt)
             .limit(limitInt);
-        
+
         res.status(200).json(formatResponse(true, {
             docs: auctions,
             page: pageInt,
@@ -1099,30 +1099,31 @@ const getMyAuctioned = asyncHandler(async (req, res) => {
 const updateBankInfo = asyncHandler(async (req, res) => {
     const { auctionId } = req.params;
     const { bankInfo } = req.body;
-  
+
     try {
-      const auction = await Auction.findById(auctionId);
-  
-      if (!auction) {
-        return res.status(404).json(formatResponse(false, null, "Auction not found"));
-      }
-  
-      // Kiểm tra trạng thái chỉ cho phép cập nhật nếu auction thành công
-      if (auction.status !== AUCTION_STATUS.WINNER_PAYMENTED) {
-        return res.status(400).json(formatResponse(false, null, "Cannot update bank info for this auction"));
-      }
-  
-      auction.winnerBankInfo = bankInfo;
-      auction.status = AUCTION_STATUS.DONE;
-      await auction.save();
-  
-      res.status(200).json(formatResponse(true, auction, "Bank info updated successfully"));
+        const auction = await Auction.findById(auctionId);
+
+        if (!auction) {
+            return res.status(404).json(formatResponse(false, null, "Auction not found"));
+        }
+
+        // Kiểm tra trạng thái chỉ cho phép cập nhật nếu auction thành công
+        if (auction.status !== AUCTION_STATUS.WINNER_PAYMENTED) {
+            return res.status(400).json(formatResponse(false, null, "Cannot update bank info for this auction"));
+        }
+        await Product.findByIdAndUpdate(auction.product, { status: PRODUCT_STATUS.TRANSFERRED });
+
+        auction.winnerBankInfo = bankInfo;
+        auction.status = AUCTION_STATUS.DONE;
+        await auction.save();
+
+        res.status(200).json(formatResponse(true, auction, "Bank info updated successfully"));
     } catch (error) {
-      console.error('Error updating bank info:', error);
-      res.status(500).json(formatResponse(false, null, "Failed to update bank info"));
+        console.error('Error updating bank info:', error);
+        res.status(500).json(formatResponse(false, null, "Failed to update bank info"));
     }
 });
-  
+
 module.exports = {
     registerAuctionProduct,
     approveAuction,
