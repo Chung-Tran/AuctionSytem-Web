@@ -197,7 +197,7 @@ const approveAuction = asyncHandler(async (req, res) => {
             ownerId: auction.registerCustomerId,
             type: NotificationType.SUCCESS,
             title: 'Chúc mừng! Sản phẩm của bạn đã được phê duyệt',
-            message: `Sản phẩm '${auction.product?.name}' của bạn đã phê duyệt thành công. Vui lòng kiểm tra email!`,
+            message: `Sản phẩm '${auction.title}' của bạn đã phê duyệt thành công. Vui lòng kiểm tra email!`,
             metadata: {
                 productId: auction.product,
                 auctionId: auction._id,
