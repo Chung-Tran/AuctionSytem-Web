@@ -77,7 +77,7 @@ const ProductItem = ({
           <div className="flex items-center justify-between mt-2">
             <div className="flex items-center gap-2">
               <EyeIcon className="w-4 h-4 text-muted-foreground" />
-              <span className="text-muted-foreground text-sm">{currentViews} { languageText.watching }</span>
+              <span className="text-muted-foreground text-sm">{currentViews} { languageText.watched }</span>
             </div>
             <button
               size="sm"

@@ -200,7 +200,7 @@ const AuctionRoomOnlyView = () => {
               </div>
               <img
                  src={productInfo?.images[0] || productTemplate}
-                className='w-48 h-48 hover:scale-105 transform  transition-transform duration-300  shadow-2xl object-cover  rounded'
+                className='w-48 h-48 hover:scale-105 transform  transition-transform duration-300  shadow-2xl object-contain  rounded'
               />
             </div>
           </div>
