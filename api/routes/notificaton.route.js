@@ -51,6 +51,7 @@ router.get(
 						$and: [{ ownerId: new mongoose.Types.ObjectId(userId) }, type ? { type }: {}],
 					},
 				},
+				{$sort:{_id:-1}},
 				{ $skip: skip },
 				{ $limit: parsedLimit },
 			];
