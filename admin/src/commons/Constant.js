@@ -91,9 +91,9 @@ export const AUCTION_STATUS_DATASOURCE = [
     { value: 'Pending', label: 'Chờ duyệt' },
     { value: 'Approved', label: 'Đã phê duyệt' },
     { value: 'Active', label: 'Đang diễn ra' },
-    { value: 'Completed', label: 'Hoàn thành' },
+    { value: 'Completed', label: 'Đã đấu giá' },
     { value: 'Winner_Paymented', label: 'Đã thanh toán' },
-    { value: 'Done', label: 'Hoàn tất' },
+    { value: 'Done', label: 'Hoàn thành' },
     { value: 'Canceled', label: 'Đã hủy' },
     { value: 'Rejected', label: 'Từ chối' }
   ];

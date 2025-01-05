@@ -13,6 +13,7 @@ const AuctionManager = () => {
     PENDING: [],
     APPROVED: [],
     ACTIVE: [],
+    COMPLETED: [],
     DONE: [],
     REJECTED: [],
   });
@@ -57,11 +58,12 @@ const AuctionManager = () => {
 
   const fetchAuctions = async () => {
     try {
-      const [newAuctions, pendingAuctions, activeAuctions, endedAuctions, cancelledAuctions] = await Promise.all([
+      const [newAuctions, pendingAuctions, activeAuctions, endedAuctions,doneAuctions, cancelledAuctions] = await Promise.all([
         auctionAPI.getNewAuction(),
         auctionAPI.getPendingAuction(),
         auctionAPI.getActiveAuction(),
         auctionAPI.getEndedAuction(),
+        auctionAPI.getDoneAuction(),
         auctionAPI.getCancelledAuction(),
       ]);
 
@@ -69,7 +71,8 @@ const AuctionManager = () => {
         PENDING: newAuctions.data.docs,
         APPROVED: pendingAuctions.data.docs,
         ACTIVE: activeAuctions.data.docs,
-        DONE: endedAuctions.data.docs,
+        COMPLETED: endedAuctions.data.docs,
+        DONE: doneAuctions.data.docs,
         REJECTED: cancelledAuctions.data.docs,
       });
     } catch (error) {
@@ -227,7 +230,7 @@ const AuctionManager = () => {
     {
       key: '1',
       label: 'Tất cả',
-      children: renderAuctionList([...auctions.PENDING, ...auctions.APPROVED, ...auctions.ACTIVE, ...auctions.DONE, ...auctions.REJECTED])
+      children: renderAuctionList([...auctions.PENDING, ...auctions.APPROVED, ...auctions.ACTIVE, ...auctions.DONE,...auctions.COMPLETED, ...auctions.REJECTED])
     },
     {
       key: '2',
@@ -247,10 +250,15 @@ const AuctionManager = () => {
     {
       key: '5',
       label: 'Đã đấu giá',
-      children: renderAuctionList(auctions.DONE)
+      children: renderAuctionList(auctions.COMPLETED)
     },
     {
       key: '6',
+      label: 'Hoàn thành',
+      children: renderAuctionList(auctions.DONE)
+    },
+    {
+      key: '7',
       label: 'Đã hủy',
       children: renderAuctionList(auctions.REJECTED)
     }

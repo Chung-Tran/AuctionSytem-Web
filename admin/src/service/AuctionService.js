@@ -35,6 +35,13 @@ const auctionAPI = {
             }
         return endedAuctionAPI 
     },
+    getDoneAuction: async () => {
+        const endedAuctionAPI = await axiosClient.get(`/auctions?status=${AUCTION_STATUS.DONE}`, { withCredentials: true })
+            if (!endedAuctionAPI.success) {
+                return toast.error(endedAuctionAPI?.message || "Lấy danh sách phiên đấu giá đã kết thúc thất bại");
+            }
+        return endedAuctionAPI 
+    },
 
     getCancelledAuction: async () => {
         const cancelAuctionAPI = await axiosClient.get(`/auctions?status=${AUCTION_STATUS.REJECTED}`, { withCredentials: true })

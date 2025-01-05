@@ -11,6 +11,7 @@ import { AUCTION_STATUS, REGISTER_STATUS } from '../../commons/Constant';
 import { AppContext } from '../../AppContext';
 import { Helmet } from 'react-helmet';
 import { HomeLanguage } from '../../languages/HomeLanguage';
+import { useNavigate } from 'react-router-dom';
 const Home = () => {
     const [auctions, setAuctions] = useState([]);
     const [auctionStanding, setAuctionStanding] = useState(null);
@@ -19,7 +20,7 @@ const Home = () => {
     const [timeRemaining, setTimeRemaining] = useState('');
     const { user, toggleLoginModal, language } = useContext(AppContext);
     const languageText = useMemo(() => HomeLanguage[language], [language]);
-
+    const navigate = useNavigate();
     const fetchData = useCallback(async () => {
         try {
             setIsLoading(true);
@@ -61,7 +62,7 @@ const Home = () => {
     if (!!auctionDetailHightLight) {
         if (auctionDetailHightLight.registrationCloseDate && new Date() > new Date(auctionDetailHightLight.registrationCloseDate)) {
             auctionDetailRegisterStatus = REGISTER_STATUS.EXPIRED;
-        } else if (user && auctionDetailRegisterStatus.registeredUsers?.includes(user.userId)) {
+        } else if (user && auctionDetailHightLight.registeredUsers?.includes(user.userId)) {
             auctionDetailRegisterStatus = REGISTER_STATUS.REGISTERED;
         } else {
             auctionDetailRegisterStatus = REGISTER_STATUS.NOT_REGISTERED;
@@ -77,7 +78,7 @@ const Home = () => {
                 <meta property="og:image" content={auctionMeta} />
             </Helmet>
             <div className='w-full h-auto flex justify-center container mx-auto '>
-                <Banner auctionStanding={auctionStanding} languageText={ languageText} />
+                <Banner auctionStanding={auctionStanding} languageText={languageText} />
             </div>
             <section className="py-12 ">
                 <div className=" mx-auto px-4 container">
@@ -105,7 +106,7 @@ const Home = () => {
                                 price={product.startingPrice}
                                 currentViews={product.viewCount || 0}
                                 endsIn={product.startTime || new Date(Date.now() + 24 * 60 * 60 * 1000)} //Thời gian còn lại để đăng ký
-                                registeredUsers={product?.registeredUsers?.map(item=>item?.customer).filter(Boolean) || []}
+                                registeredUsers={product?.registeredUsers?.map(item => item?.customer).filter(Boolean) || []}
                                 registrationCloseDate={product.registrationCloseDate}
                                 registrationOpenDate={product.registrationOpenDate}
                                 language={language}
@@ -137,7 +138,7 @@ const Home = () => {
                                     <div className="flex items-center justify-between mb-6">
                                         <div>
                                             <p className="text-muted-foreground">{languageText.timeRemaining}:</p>
-                                            <p className="text-2xl font-bold">{countdown(timeRemaining)}</p>
+                                            <p className="text-2xl font-bold">{countdown(auctionDetailHightLight.startTime)}</p>
                                         </div>
                                         <div>
                                             <p className="text-muted-foreground">{languageText.currentBid}:</p>
@@ -147,8 +148,8 @@ const Home = () => {
                                     <button
                                         size="lg"
                                         className={`w-full inline-flex items-center justify-center text-sm font-medium bg-primary h-11 rounded-md px-8 text-white 
-                ${auctionDetailRegisterStatus === REGISTER_STATUS.REGISTERED || auctionDetailRegisterStatus === REGISTER_STATUS.EXPIRED ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        // onClick={handleSubmit}
+                                        ${auctionDetailRegisterStatus === REGISTER_STATUS.REGISTERED || auctionDetailRegisterStatus === REGISTER_STATUS.EXPIRED ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        onClick={() => navigate(`/auctions/${auctionDetailHightLight.slug}`)}
                                         disabled={auctionDetailRegisterStatus === REGISTER_STATUS.REGISTERED || auctionDetailRegisterStatus === REGISTER_STATUS.EXPIRED}
                                     >
                                         {auctionDetailRegisterStatus === REGISTER_STATUS.EXPIRED ? languageText.registrationClosed :
