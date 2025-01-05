@@ -42,7 +42,7 @@ const Banner = ({ auctionStanding,languageText }) => {
           </div>
           <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-4">
             <h3 className="text-xl font-semibold">{auctionStanding[currentIndex]?.productName || "Rare Antique Vase"}</h3>
-            <p>Current Bid: {formatCurrency(auctionStanding[currentIndex]?.startingPrice)}</p>
+            <p>Start Bid: {formatCurrency(auctionStanding[currentIndex]?.startingPrice)}</p>
             <p>Ends in {countdown(auctionStanding[currentIndex]?.registrationCloseDate)}</p>
           </div>
         </div>

@@ -31,6 +31,7 @@ const approvalValidationSchema = Yup.object({
 const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
   const [rejectReason, setRejectReason] = useState('');
   const [approvalAction, setApprovalAction] = useState();
+  const [loading, setLoading] = useState(false);
 
   const [detailAuction, setDetailAuction] = useState (); 
 
@@ -112,6 +113,7 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
     },
     validationSchema: (type === MODAL_TYPES.APPROVE || type === MODAL_TYPES.UPDATE) ? approvalValidationSchema : null,
     onSubmit: values => {
+      setLoading(true)
       handleSubmit(values)
     },
   });
@@ -227,14 +229,14 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
 
       if (response.success) {
         toast.success('Thao tác thành công!');
+        setLoading(false)
         onSuccess?.();
         onClose();
       }
     } catch (error) {
-      console.log("Auction ID:", values._id);
-
       console.error("Lỗii:", error);
-      toast.error(error.response?.data?.message || 'Có lỗi xảy raa!');
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra!');
+      setLoading(false)
     }
   }
 
@@ -367,9 +369,8 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
                 {(status === AUCTION_STATUS.PENDING || status === AUCTION_STATUS.APPROVED || status === AUCTION_STATUS.DONE) && (renderFormField('Thời điểm duyệt', 'approvalTime', 'datetime-local', undefined, true))}
                 {/* {(status === 'pending' || status === 'active' || status === 'ended') && (renderFormField('Người điều chỉnh', 'updatedBy'))}
                 {(status === 'pending' || status === 'active' || status === 'ended') && (renderFormField('Thời điểm điều chỉnh', 'updatedAt', 'datetime-local'))} */}
-
                 {status === AUCTION_STATUS.DONE && (renderFormField('Người mua', 'winner', undefined, undefined, true))}
-                {status === AUCTION_STATUS.DONE && (renderFormField('Giá mua', 'winningPrice', undefined, undefined, true))}
+                {status === AUCTION_STATUS.DONE && (renderFormField('Giá trúng', 'winningPrice', 'number', undefined, true))}
 
                 {status === AUCTION_STATUS.REJECTED && (renderFormField('Lí do từ chối', 'cancellationReason'))}
 
@@ -581,6 +582,65 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
           )}
           </TabPane>}
 
+          {(detailAuction?.status == AUCTION_STATUS.COMPLETED || detailAuction?.status == AUCTION_STATUS.DONE) &&
+            <TabPane tab="Lịch sử đấu giá" key="5">
+              <div style={{maxHeight:'80vh', maxWidth:'100%', overflow:'auto'}}>
+              <List
+                className="demo-loadmore-list"
+                itemLayout="horizontal"
+                dataSource={detailAuction?.bidHistory}
+                renderItem={(bid, index) => {
+                  const isWinningBid = index == 0; //Item đầu là item trúng đấu giá(đã sort ở API)
+                  return (
+                    <List.Item
+                      className={`d-flex justify-content-start data-row `} 
+                      style={{
+                        backgroundColor: isWinningBid ? '#ffffe0' : 'transparent', // Nền sáng hơn cho bid trúng
+                        borderLeft: isWinningBid ? '4px solid #ff6347' : 'none', // Viền trái màu đỏ cho bid trúng
+                        fontWeight: isWinningBid ? 'bold' : 'normal', // Làm đậm font cho bid trúng
+                        boxShadow: isWinningBid ? '0px 4px 12px rgba(255, 99, 71, 0.6)' : 'none', // Thêm shadow cho bid trúng
+                      }}  
+                    >
+                      <div className="d-flex w-100 align-items-start">
+
+                        {/* Mã khách hàng */}
+                        <div style={{ width: '20%' }}>
+                          <div className="text-center fw-semibold">Mã khách hàng</div>
+                          <div className="text-center">{bid.bidder?.userCode}</div>
+                        </div>
+
+                        {/* Tên khách hàng và thông tin liên hệ */}
+                        <div style={{ width: '40%' }}>
+                          <div className="fw-semibold">Họ tên khách hàng</div>
+                          <div className="d-flex align-items-center">
+                            <div>
+                              <div>{bid.bidder?.fullName}</div>
+                              <div className="text-muted">{bid.bidder?.username}</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Số tiền đặt giá */}
+                        <div style={{ width: '20%' }}>
+                          <div className="fw-semibold">Số tiền đặt giá</div>
+                          <div>{bid.amount.toLocaleString()} VND</div>
+                        </div>
+
+                        {/* Thời gian đặt giá */}
+                        <div style={{ width: '20%' }}>
+                          <div className="fw-semibold">Thời gian</div>
+                          <div>{formatDateTime(bid.time)}</div>
+                        </div>
+
+                      </div>
+                    </List.Item>
+                  );
+                }}
+              />
+              </div>
+            </TabPane>
+          }
+
         </Tabs>
 
       </CModalBody>
@@ -590,6 +650,8 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
           <CButton
             color={(type === MODAL_TYPES.APPROVE || type === MODAL_TYPES.UPDATE) ? 'success' : 'danger'}
             onClick={formik.handleSubmit}
+            onLoad={loading}
+            disabled={loading}
           >
             {type === MODAL_TYPES.APPROVE && 'Duyệt'}
             {type === MODAL_TYPES.REJECT && 'Từ chối'}

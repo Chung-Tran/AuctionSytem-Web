@@ -3,7 +3,7 @@ import Breadcrumb from '../../components/BreadCrumb/BreadCrumb'
 import ProductItem from '../../components/Product/ProductItem';
 import logo from '../../assets/logo192.png';
 import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AuctionService from '../../services/AuctionService';
 import LoadingSpinner from '../LoadingSpinner';
 import { countdown, formatCurrency } from '../../commons/MethodsCommons';
@@ -11,6 +11,7 @@ import { Helmet } from 'react-helmet';
 import { AUCTION_STATUS } from '../../commons/Constant';
 import { UpcommingLanguage } from '../../languages/UpcommingLanguage';
 import { AppContext } from '../../AppContext';
+import productTemplate from '../../assets/productTemplate.jpg'
 const Upcomming = () => {
     const buttonSelect = "bg-primary text-white ";
     const [loading, setLoading] = useState(false);
@@ -24,6 +25,7 @@ const Upcomming = () => {
     const [totalPages, setTotalPages] = useState(1);
     const { language } = useContext(AppContext);
     const languageText = useMemo(() => UpcommingLanguage[language], [language]);
+    const navigate = useNavigate();
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true)
@@ -122,13 +124,13 @@ const Upcomming = () => {
                 </div>
             </section>
 
-            {auctionHighlight && <section className="bg-muted py-12 mt-10 px-6">
+            {!!auctionHighlight && <section className="bg-muted py-12 mt-10 px-6">
                 <div className="container mx-auto px-4 md:px-6">
                     <h2 className="text-2xl font-bold mb-6">{languageText.productDetails}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className='h-[600px]'>
                             <img
-                                src="/placeholder.svg"
+                                src={auctionHighlight?.productImages?.[0] || productTemplate}
                                 alt="Product Image"
                                 width={600}
                                 height={600}
@@ -151,7 +153,11 @@ const Upcomming = () => {
                                     <p className="text-2xl font-bold">{formatCurrency(auctionHighlight?.startingPrice)}</p>
                                 </div>
                             </div>
-                            <button size="lg" className="w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium bg-primary h-11 rounded-md px-8 text-white">
+                            <button
+                                size="lg"
+                                className="w-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium bg-primary h-11 rounded-md px-8 text-white"
+                                onClick={() => navigate(`/auctions/${auctionHighlight.slug}`)}
+                            >
                                 {languageText.placeBid}
                             </button>
                         </div>

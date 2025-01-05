@@ -1,6 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Product = require('../models/product.model');
-const { Auction } = require('../models/auction.model');
+const { Auction,BidHistory } = require('../models/auction.model');
 const { Transaction } = require('../models/transaction.model');
 const { Customer } = require('../models/customer.model');
 const { formatResponse } = require('../common/MethodsCommon');
@@ -10,8 +10,10 @@ const multer = require('multer');
 const moment = require('moment');
 const mongoose = require('mongoose');
 const { globalIo, getGlobalIo } = require('./socket.controller');
-const { REDIS_KEYS, AUCTION_STATUS, PRODUCT_STATUS } = require('../common/constant');
+const { REDIS_KEYS, AUCTION_STATUS, PRODUCT_STATUS, EmailType } = require('../common/constant');
 const { pushAuctionToQueue } = require('../common/initializeAuctionSync');
+const { sendEmail } = require('../utils/email');
+const { parseDurationToHumanFormat } = require('../utils/time');
 
 const registerAuctionProduct = asyncHandler(async (req, res) => {
     const {
@@ -88,49 +90,126 @@ const registerAuctionProduct = asyncHandler(async (req, res) => {
 
 const approveAuction = asyncHandler(async (req, res) => {
     const { auctionId, userId } = req.params;
-    // const userId = req.user.userId;
 
     const {
+        // Auction details
         startTime,
         endTime,
         registrationOpenDate,
         registrationCloseDate,
         registrationFee,
         signupFee,
+        title,
+        description,
+        startingPrice,
+        bidIncrement,
+        deposit,
+        sellerName,
+        contactEmail,
+        
+        // Product details
+        productName,
+        productDescription,
+        productAddress,
+        productCategory,
+        productType,
+        productCondition,
+        productStatus,
     } = req.body;
 
+    // Validate auction existence
     const auction = await Auction.findById(auctionId);
     if (!auction) {
         return res.status(404).json(formatResponse(false, null, "Không tìm thấy phiên đấu giá"));
     }
 
-    if (auction.managementAction.length === 0) {
-        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'duyệt'});
-    } else {
-        auction.managementAction.push({ timeLine: new Date(), userBy: userId, action: 'khôi phục'});
-    }
+    const productId = auction.product;
+
+    // Update management action
+    const newAction = {
+        timeLine: new Date(),
+        userBy: userId,
+        action: auction.managementAction.length === 0 ? 'duyệt' : 'khôi phục'
+    };
+    auction.managementAction.push(newAction);
 
     try {
+        // Cập nhật các trường bắt buộc của auction
         auction.startTime = startTime;
         auction.endTime = endTime;
         auction.registrationOpenDate = registrationOpenDate;
         auction.registrationCloseDate = registrationCloseDate;
         auction.registrationFee = registrationFee;
         auction.signupFee = signupFee;
-        
         auction.status = AUCTION_STATUS.APPROVED;
 
+        // Cập nhật các trường tùy chọn của auction
+        if (!!title ) auction.title = title;
+        if (!!sellerName ) auction.sellerName = sellerName;
+        if (!!contactEmail ) auction.contactEmail = contactEmail;
+        if (!!startingPrice ) auction.startingPrice = startingPrice;
+        if (!!bidIncrement ) auction.bidIncrement = bidIncrement;
+        if (!!deposit ) auction.deposit = deposit;
+        if (!!description ) auction.description = description;
+
         await auction.save();
-        //Nếu như phê duyệt đấu giá trong ngày thì sẽ push nó vào list auto start
-        if (new Date(startTime).getDate() == new Date().getDate())
+
+        // Cập nhật thông tin sản phẩm
+        const productUpdate = {};
+        
+        if (!!productName ) productUpdate.productName = productName;
+        if (!!productDescription ) productUpdate.description = productDescription;
+        if (!!productAddress ) productUpdate.address = productAddress;
+        if (!!productCategory ) productUpdate.category = productCategory;
+        if (!!productType ) productUpdate.type = productType;
+        if (!!productCondition ) productUpdate.condition = productCondition;
+        if (!!productStatus ) productUpdate.status = productStatus;
+
+        // Chỉ cập nhật product nếu có thay đổi
+        if (Object.keys(productUpdate).length > 0) {
+            await Product.findByIdAndUpdate(productId, productUpdate);
+        }
+
+        // Xử lý auto-start queue
+        const isStartingToday = new Date(startTime).setHours(0, 0, 0, 0) === new Date().setHours(0, 0, 0, 0);
+        if (isStartingToday) {
             await pushAuctionToQueue(auction._id);
+        }
+        // Send Email đã được phê duyệt tới chủ sản phẩm
+        const isSuccessed = await sendEmail(
+            auction.contactEmail,
+            EmailType.NOTIFY_FOR_AUCTION_APPROVED,
+            {
+                productName: auction.title,
+                auctionId: auction._id,
+                productId: auction.product,
+                winningCustomer: auction.winningCustomer,
+                sellerName: auction.sellerName,
+                approvedTime: new Date()
+            }
+        )
+        if (!isSuccessed) {
+            console.error('Send email to customer:');
+        }
+        // Save a Notification
+    await Notification.create(new Notification({
+        ownerId: auction.registerCustomerId,
+        type: NotificationType.SUCCESS,
+        title: 'Chúc mừng! Sản phẩm của bạn đã được phê duyệt',
+        message: `Sản phẩm '${auction.product?.name}' của bạn đã phê duyệt thành công. Vui lòng kiểm tra email!`,
+        metadata: {
+          productId: auction.product,
+          auctionId: auction._id,
+        }
+      }));
+        res.status(200).json(formatResponse(true, 
+            { auctionId: auction._id }, 
+            "Phiên đấu giá đã được duyệt và kích hoạt thành công"
+        ));
 
-        await Product.findByIdAndUpdate(auction.product, { status: PRODUCT_STATUS.RECEIVED });
-
-        res.status(200).json(formatResponse(true, { auctionId: auction._id }, "Phiên đấu giá đã được duyệt và kích hoạt thành công"));
     } catch (error) {
         console.error('Lỗi khi duyệt phiên đấu giá:', error);
-        res.status(500).json(formatResponse(false, null, "Đã xảy ra lỗi khi duyệt phiên đấu giá"));
+        res.status(200).json(formatResponse(false, null, "Đã xảy ra lỗi khi duyệt phiên đấu giá"));
     }
 });
 
@@ -162,7 +241,16 @@ const rejectAuction = asyncHandler(async (req, res) => {
         await auction.save();
 
         await Product.findByIdAndUpdate(auction.product, { status: AUCTION_STATUS.REJECTED });
-
+        await Notification.create(new Notification({
+            ownerId: auction.registerCustomerId,
+            type: NotificationType.SUCCESS,
+            title: 'Sản phẩm của bạn đã bị từ chối đấu giá',
+            message: `Sản phẩm '${auction.product?.name}' của bạn đã bị từ chối đấu giá. Vui lòng kiểm tra email!`,
+            metadata: {
+              productId: auction.product,
+              auctionId: auctionId,
+            }
+          }));
         res.status(200).json(formatResponse(true, { auctionId: auction._id }, "Phiên đấu giá đã bị từ chối"));
     } catch (error) {
         console.error('Lỗi khi từ chối phiên đấu giá:', error);
@@ -367,17 +455,18 @@ const getAuctionDetailsByID = asyncHandler(async (req, res) => {
         .populate({
             path: 'registeredUsers.customer',
         });
+        const bidHistory =await BidHistory.find({ auction: id_Auction }).populate('bidder').sort({_id:-1,amount:-1}).lean();
 
         if(!auction){
             return res.status(400).json(formatResponse(false, null, "Không tìm thấy Auction"));
         }
         const data = {
             ...auction.toObject(),
-            
+            bidHistory:[...bidHistory]
         }
         res.status(200).json(formatResponse(true, data, "Lấy chi tiết phiên đấu giá thành công"));
     } catch (error) {
-        console.log('Lỗi khi lấy chi tiết phiên đấu giá: ', error.messager)
+        console.log('Lỗi khi lấy chi tiết phiên đấu giá: ', error)
         res.status(400).json(formatResponse(false, null, "Lấy chi tiết phiên đấu giá thất bại"));
     }
 })
@@ -423,6 +512,9 @@ const getAuctionDetails = asyncHandler(async (req, res) => {
                     productImages: "$product.images",
                     productDescription: "$product.description",
                     productAddress: "$product.address",
+                    productCategory: "$product.category",
+                    productCondition: "$product.condition",
+                    productType: "$product.type",
 
                     //Auction
                     title: 1,
@@ -474,8 +566,10 @@ const getAuctionOutstanding = asyncHandler(async (req, res) => {
         const parsedLimit = parseInt(limit, 10);
         const parsedPage = parseInt(page, 10); 
         const skip = (parsedPage - 1) * parsedLimit; 
-
         let pipeline = [
+            {
+                $match: { status: status}
+            },
             {
                 $lookup: { 
                     from: 'products',
@@ -496,6 +590,7 @@ const getAuctionOutstanding = asyncHandler(async (req, res) => {
             {
                 $limit: parsedLimit 
             },
+          
             {
                 $project: { 
                     // Product
@@ -515,15 +610,10 @@ const getAuctionOutstanding = asyncHandler(async (req, res) => {
                     deposit: 1,
                     registrationFee: 1,
                     signupFee: 1,
+                    slug: 1,
                 }
             }
         ];
-        if (status) {
-            pipeline.push({
-                $match: { status: status }
-            });
-        }
-
         const auctions = await Auction.aggregate(pipeline); 
         res.status(200).json(formatResponse(true, auctions, ""));
     } catch (error) {
