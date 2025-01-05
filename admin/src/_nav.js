@@ -74,24 +74,24 @@ const _nav = [
     disabled: hasPermission([5,6,7,8]),
   },
 
-  {
-    component: CNavTitle,
-    name: 'Sản phẩm',
-  },
-  {
-    component: CNavGroup,
-    name: 'Quản lý sản phẩm',
-    to: '/base',
-    icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
-    items: [
-      {
-        component: CNavItem,
-        name: 'Sản phẩm',
-        to: '/product',
-      },
-    ],
-    disabled: hasPermission([10,11,12,13]),
-  },
+  // {
+  //   component: CNavTitle,
+  //   name: 'Sản phẩm',
+  // },
+  // {
+  //   component: CNavGroup,
+  //   name: 'Quản lý sản phẩm',
+  //   to: '/base',
+  //   icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
+  //   items: [
+  //     {
+  //       component: CNavItem,
+  //       name: 'Sản phẩm',
+  //       to: '/product',
+  //     },
+  //   ],
+  //   disabled: hasPermission([10,11,12,13]),
+  // },
 ]
 
 export default _nav

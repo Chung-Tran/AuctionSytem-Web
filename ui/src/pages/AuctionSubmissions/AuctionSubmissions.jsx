@@ -171,12 +171,17 @@ export default function AuctionSubmissions() {
                             Update Bank Info
                           </Button>
                         )}
+                      </div>
+                    )}
+                    {(auction.status === AUCTION_STATUS.WINNER_PAYMENTED || auction.status === AUCTION_STATUS.DONE) && (
+                      <div className="flex space-x-4 items-center mt-auto">
                         <TransactionReportButton
                           disabled={!auction.winnerBankInfo}
                           data={auction}
                         />
                       </div>
                     )}
+
                   </div>
 
                 </div>
