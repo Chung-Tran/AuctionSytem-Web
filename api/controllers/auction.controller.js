@@ -971,7 +971,6 @@ const ongoingList = asyncHandler(async (req, res) => {
 const checkValidAccess = asyncHandler(async (req, res) => {
     const customerId = req.user.userId;
     const { auctionId } = req.params
-    console.log(customerId)
     try {
         const auction = await Auction.findOne({
             _id: auctionId,
@@ -986,7 +985,6 @@ const checkValidAccess = asyncHandler(async (req, res) => {
                 }
             }
         }).select('registeredUsers.$');
-        console.log(auction)
         if (auction && auction.registeredUsers.length > 0) {
             res.status(200).json(formatResponse(true, { allow: true }, "Allow access"));
         } else {

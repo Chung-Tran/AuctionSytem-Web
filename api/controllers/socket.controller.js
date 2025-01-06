@@ -20,7 +20,6 @@ const initializeSocket = (io) => {
     setGlobalIo(io);
     io.use(verifySocketToken);
     io.on('connection', (socket) => {
-        console.log('Connected. ID:', socket.id);
         socket.on('joinAuctionRoom', (roomId) => joinAuctionRoom(io, socket, roomId));
         socket.on('placeBid', (data) => placeBid(io, socket, data));
         socket.on('endAuction', (roomId) => endAuction(io, socket, roomId));
