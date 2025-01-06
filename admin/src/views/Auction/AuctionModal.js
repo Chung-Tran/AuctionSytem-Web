@@ -143,6 +143,7 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
 
         if (startTime.isBefore(now)) {
           toast.error('Thời gian bắt đầu phải sau thời gian hiện tại');
+          setLoading(false)
           return;
         }
 
@@ -150,6 +151,7 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
           const registrationCloseDate = moment(values.registrationCloseDate);
           if (registrationCloseDate.isSameOrAfter(startTime)) {
             toast.error('Thời gian đóng đăng ký phải trước thời gian bắt đầu');
+            setLoading(false)
             return;
           }
         }
@@ -158,6 +160,7 @@ const AuctionModal = ({ type, visible, onClose, data, status, onSuccess }) => {
           const endTime = moment(values.endTime);
           if (endTime.isSameOrBefore(startTime)) {
             toast.error('Thời gian kết thúc phải sau thời gian bắt đầu');
+            setLoading(false)
             return;
           }
         }
